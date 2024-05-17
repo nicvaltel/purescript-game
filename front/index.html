@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purescript Game Engine</title>
+    <link rel="shortcut icon" href="#">
+</head>
+<body>
+
+    <style>
+        .container {
+            width: 100%; /* Set the width of the container to 100% */
+            display: flex; /* Use flexbox to arrange child divs horizontally */
+        }
+
+        .child {
+            flex: 1; /* Each child div takes up an equal amount of space */
+            padding: 10px; /* Optional padding for spacing between child divs */
+            border: 1px solid #000; /* Optional border for visual separation */
+        }
+    </style>
+
+    <div class="container">
+        <div class="child">Div 1</div>
+        <div class="child">
+            Div 2
+            <canvas id="gameBoard" width="650" height="650"></canvas>
+        </div>
+        <div class="child">Div 3</div>
+    </div>
+    <script src="./scripts/app.js"></script>
+</body>
+</html>
