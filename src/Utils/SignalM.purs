@@ -1,4 +1,4 @@
-module SignalM where
+module Utils.SignalM where
 
 import Prelude
 import Constants (constants)

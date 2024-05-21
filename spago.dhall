@@ -37,7 +37,13 @@ to generate this file without the comments in this block.
     "unsafe-coerce",
     "either",
     "exceptions",
-    "fetch"
+    -- "fetch",
+    "concurrent-queues",
+    "affjax",
+    "affjax-web",
+    "http-methods",
+    "datetime",
+    "argonaut-core"
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

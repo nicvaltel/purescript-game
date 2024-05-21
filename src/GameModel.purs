@@ -4,6 +4,7 @@ import Prelude
 import Effect (Effect)
 import Signal.Time (Time)
 import Data.Tuple (Tuple)
+import Effect.Aff (Aff)
 
 type Model
   = { gameStepNumber :: Int
@@ -28,5 +29,5 @@ initialModel =
   , screenHeight: 100.0
   }
 
-initGame :: Effect Model
+initGame :: Aff Model
 initGame = pure initialModel
