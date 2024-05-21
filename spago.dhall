@@ -26,17 +26,18 @@ to generate this file without the comments in this block.
     "quickcheck",
     -- "random",
     "signal",
-    "transformers",
+    -- "transformers",
     "tuples",
     "arrays",
     -- "web-dom",
     -- "web-html",
     -- "web-events",
-    -- "refs",
-    -- "aff",
-    "unsafe-coerce",
     "refs",
-
+    "aff",
+    "unsafe-coerce",
+    "either",
+    "exceptions",
+    "fetch"
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

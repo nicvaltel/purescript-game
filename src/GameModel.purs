@@ -9,10 +9,14 @@ type Model
   = { gameStepNumber :: Int
     , gameTime :: Time
     , inputKey :: Int
-    , wsBuffer :: Array (Tuple Int String)
+    , wsBuffer :: Array String
     , screenWidth :: Number
     , screenHeight :: Number
     }
+
+-- type GraphicsModel = {
+--   background :: 
+-- }
 
 initialModel :: Model
 initialModel =

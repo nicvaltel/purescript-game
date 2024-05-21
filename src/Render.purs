@@ -25,7 +25,8 @@ render m =
         Just canvas <- getCanvasElementById "gameBoard"
         ctx <- getContext2D canvas
         canvasDim <- getCanvasDimensions canvas
-        --   clearRect ctx $ { x: 0.0, y: 0.0, width: canvasDim.width, height: canvasDim.width }
+        save ctx
+        clearRect ctx $ { x: 0.0, y: 0.0, width: canvasDim.width, height: canvasDim.width }
         fillPath ctx
           $ rect ctx
               { x: 0.0
@@ -33,3 +34,5 @@ render m =
               , width: canvasDim.width
               , height: canvasDim.height
               }
+        clearRect ctx $ { x: 0.0, y: 0.0, width: 300.0, height: 200.0 }
+        restore ctx

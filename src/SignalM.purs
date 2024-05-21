@@ -29,9 +29,6 @@ evalGenD g = do
   seed <- randomSeed
   pure $ evalGen g { newSeed: seed, size: 536870911 }
 
-frameRate :: Signal Number
-frameRate = every constants.frameRateNumber
-
 frameRateQuick :: Signal Number
 frameRateQuick = every 100.0
 
