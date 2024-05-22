@@ -43,7 +43,10 @@ to generate this file without the comments in this block.
     "affjax-web",
     "http-methods",
     "datetime",
-    "argonaut-core"
+    "argonaut-core",
+    "argonaut-codecs",
+    "newtype",
+    "ordered-collections",
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

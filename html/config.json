@@ -1,0 +1,5 @@
+{
+    "frameRateNumber": 20.0,
+    "websocketUrl": "ws://95.140.155.123:1234/ws",
+    "debug": true 
+}

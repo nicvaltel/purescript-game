@@ -1,7 +1,6 @@
 module Utils.SignalM where
 
 import Prelude
-import Constants (constants)
 import Data.Array ((:), take, null, unsafeIndex)
 import Data.Tuple (Tuple(..), fst, uncurry)
 import Effect (Effect)

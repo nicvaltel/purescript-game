@@ -1,21 +1,33 @@
-module ResourceLoader where
+module ResourceLoader
+  ( FilePath
+  , loadImages
+  , parseConfigFile
+  )
+  where
 
 import Prelude
+
+import Affjax as AX
+import Affjax.ResponseFormat as ResponseFormat
+import Affjax.Web (driver)
+import Config (Config, fromJson)
+import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..))
+import Data.HTTP.Method (Method(..))
+import Data.Map (Map)
+import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Traversable (traverse)
 import Effect (Effect)
 import Effect.Aff (Canceler, Aff, makeAff)
 import Effect.Exception (Error, error)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
-import Affjax as AX
-import Affjax.Web (driver)
-import Affjax.ResponseFormat as ResponseFormat
-import Data.HTTP.Method (Method(..))
+import Data.Tuple (Tuple(..))
 
-type Path
+type FilePath
   = String
 
-fileLoader :: Path -> Aff (Maybe String)
+fileLoader :: FilePath -> Aff (Maybe String)
 fileLoader resource = do
   res <- AX.request driver settings
   case res of
@@ -30,7 +42,17 @@ fileLoader resource = do
         }
     )
 
-tryLoadImageAff :: String -> Aff CanvasImageSource
+parseConfigFile :: FilePath -> Aff (Either String Config)
+parseConfigFile configFilePath = do
+  mbConf <- fileLoader configFilePath
+  case mbConf of
+    Nothing -> pure $ Left "Config file not found"
+    Just configString -> do
+      case jsonParser configString of
+        Left err -> pure $ Left $ "Invalid json structure in config file: \n" <> err
+        Right json -> pure $ fromJson json
+
+tryLoadImageAff :: FilePath -> Aff CanvasImageSource
 tryLoadImageAff path = makeAff wrappedFn
   where
   wrappedFn :: (Either Error CanvasImageSource -> Effect Unit) -> Effect Canceler
@@ -41,3 +63,9 @@ tryLoadImageAff path = makeAff wrappedFn
           Nothing -> done (Left (error $ "Could not load " <> path))
       )
     pure mempty
+
+-- traverse :: forall t a b m. Traversable t => Applicative m => (a -> m b) -> t a -> m (t b)
+loadImages :: Array (Tuple FilePath String) -> Aff ( Map String CanvasImageSource)
+loadImages files = do 
+  images <- traverse (\(Tuple path name) -> (\img -> Tuple name img) <$> tryLoadImageAff path) files
+  pure $ Map.fromFoldable images

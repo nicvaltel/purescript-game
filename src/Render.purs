@@ -2,11 +2,13 @@ module Render where
 
 import Graphics.Canvas
 import Prelude
+
+import Config (Config)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Console (log)
-import GameModel (Model)
+import GameModel (Model, showModel)
 import Partial.Unsafe (unsafePartial)
 
 square :: Int -> Int -> Int -> Rectangle
@@ -17,11 +19,11 @@ square size x y =
   , height: toNumber size
   }
 
-render :: Model -> Effect Unit
-render m =
+render :: Config -> Model -> Effect Unit
+render conf m =
   unsafePartial
     $ do
-        log (show m)
+        when conf.debug $ log (showModel m)
         Just canvas <- getCanvasElementById "gameBoard"
         ctx <- getContext2D canvas
         canvasDim <- getCanvasDimensions canvas
