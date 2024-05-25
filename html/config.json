@@ -1,5 +1,20 @@
 {
-    "frameRateNumber": 20.0,
-    "websocketUrl": "ws://95.140.155.123:1234/ws",
-    "debug": true 
+  "frameRateNumber": 10.0,
+  "websocketUrl": "ws://95.140.155.123:1234/ws",
+  "debug": false ,
+  "images" : [
+    {
+      "name": "red_ball1",
+      "path": "images/1_Billiard_Ball@72p@72p.png"
+    },
+    { 
+      "name": "jupiter",
+      "path": "images/Jupiter@72p.png"
+    },
+    {
+      "name": "red_ball",
+      "path": "images/white_00.png"
+    }
+    ]
 }
+

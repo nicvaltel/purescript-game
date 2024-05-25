@@ -1,11 +1,12 @@
 module Main where
 
 import Prelude
+
 import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
-import Effect.Console (log)
+import Effect.Console (log,logShow)
 import ResourceLoader (parseConfigFile)
 import RunGame (runGame)
 
@@ -19,4 +20,6 @@ main =
         eitherConf <- parseConfigFile configFilePath
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
-          Right config -> runGame config
+          Right config -> do
+            when config.debug $ liftEffect $ logShow config
+            runGame config

@@ -1,6 +1,6 @@
 module ResourceLoader
-  ( FilePath
-  , loadImages
+  ( 
+    loadImages
   , parseConfigFile
   )
   where
@@ -23,9 +23,7 @@ import Effect.Aff (Canceler, Aff, makeAff)
 import Effect.Exception (Error, error)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
 import Data.Tuple (Tuple(..))
-
-type FilePath
-  = String
+import Types
 
 fileLoader :: FilePath -> Aff (Maybe String)
 fileLoader resource = do
@@ -60,12 +58,11 @@ tryLoadImageAff path = makeAff wrappedFn
     tryLoadImage path
       ( \maybeImage -> case maybeImage of
           Just canvasImage -> done (Right canvasImage)
-          Nothing -> done (Left (error $ "Could not load " <> path))
+          Nothing -> done (Left (error $ "tryLoadImageAff Error: Could not load " <> path))
       )
     pure mempty
 
--- traverse :: forall t a b m. Traversable t => Applicative m => (a -> m b) -> t a -> m (t b)
-loadImages :: Array (Tuple FilePath String) -> Aff ( Map String CanvasImageSource)
+loadImages :: Array {name :: String, path :: String} -> Aff ( Map String CanvasImageSource)
 loadImages files = do 
-  images <- traverse (\(Tuple path name) -> (\img -> Tuple name img) <$> tryLoadImageAff path) files
+  images <- traverse (\{name, path} -> (\img -> Tuple name img) <$> tryLoadImageAff path) files
   pure $ Map.fromFoldable images

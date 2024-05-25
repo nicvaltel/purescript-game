@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Purescript Game Engine</title>
+    <title>PureScript Game Engine</title>
     <link rel="shortcut icon" href="#">
 </head>
 
 <body scroll="no" style="overflow: hidden"> <!-- to disable scroll -->
 
     <style>
-        .container {
+        .container1 {
             width: 100%; /* Set the width of the container to 100% */
+            height: 100%;
             display: flex; /* Use flexbox to arrange child divs horizontally */
         }
 
-        .child {
+        .child1 {
             flex: 1; /* Each child div takes up an equal amount of space */
             padding: 10px; /* Optional padding for spacing between child divs */
             border: 1px solid #000; /* Optional border for visual separation */
@@ -23,13 +24,31 @@
     </style>
 
     <div class="container">
-        <div class="child">Div 1</div>
         <div class="child">
-            Div 2
-            <canvas id="gameBoard" width="650" height="650"></canvas>
+            <canvas id="canvas" width="1920" height="1080"></canvas>
         </div>
-        <div class="child">Div 3</div>
     </div>
+    <!-- <script type="text/javascript">
+        (function() {
+          function resizeCanvas() {
+            var canvas = document.getElementById("canvas");
+            var scale = window.innerHeight / canvas.clientHeight;
+            canvas.style.mozTransform = "scale(" + scale + ")";
+            canvas.style.webkitTransform = "scale(" + scale + ")";
+            canvas.style.transform = "scale(" + scale + ")";
+            canvas.style.width = (window.innerWidth / scale) + "px";
+          }
+          resizeCanvas();
+          window.addEventListener("resize", resizeCanvas);
+        })();
+    </script> -->
+
+    <!-- <script src="scripts/app.js"></script> -->
+
+    <!-- <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script> -->
+    <!-- <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script> -->
     <script src="scripts/app.js"></script>
+    
+
 </body>
 </html>

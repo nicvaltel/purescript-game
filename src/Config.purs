@@ -10,6 +10,7 @@ type Config
   = { frameRateNumber :: Number
     , websocketUrl :: String
     , debug :: Boolean
+    , images :: Array {name :: String, path :: String}
     }
 
 -- decodeJson :: DecodeJson a => Json -> Either JsonDecodeError a
