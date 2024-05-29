@@ -52,3 +52,26 @@ runExample = do
   currentTime <- now
   time <- new currentTime
   runSignal (render time <$> processSignal)
+
+
+
+
+-- mainLoop :: Config -> Q.Queue String -> Q.Queue UserInput -> Model -> Aff Unit
+-- mainLoop conf queueWS queueInput model = do
+--   -- liftEffect (render conf model) 
+--   _ <- forkAff $ liftEffect (render conf model)
+--   currentTime <- liftEffect now
+--   let (Milliseconds deltaTime) = diff currentTime model.lastUpdateTime
+--       timeToWait = conf.frameRateNumber - deltaTime
+--   when (timeToWait > 0.0) $ delay (Milliseconds timeToWait)
+
+--   messages <- readAllQueue queueWS
+--   when conf.debug $ liftEffect $ log "MESSAGES:"
+--   when conf.debug $ liftEffect $ logShow messages
+--   inputs <- readAllQueue queueInput
+--   when conf.debug $ liftEffect $ log "INPUTS:"
+--   when conf.debug $ liftEffect $ logShow inputs
+--   let
+--     newModel0 = gameStep deltaTime messages inputs model
+--     newModel = newModel0{lastUpdateTime = currentTime}
+--   mainLoop conf queueWS queueInput newModel

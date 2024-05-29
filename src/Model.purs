@@ -1,4 +1,4 @@
-module GameModel
+module Model
   ( Actor
   , Model(..)
   , initGame
@@ -60,12 +60,12 @@ initialModel currentTime =
 
 actorBall :: Actor
 actorBall = 
-  { name : "actor_red_ball"
+  { name : "jupiter"
     , x : 17.0
     , y : 22.0
     , vx : 31.0/100.0
     , vy : 23.0/100.0
-    , spriteName : "red_ball"
+    , spriteName : "jupiter"
     }
 populateActors :: Model -> Model
 populateActors m = m {actors = [actorBall]}

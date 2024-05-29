@@ -1,23 +1,8 @@
-module GameData where
+module UpdateModel where
 
 import Prelude
-import GameModel
-import Types
-
-
--- actorBall :: Actor
--- actorBall = 
---   { name : "actor_red_ball"
---     , x : 17.0
---     , y : 22.0
---     , vx : 35.0
---     , vy : 25.0
---     , spriteName : "red_ball"
---     }
-
-
--- populateActors :: Model -> Model
--- populateActors m = m {actors = [actorBall]}
+import Model (Model, Actor)
+import Types (Time)
 
 
 moveActor :: Time -> Actor -> Actor

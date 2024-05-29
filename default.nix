@@ -30,3 +30,6 @@ in
          echo "Entering my Nix shell environment..."
      '';
 }
+
+
+# spago bundle-app --to html/scripts/app.js --platform browser

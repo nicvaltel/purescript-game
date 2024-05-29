@@ -8,7 +8,7 @@ import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log,logShow)
 import ResourceLoader (parseConfigFile)
-import RunGame (runGame)
+import GameLoop (runGame)
 
 configFilePath ∷ String
 configFilePath = "config.json"

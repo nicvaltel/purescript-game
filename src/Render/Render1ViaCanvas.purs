@@ -1,27 +1,26 @@
-module Render where
+module Render.Render1ViaCanvas (render) where
 
-import Graphics.Canvas
 import Prelude
 
 import Config (Config)
-import Data.Int (toNumber)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Number (floor)
+import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
-import GameModel (Model, showModel)
+import Model (Model, showModel)
+import Graphics.Canvas (getCanvasElementById, getContext2D, restore, save, getCanvasDimensions, clearRect, drawImage)
 import Partial.Unsafe (unsafePartial)
 import Utils.Utils (undefined)
-import Data.Traversable(for)
-import Data.Number(floor)
 
-square :: Int -> Int -> Int -> Rectangle
-square size x y =
-  { x: toNumber (size * x)
-  , y: toNumber (size * y)
-  , width: toNumber size
-  , height: toNumber size
-  }
+-- square :: Int -> Int -> Int -> Rectangle
+-- square size x y =
+--   { x: toNumber (size * x)
+--   , y: toNumber (size * y)
+--   , width: toNumber size
+--   , height: toNumber size
+--   }
 
 render :: Config -> Model -> Effect Unit
 render conf m =
@@ -47,8 +46,6 @@ render conf m =
             let sprite = fromMaybe undefined (Map.lookup actor.spriteName m.sprites)
             drawImage ctx sprite (floor actor.x) (floor actor.y)
 
-
         -- let redBall = fromMaybe undefined (Map.lookup "red_ball" m.sprites)
         -- drawImage ctx redBall (toNumber m.gameStepNumber) (toNumber m.gameStepNumber)
-
         restore ctx
