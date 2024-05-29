@@ -1,4 +1,4 @@
-module WebSocket.WSSignalChan
+module Engine.WebSocket.WSSignalChan
   ( WSocket(..)
   , exampleOfUsageWSSignalChan
   , initWSSignal

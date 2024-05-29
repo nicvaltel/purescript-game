@@ -1,4 +1,4 @@
-module ResourceLoader
+module Engine.ResourceLoader
   ( 
     loadImages
   , parseConfigFile
@@ -10,7 +10,7 @@ import Prelude
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
 import Affjax.Web (driver)
-import Config (Config, fromJson)
+import Engine.Config (Config, fromJson)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
@@ -23,7 +23,7 @@ import Effect.Aff (Canceler, Aff, makeAff)
 import Effect.Exception (Error, error)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
 import Data.Tuple (Tuple(..))
-import Types
+import Engine.Types
 
 fileLoader :: FilePath -> Aff (Maybe String)
 fileLoader resource = do

@@ -1,21 +1,25 @@
-module Model
+module Engine.Model
   ( Actor
   , Model(..)
-  , initGame
+  , initialModel
+  , initialModelZeroTime
   , showModel
-  ) where
+  )
+  where
 
 import Prelude
-import Data.DateTime.Instant (Instant)
+
+import Data.DateTime.Instant (Instant, instant)
 import Data.Foldable (foldr)
 import Data.Map (Map)
 import Data.Map as Map
+import Data.Maybe (Maybe(..))
+import Data.Time (Millisecond)
+import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
-import Graphics.Canvas (CanvasImageSource)
--- import Signal.Time (Time)
 import Effect.Now (now)
-
-
+import Graphics.Canvas (CanvasImageSource)
+import Partial.Unsafe (unsafePartial)
 
 type Actor
   = { name :: String
@@ -48,29 +52,18 @@ showModel m =
       ]
 
 initialModel :: Instant -> Model
-initialModel currentTime =
-  { gameStepNumber: 0
-  -- , gameTime: 0.0
-  , screenWidth: 150.0
-  , screenHeight: 100.0
-  , sprites: Map.empty
-  , lastUpdateTime: currentTime
-  , actors: []
-  }
+initialModel currentTime = initialModelZeroTime{lastUpdateTime = currentTime}
 
-actorBall :: Actor
-actorBall = 
-  { name : "jupiter"
-    , x : 17.0
-    , y : 22.0
-    , vx : 31.0/100.0
-    , vy : 23.0/100.0
-    , spriteName : "jupiter"
+
+initialModelZeroTime :: Model
+initialModelZeroTime = unsafePartial $
+  let Just time = instant (Milliseconds 0.0)
+  in 
+    { gameStepNumber: 0
+    -- , gameTime: 0.0
+    , screenWidth: 150.0
+    , screenHeight: 100.0
+    , sprites: Map.empty
+    , lastUpdateTime: time
+    , actors: []
     }
-populateActors :: Model -> Model
-populateActors m = m {actors = [actorBall]}
-
-initGame :: Effect Model
-initGame = do
-  currentTime <- now
-  pure $ populateActors $ initialModel currentTime

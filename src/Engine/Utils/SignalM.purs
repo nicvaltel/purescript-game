@@ -1,4 +1,4 @@
-module Utils.SignalM where
+module Engine.Utils.SignalM where
 
 import Prelude
 import Data.Array ((:), take, null, unsafeIndex)

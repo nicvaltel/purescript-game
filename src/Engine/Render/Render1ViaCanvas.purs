@@ -1,18 +1,18 @@
-module Render.Render1ViaCanvas (render) where
+module Engine.Render.Render1ViaCanvas (render) where
 
 import Prelude
 
-import Config (Config)
+import Engine.Config (Config)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Number (floor)
 import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
-import Model (Model, showModel)
+import Engine.Model (Model, showModel)
 import Graphics.Canvas (getCanvasElementById, getContext2D, restore, save, getCanvasDimensions, clearRect, drawImage)
 import Partial.Unsafe (unsafePartial)
-import Utils.Utils (undefined)
+import Engine.Utils.Utils (undefined)
 
 -- square :: Int -> Int -> Int -> Rectangle
 -- square size x y =

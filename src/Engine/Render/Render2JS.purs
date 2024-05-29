@@ -1,15 +1,15 @@
-module Render.Render2JS (render) where
+module Engine.Render.Render2JS (render) where
 
 import Graphics.Canvas (getCanvasElementById, getContext2D, restore, save, getCanvasDimensions, clearRect)
 import Prelude
 
-import Config (Config)
+import Engine.Config (Config)
 import Data.Maybe (Maybe(..))
 import Data.Number (floor)
 import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
-import Model (Model, showModel)
+import Engine.Model (Model, showModel)
 import Partial.Unsafe (unsafePartial)
 
 data Img

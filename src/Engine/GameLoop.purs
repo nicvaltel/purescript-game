@@ -1,12 +1,10 @@
-module GameLoop
-  ( runGame
-  )
-  where
+module Engine.GameLoop
+  ( GameStepFunc
+  , runGame
+  ) where
 
 import Prelude
-
 import Concurrent.Queue as Q
-import Config (Config)
 import Data.DateTime.Instant (diff)
 import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
@@ -14,30 +12,29 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Now (now)
-import Model (Model, initGame)
-import Render.Render (render)
-import ResourceLoader (loadImages)
-import Types (Time)
-import UpdateModel (updateModel)
-import UserInput (UserInput, runUserInput)
-import Utils.Utils (readAllQueue)
-import WebSocket.WSSignalChan as WS
+import Engine.Config (Config)
+import Engine.Model (Model)
+import Engine.Render.Render (render)
+import Engine.Types (Time)
+import Engine.UserInput (UserInput, runUserInput)
+import Engine.Utils.Utils (readAllQueue)
+import Engine.WebSocket.WSSignalChan as WS
 
-newtype RequestAnimationFrameId = RequestAnimationFrameId Int
+newtype RequestAnimationFrameId
+  = RequestAnimationFrameId Int
+
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
 
-gameStep :: Time -> Array String -> Array UserInput -> Model -> Model
-gameStep dt wsMessages userInputs model = 
-  let model0 = updateModel dt model
-   in model0{gameStepNumber = model.gameStepNumber + 1}
+type GameStepFunc
+  = Time -> Array String -> Array UserInput -> Model -> Model
 
-mainLoop :: Config -> Q.Queue String -> Q.Queue UserInput -> Model -> Aff Unit
-mainLoop conf queueWS queueInput model = do
+mainLoop :: Config -> Q.Queue String -> Q.Queue UserInput -> GameStepFunc -> Model -> Aff Unit
+mainLoop conf queueWS queueInput gameStep model = do
   -- _ <- forkAff $ liftEffect (render conf model)
   liftEffect (render conf model)
   currentTime <- liftEffect now
-  let (Milliseconds deltaTime) = diff currentTime model.lastUpdateTime
-
+  let
+    (Milliseconds deltaTime) = diff currentTime model.lastUpdateTime
   messages <- readAllQueue queueWS
   when conf.debug $ liftEffect $ log "MESSAGES:"
   when conf.debug $ liftEffect $ logShow messages
@@ -46,10 +43,11 @@ mainLoop conf queueWS queueInput model = do
   when conf.debug $ liftEffect $ logShow inputs
   let
     newModel0 = gameStep deltaTime messages inputs model
-    newModel = newModel0{lastUpdateTime = currentTime}
-  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf queueWS queueInput newModel)
+
+    newModel = newModel0 { lastUpdateTime = currentTime }
+  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf queueWS queueInput gameStep newModel)
   pure unit
-  
+
 runWS :: Config -> Q.Queue String -> Aff Unit
 runWS conf queue = do
   sock <- liftEffect $ WS.initWebSocket conf.websocketUrl
@@ -59,17 +57,14 @@ runWS conf queue = do
     $ \str -> do
         launchAff_ $ Q.write queue str
 
-runGame :: Config -> Aff Unit
-runGame conf = do --onDOMContentLoaded
+runGame :: Config -> GameStepFunc -> Model -> Aff Unit
+runGame conf gameStep model = do --onDOMContentLoaded
   queueUserInput :: Q.Queue UserInput <- Q.new
   liftEffect $ runUserInput queueUserInput
-
   queueWS :: Q.Queue String <- Q.new
   runWS conf queueWS
-
-  gameModel' <- liftEffect initGame
-  spritesMap <- loadImages conf.images
-  let gameModel = gameModel' {sprites = spritesMap}
-
-  mainLoop conf queueWS queueUserInput gameModel
+  currentTime <- liftEffect now
+  let
+    gameModel = model { lastUpdateTime = currentTime }
+  mainLoop conf queueWS queueUserInput gameStep gameModel
   pure unit

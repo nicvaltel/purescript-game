@@ -1,10 +1,10 @@
-module Config where
+module Engine.Config where
 
 import Prelude
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Decode.Class (decodeJson)
 import Data.Either (Either)
-import Utils.Utils (mapLeft)
+import Engine.Utils.Utils (mapLeft)
 
 type Config
   = { frameRateNumber :: Number

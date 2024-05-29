@@ -1,4 +1,4 @@
-module UserInput
+module Engine.UserInput
   ( UserInput(..)
   , runUserInput
   )
@@ -8,7 +8,7 @@ import Prelude
 import Effect (Effect)
 import Signal (Signal, runSignal)
 import Signal.DOM (keyPressed)
-import Utils.Utils (undefined)
+import Engine.Utils.Utils (undefined)
 import Concurrent.Queue as Q
 import Effect.Aff (launchAff_)
 

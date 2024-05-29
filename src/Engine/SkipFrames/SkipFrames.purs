@@ -1,4 +1,4 @@
-module SkipFrames.SkipFrames where
+module Engine.SkipFrames.SkipFrames where
 
 import Prelude
 import Effect (Effect)

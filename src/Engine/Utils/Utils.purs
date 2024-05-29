@@ -1,4 +1,4 @@
-module Utils.Utils where
+module Engine.Utils.Utils where
 
 import Prelude
 import Unsafe.Coerce (unsafeCoerce)

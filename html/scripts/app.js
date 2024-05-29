@@ -93,18 +93,8 @@
   };
 
   // output/Control.Apply/index.js
-  var identity2 = /* @__PURE__ */ identity(categoryFn);
   var apply = function(dict) {
     return dict.apply;
-  };
-  var applySecond = function(dictApply) {
-    var apply1 = apply(dictApply);
-    var map12 = map(dictApply.Functor0());
-    return function(a) {
-      return function(b) {
-        return apply1(map12($$const(identity2))(a))(b);
-      };
-    };
   };
 
   // output/Control.Applicative/index.js
@@ -219,20 +209,6 @@
   var topNumber = Number.POSITIVE_INFINITY;
   var bottomNumber = Number.NEGATIVE_INFINITY;
 
-  // output/Data.Ord/foreign.js
-  var unsafeCompareImpl = function(lt) {
-    return function(eq3) {
-      return function(gt) {
-        return function(x) {
-          return function(y) {
-            return x < y ? lt : x === y ? eq3 : gt;
-          };
-        };
-      };
-    };
-  };
-  var ordStringImpl = unsafeCompareImpl;
-
   // output/Data.Eq/foreign.js
   var refEq = function(r1) {
     return function(r2) {
@@ -248,29 +224,6 @@
   var eq = function(dict) {
     return dict.eq;
   };
-
-  // output/Data.Ordering/index.js
-  var LT = /* @__PURE__ */ function() {
-    function LT2() {
-    }
-    ;
-    LT2.value = new LT2();
-    return LT2;
-  }();
-  var GT = /* @__PURE__ */ function() {
-    function GT2() {
-    }
-    ;
-    GT2.value = new GT2();
-    return GT2;
-  }();
-  var EQ = /* @__PURE__ */ function() {
-    function EQ2() {
-    }
-    ;
-    EQ2.value = new EQ2();
-    return EQ2;
-  }();
 
   // output/Data.Ring/foreign.js
   var numSub = function(n1) {
@@ -318,19 +271,6 @@
     return function(a) {
       return sub1(zero2)(a);
     };
-  };
-
-  // output/Data.Ord/index.js
-  var ordString = /* @__PURE__ */ function() {
-    return {
-      compare: ordStringImpl(LT.value)(EQ.value)(GT.value),
-      Eq0: function() {
-        return eqString;
-      }
-    };
-  }();
-  var compare = function(dict) {
-    return dict.compare;
   };
 
   // output/Data.Show/foreign.js
@@ -464,7 +404,7 @@
   };
 
   // output/Data.Maybe/index.js
-  var identity3 = /* @__PURE__ */ identity(categoryFn);
+  var identity2 = /* @__PURE__ */ identity(categoryFn);
   var Nothing = /* @__PURE__ */ function() {
     function Nothing2() {
     }
@@ -510,7 +450,7 @@
   };
   var map2 = /* @__PURE__ */ map(functorMaybe);
   var fromMaybe = function(a) {
-    return maybe(a)(identity3);
+    return maybe(a)(identity2);
   };
   var applyMaybe = {
     apply: function(v) {
@@ -1499,16 +1439,6 @@
     };
   }
   var _liftEffect = Aff.Sync;
-  function _parAffMap(f) {
-    return function(aff) {
-      return Aff.ParMap(f, aff);
-    };
-  }
-  function _parAffApply(aff1) {
-    return function(aff2) {
-      return Aff.ParApply(aff1, aff2);
-    };
-  }
   var makeAff = Aff.Async;
   function _makeFiber(util, aff) {
     return function() {
@@ -1630,9 +1560,6 @@
   var functorEffect = /* @__PURE__ */ $lazy_functorEffect(20);
 
   // output/Effect.Exception/foreign.js
-  function error(msg) {
-    return new Error(msg);
-  }
   function message(e) {
     return e.message;
   }
@@ -1647,10 +1574,10 @@
   var $$try = function(dictMonadError) {
     var catchError1 = catchError(dictMonadError);
     var Monad0 = dictMonadError.MonadThrow0().Monad0();
-    var map12 = map(Monad0.Bind1().Apply0().Functor0());
+    var map11 = map(Monad0.Bind1().Apply0().Functor0());
     var pure7 = pure(Monad0.Applicative0());
     return function(a) {
-      return catchError1(map12(Right.create)(a))(function($52) {
+      return catchError1(map11(Right.create)(a))(function($52) {
         return pure7(Left.create($52));
       });
     };
@@ -1925,14 +1852,6 @@
     };
   };
 
-  // output/Control.Parallel.Class/index.js
-  var sequential = function(dict) {
-    return dict.sequential;
-  };
-  var parallel = function(dict) {
-    return dict.parallel;
-  };
-
   // output/Data.Foldable/foreign.js
   var foldrArray = function(f) {
     return function(init3) {
@@ -1960,14 +1879,14 @@
   };
 
   // output/Data.Bifunctor/index.js
-  var identity4 = /* @__PURE__ */ identity(categoryFn);
+  var identity3 = /* @__PURE__ */ identity(categoryFn);
   var bimap = function(dict) {
     return dict.bimap;
   };
   var lmap = function(dictBifunctor) {
     var bimap1 = bimap(dictBifunctor);
     return function(f) {
-      return bimap1(f)(identity4);
+      return bimap1(f)(identity3);
     };
   };
   var bifunctorEither = {
@@ -2017,18 +1936,6 @@
   var foldr = function(dict) {
     return dict.foldr;
   };
-  var traverse_ = function(dictApplicative) {
-    var applySecond2 = applySecond(dictApplicative.Apply0());
-    var pure7 = pure(dictApplicative);
-    return function(dictFoldable) {
-      var foldr22 = foldr(dictFoldable);
-      return function(f) {
-        return foldr22(function($454) {
-          return applySecond2(f($454));
-        })(pure7(unit));
-      };
-    };
-  };
   var foldl = function(dict) {
     return dict.foldl;
   };
@@ -2036,13 +1943,13 @@
     var foldr22 = foldr(dictFoldable);
     return function(dictMonoid) {
       var append3 = append(dictMonoid.Semigroup0());
-      var mempty3 = mempty(dictMonoid);
+      var mempty2 = mempty(dictMonoid);
       return function(f) {
         return foldr22(function(x) {
           return function(acc) {
             return append3(f(x))(acc);
           };
-        })(mempty3);
+        })(mempty2);
       };
     };
   };
@@ -2086,7 +1993,7 @@
       };
     }
     return function(apply3) {
-      return function(map12) {
+      return function(map11) {
         return function(pure7) {
           return function(f) {
             return function(array) {
@@ -2095,14 +2002,14 @@
                   case 0:
                     return pure7([]);
                   case 1:
-                    return map12(array1)(f(array[bot]));
+                    return map11(array1)(f(array[bot]));
                   case 2:
-                    return apply3(map12(array2)(f(array[bot])))(f(array[bot + 1]));
+                    return apply3(map11(array2)(f(array[bot])))(f(array[bot + 1]));
                   case 3:
-                    return apply3(apply3(map12(array3)(f(array[bot])))(f(array[bot + 1])))(f(array[bot + 2]));
+                    return apply3(apply3(map11(array3)(f(array[bot])))(f(array[bot + 1])))(f(array[bot + 2]));
                   default:
                     var pivot = bot + Math.floor((top2 - bot) / 4) * 2;
-                    return apply3(map12(concat2)(go(bot, pivot)))(go(pivot, top2));
+                    return apply3(map11(concat2)(go(bot, pivot)))(go(pivot, top2));
                 }
               }
               return go(0, array.length);
@@ -2114,14 +2021,14 @@
   }();
 
   // output/Data.Traversable/index.js
-  var identity5 = /* @__PURE__ */ identity(categoryFn);
+  var identity4 = /* @__PURE__ */ identity(categoryFn);
   var traverse = function(dict) {
     return dict.traverse;
   };
   var sequenceDefault = function(dictTraversable) {
     var traverse22 = traverse(dictTraversable);
     return function(dictApplicative) {
-      return traverse22(dictApplicative)(identity5);
+      return traverse22(dictApplicative)(identity4);
     };
   };
   var traversableArray = {
@@ -2153,36 +2060,11 @@
     };
   };
 
-  // output/Control.Parallel/index.js
-  var identity6 = /* @__PURE__ */ identity(categoryFn);
-  var parTraverse_ = function(dictParallel) {
-    var sequential2 = sequential(dictParallel);
-    var traverse_2 = traverse_(dictParallel.Applicative1());
-    var parallel2 = parallel(dictParallel);
-    return function(dictFoldable) {
-      var traverse_1 = traverse_2(dictFoldable);
-      return function(f) {
-        var $48 = traverse_1(function($50) {
-          return parallel2(f($50));
-        });
-        return function($49) {
-          return sequential2($48($49));
-        };
-      };
-    };
-  };
-  var parSequence_ = function(dictParallel) {
-    var parTraverse_1 = parTraverse_(dictParallel);
-    return function(dictFoldable) {
-      return parTraverse_1(dictFoldable)(identity6);
-    };
-  };
-
   // output/Data.Time.Duration/index.js
   var show2 = /* @__PURE__ */ show(showNumber);
   var over2 = /* @__PURE__ */ over()();
   var negate2 = /* @__PURE__ */ negate(ringNumber);
-  var identity7 = /* @__PURE__ */ identity(categoryFn);
+  var identity5 = /* @__PURE__ */ identity(categoryFn);
   var Milliseconds = function(x) {
     return x;
   };
@@ -2213,8 +2095,8 @@
     };
   };
   var durationMilliseconds = {
-    fromDuration: identity7,
-    toDuration: identity7
+    fromDuration: identity5,
+    toDuration: identity5
   };
 
   // output/Partial.Unsafe/foreign.js
@@ -2259,9 +2141,6 @@
   var $$void2 = /* @__PURE__ */ $$void(functorEffect);
   var Canceler = function(x) {
     return x;
-  };
-  var functorParAff = {
-    map: _parAffMap
   };
   var functorAff = {
     map: _map
@@ -2312,7 +2191,7 @@
     return _makeFiber(ffiUtil, aff);
   };
   var launchAff = function(aff) {
-    return function __do2() {
+    return function __do() {
       var fiber = makeFiber(aff)();
       fiber.run();
       return fiber;
@@ -2320,12 +2199,6 @@
   };
   var launchAff_ = function($74) {
     return $$void2(launchAff($74));
-  };
-  var applyParAff = {
-    apply: _parAffApply,
-    Functor0: function() {
-      return functorParAff;
-    }
   };
   var monadAff = {
     Applicative0: function() {
@@ -2378,46 +2251,7 @@
       return monadThrowAff;
     }
   };
-  var parallelAff = {
-    parallel: unsafeCoerce2,
-    sequential: _sequential,
-    Monad0: function() {
-      return monadAff;
-    },
-    Applicative1: function() {
-      return $lazy_applicativeParAff(0);
-    }
-  };
-  var $lazy_applicativeParAff = /* @__PURE__ */ $runtime_lazy2("applicativeParAff", "Effect.Aff", function() {
-    return {
-      pure: function() {
-        var $82 = parallel(parallelAff);
-        return function($83) {
-          return $82(pure2($83));
-        };
-      }(),
-      Apply0: function() {
-        return applyParAff;
-      }
-    };
-  });
-  var parSequence_2 = /* @__PURE__ */ parSequence_(parallelAff)(foldableArray);
-  var semigroupCanceler = {
-    append: function(v) {
-      return function(v1) {
-        return function(err) {
-          return parSequence_2([v(err), v1(err)]);
-        };
-      };
-    }
-  };
   var nonCanceler = /* @__PURE__ */ $$const(/* @__PURE__ */ pure2(unit));
-  var monoidCanceler = {
-    mempty: nonCanceler,
-    Semigroup0: function() {
-      return semigroupCanceler;
-    }
-  };
 
   // output/Effect.Console/foreign.js
   var log = function(s) {
@@ -2434,7 +2268,7 @@
     };
   };
 
-  // output/GameLoop/foreign.js
+  // output/Engine.GameLoop/foreign.js
   function _requestAnimationFrame(fn) {
     return function() {
       return window.requestAnimationFrame(fn);
@@ -2721,7 +2555,7 @@
   };
   var take2 = function(avar) {
     return makeAff(function(k) {
-      return function __do2() {
+      return function __do() {
         var c = take(avar)(k)();
         return effectCanceler(c);
       };
@@ -2730,7 +2564,7 @@
   var put2 = function(value2) {
     return function(avar) {
       return makeAff(function(k) {
-        return function __do2() {
+        return function __do() {
           var c = put(value2)(avar)(k)();
           return effectCanceler(c);
         };
@@ -2815,6 +2649,17 @@
       return "(Instant " + (show3(v) + ")");
     }
   };
+  var instant = function(v) {
+    if (v >= -86399778816e5 && v <= 8639977881599999) {
+      return new Just(v);
+    }
+    ;
+    if (otherwise) {
+      return Nothing.value;
+    }
+    ;
+    throw new Error("Failed pattern match at Data.DateTime.Instant (line 44, column 1 - line 44, column 41): " + [v.constructor.name]);
+  };
   var diff = function(dictDuration) {
     var toDuration2 = toDuration(dictDuration);
     return function(dt1) {
@@ -2828,6 +2673,15 @@
   function now() {
     return Date.now();
   }
+
+  // output/Engine.Render.Render/foreign.js
+  var _renderObject = function(o) {
+    return function() {
+      var el = document.getElementById(o.id);
+      el.setAttribute("class", o.css);
+      el.setAttribute("style", "left: " + (o.baseX + (o.x | 0)) + "px; top: " + (o.baseY + (o.y | 0)) + "px");
+    };
+  };
 
   // output/Data.FunctorWithIndex/foreign.js
   var mapWithIndexArray = function(f) {
@@ -2863,7 +2717,7 @@
     var foldrWithIndex1 = foldrWithIndex(dictFoldableWithIndex);
     return function(dictMonoid) {
       var append3 = append(dictMonoid.Semigroup0());
-      var mempty3 = mempty(dictMonoid);
+      var mempty2 = mempty(dictMonoid);
       return function(f) {
         return foldrWithIndex1(function(i) {
           return function(x) {
@@ -2871,7 +2725,7 @@
               return append3(f(i)(x))(acc);
             };
           };
-        })(mempty3);
+        })(mempty2);
       };
     };
   };
@@ -3124,14 +2978,14 @@
     },
     foldMap: function(dictMonoid) {
       var append22 = append(dictMonoid.Semigroup0());
-      var mempty3 = mempty(dictMonoid);
+      var mempty2 = mempty(dictMonoid);
       return function(f) {
         return foldl(foldableList)(function(acc) {
           var $286 = append22(acc);
           return function($287) {
             return $286(f($287));
           };
-        })(mempty3);
+        })(mempty2);
       };
     }
   };
@@ -3174,388 +3028,11 @@
     Leaf2.value = new Leaf2();
     return Leaf2;
   }();
-  var Two = /* @__PURE__ */ function() {
-    function Two2(value0, value1, value2, value3) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-      this.value3 = value3;
-    }
-    ;
-    Two2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return function(value3) {
-            return new Two2(value0, value1, value2, value3);
-          };
-        };
-      };
-    };
-    return Two2;
-  }();
-  var Three = /* @__PURE__ */ function() {
-    function Three2(value0, value1, value2, value3, value4, value5, value6) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-      this.value3 = value3;
-      this.value4 = value4;
-      this.value5 = value5;
-      this.value6 = value6;
-    }
-    ;
-    Three2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return function(value3) {
-            return function(value4) {
-              return function(value5) {
-                return function(value6) {
-                  return new Three2(value0, value1, value2, value3, value4, value5, value6);
-                };
-              };
-            };
-          };
-        };
-      };
-    };
-    return Three2;
-  }();
-  var TwoLeft = /* @__PURE__ */ function() {
-    function TwoLeft2(value0, value1, value2) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-    }
-    ;
-    TwoLeft2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return new TwoLeft2(value0, value1, value2);
-        };
-      };
-    };
-    return TwoLeft2;
-  }();
-  var TwoRight = /* @__PURE__ */ function() {
-    function TwoRight2(value0, value1, value2) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-    }
-    ;
-    TwoRight2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return new TwoRight2(value0, value1, value2);
-        };
-      };
-    };
-    return TwoRight2;
-  }();
-  var ThreeLeft = /* @__PURE__ */ function() {
-    function ThreeLeft2(value0, value1, value2, value3, value4, value5) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-      this.value3 = value3;
-      this.value4 = value4;
-      this.value5 = value5;
-    }
-    ;
-    ThreeLeft2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return function(value3) {
-            return function(value4) {
-              return function(value5) {
-                return new ThreeLeft2(value0, value1, value2, value3, value4, value5);
-              };
-            };
-          };
-        };
-      };
-    };
-    return ThreeLeft2;
-  }();
-  var ThreeMiddle = /* @__PURE__ */ function() {
-    function ThreeMiddle2(value0, value1, value2, value3, value4, value5) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-      this.value3 = value3;
-      this.value4 = value4;
-      this.value5 = value5;
-    }
-    ;
-    ThreeMiddle2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return function(value3) {
-            return function(value4) {
-              return function(value5) {
-                return new ThreeMiddle2(value0, value1, value2, value3, value4, value5);
-              };
-            };
-          };
-        };
-      };
-    };
-    return ThreeMiddle2;
-  }();
-  var ThreeRight = /* @__PURE__ */ function() {
-    function ThreeRight2(value0, value1, value2, value3, value4, value5) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-      this.value3 = value3;
-      this.value4 = value4;
-      this.value5 = value5;
-    }
-    ;
-    ThreeRight2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return function(value3) {
-            return function(value4) {
-              return function(value5) {
-                return new ThreeRight2(value0, value1, value2, value3, value4, value5);
-              };
-            };
-          };
-        };
-      };
-    };
-    return ThreeRight2;
-  }();
-  var KickUp = /* @__PURE__ */ function() {
-    function KickUp2(value0, value1, value2, value3) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value2;
-      this.value3 = value3;
-    }
-    ;
-    KickUp2.create = function(value0) {
-      return function(value1) {
-        return function(value2) {
-          return function(value3) {
-            return new KickUp2(value0, value1, value2, value3);
-          };
-        };
-      };
-    };
-    return KickUp2;
-  }();
-  var fromZipper = function($copy_dictOrd) {
-    return function($copy_v) {
-      return function($copy_v1) {
-        var $tco_var_dictOrd = $copy_dictOrd;
-        var $tco_var_v = $copy_v;
-        var $tco_done = false;
-        var $tco_result;
-        function $tco_loop(dictOrd, v, v1) {
-          if (v instanceof Nil) {
-            $tco_done = true;
-            return v1;
-          }
-          ;
-          if (v instanceof Cons) {
-            if (v.value0 instanceof TwoLeft) {
-              $tco_var_dictOrd = dictOrd;
-              $tco_var_v = v.value1;
-              $copy_v1 = new Two(v1, v.value0.value0, v.value0.value1, v.value0.value2);
-              return;
-            }
-            ;
-            if (v.value0 instanceof TwoRight) {
-              $tco_var_dictOrd = dictOrd;
-              $tco_var_v = v.value1;
-              $copy_v1 = new Two(v.value0.value0, v.value0.value1, v.value0.value2, v1);
-              return;
-            }
-            ;
-            if (v.value0 instanceof ThreeLeft) {
-              $tco_var_dictOrd = dictOrd;
-              $tco_var_v = v.value1;
-              $copy_v1 = new Three(v1, v.value0.value0, v.value0.value1, v.value0.value2, v.value0.value3, v.value0.value4, v.value0.value5);
-              return;
-            }
-            ;
-            if (v.value0 instanceof ThreeMiddle) {
-              $tco_var_dictOrd = dictOrd;
-              $tco_var_v = v.value1;
-              $copy_v1 = new Three(v.value0.value0, v.value0.value1, v.value0.value2, v1, v.value0.value3, v.value0.value4, v.value0.value5);
-              return;
-            }
-            ;
-            if (v.value0 instanceof ThreeRight) {
-              $tco_var_dictOrd = dictOrd;
-              $tco_var_v = v.value1;
-              $copy_v1 = new Three(v.value0.value0, v.value0.value1, v.value0.value2, v.value0.value3, v.value0.value4, v.value0.value5, v1);
-              return;
-            }
-            ;
-            throw new Error("Failed pattern match at Data.Map.Internal (line 462, column 3 - line 467, column 88): " + [v.value0.constructor.name]);
-          }
-          ;
-          throw new Error("Failed pattern match at Data.Map.Internal (line 459, column 1 - line 459, column 80): " + [v.constructor.name, v1.constructor.name]);
-        }
-        ;
-        while (!$tco_done) {
-          $tco_result = $tco_loop($tco_var_dictOrd, $tco_var_v, $copy_v1);
-        }
-        ;
-        return $tco_result;
-      };
-    };
-  };
-  var insert = function(dictOrd) {
-    var fromZipper1 = fromZipper(dictOrd);
-    var compare2 = compare(dictOrd);
-    return function(k) {
-      return function(v) {
-        var up = function($copy_v1) {
-          return function($copy_v2) {
-            var $tco_var_v1 = $copy_v1;
-            var $tco_done = false;
-            var $tco_result;
-            function $tco_loop(v1, v2) {
-              if (v1 instanceof Nil) {
-                $tco_done = true;
-                return new Two(v2.value0, v2.value1, v2.value2, v2.value3);
-              }
-              ;
-              if (v1 instanceof Cons) {
-                if (v1.value0 instanceof TwoLeft) {
-                  $tco_done = true;
-                  return fromZipper1(v1.value1)(new Three(v2.value0, v2.value1, v2.value2, v2.value3, v1.value0.value0, v1.value0.value1, v1.value0.value2));
-                }
-                ;
-                if (v1.value0 instanceof TwoRight) {
-                  $tco_done = true;
-                  return fromZipper1(v1.value1)(new Three(v1.value0.value0, v1.value0.value1, v1.value0.value2, v2.value0, v2.value1, v2.value2, v2.value3));
-                }
-                ;
-                if (v1.value0 instanceof ThreeLeft) {
-                  $tco_var_v1 = v1.value1;
-                  $copy_v2 = new KickUp(new Two(v2.value0, v2.value1, v2.value2, v2.value3), v1.value0.value0, v1.value0.value1, new Two(v1.value0.value2, v1.value0.value3, v1.value0.value4, v1.value0.value5));
-                  return;
-                }
-                ;
-                if (v1.value0 instanceof ThreeMiddle) {
-                  $tco_var_v1 = v1.value1;
-                  $copy_v2 = new KickUp(new Two(v1.value0.value0, v1.value0.value1, v1.value0.value2, v2.value0), v2.value1, v2.value2, new Two(v2.value3, v1.value0.value3, v1.value0.value4, v1.value0.value5));
-                  return;
-                }
-                ;
-                if (v1.value0 instanceof ThreeRight) {
-                  $tco_var_v1 = v1.value1;
-                  $copy_v2 = new KickUp(new Two(v1.value0.value0, v1.value0.value1, v1.value0.value2, v1.value0.value3), v1.value0.value4, v1.value0.value5, new Two(v2.value0, v2.value1, v2.value2, v2.value3));
-                  return;
-                }
-                ;
-                throw new Error("Failed pattern match at Data.Map.Internal (line 498, column 5 - line 503, column 108): " + [v1.value0.constructor.name, v2.constructor.name]);
-              }
-              ;
-              throw new Error("Failed pattern match at Data.Map.Internal (line 495, column 3 - line 495, column 56): " + [v1.constructor.name, v2.constructor.name]);
-            }
-            ;
-            while (!$tco_done) {
-              $tco_result = $tco_loop($tco_var_v1, $copy_v2);
-            }
-            ;
-            return $tco_result;
-          };
-        };
-        var down = function($copy_v1) {
-          return function($copy_v2) {
-            var $tco_var_v1 = $copy_v1;
-            var $tco_done1 = false;
-            var $tco_result;
-            function $tco_loop(v1, v2) {
-              if (v2 instanceof Leaf) {
-                $tco_done1 = true;
-                return up(v1)(new KickUp(Leaf.value, k, v, Leaf.value));
-              }
-              ;
-              if (v2 instanceof Two) {
-                var v3 = compare2(k)(v2.value1);
-                if (v3 instanceof EQ) {
-                  $tco_done1 = true;
-                  return fromZipper1(v1)(new Two(v2.value0, k, v, v2.value3));
-                }
-                ;
-                if (v3 instanceof LT) {
-                  $tco_var_v1 = new Cons(new TwoLeft(v2.value1, v2.value2, v2.value3), v1);
-                  $copy_v2 = v2.value0;
-                  return;
-                }
-                ;
-                $tco_var_v1 = new Cons(new TwoRight(v2.value0, v2.value1, v2.value2), v1);
-                $copy_v2 = v2.value3;
-                return;
-              }
-              ;
-              if (v2 instanceof Three) {
-                var v3 = compare2(k)(v2.value1);
-                if (v3 instanceof EQ) {
-                  $tco_done1 = true;
-                  return fromZipper1(v1)(new Three(v2.value0, k, v, v2.value3, v2.value4, v2.value5, v2.value6));
-                }
-                ;
-                var v4 = compare2(k)(v2.value4);
-                if (v4 instanceof EQ) {
-                  $tco_done1 = true;
-                  return fromZipper1(v1)(new Three(v2.value0, v2.value1, v2.value2, v2.value3, k, v, v2.value6));
-                }
-                ;
-                if (v3 instanceof LT) {
-                  $tco_var_v1 = new Cons(new ThreeLeft(v2.value1, v2.value2, v2.value3, v2.value4, v2.value5, v2.value6), v1);
-                  $copy_v2 = v2.value0;
-                  return;
-                }
-                ;
-                if (v3 instanceof GT && v4 instanceof LT) {
-                  $tco_var_v1 = new Cons(new ThreeMiddle(v2.value0, v2.value1, v2.value2, v2.value4, v2.value5, v2.value6), v1);
-                  $copy_v2 = v2.value3;
-                  return;
-                }
-                ;
-                $tco_var_v1 = new Cons(new ThreeRight(v2.value0, v2.value1, v2.value2, v2.value3, v2.value4, v2.value5), v1);
-                $copy_v2 = v2.value6;
-                return;
-              }
-              ;
-              throw new Error("Failed pattern match at Data.Map.Internal (line 478, column 3 - line 478, column 55): " + [v1.constructor.name, v2.constructor.name]);
-            }
-            ;
-            while (!$tco_done1) {
-              $tco_result = $tco_loop($tco_var_v1, $copy_v2);
-            }
-            ;
-            return $tco_result;
-          };
-        };
-        return down(Nil.value);
-      };
-    };
-  };
   var empty4 = /* @__PURE__ */ function() {
     return Leaf.value;
   }();
-  var fromFoldable = function(dictOrd) {
-    var insert1 = insert(dictOrd);
-    return function(dictFoldable) {
-      return foldl(dictFoldable)(function(m) {
-        return function(v) {
-          return insert1(v.value0)(v.value1)(m);
-        };
-      })(empty4);
-    };
-  };
 
-  // output/Model/index.js
+  // output/Engine.Model/index.js
   var foldr3 = /* @__PURE__ */ foldr(foldableArray);
   var show4 = /* @__PURE__ */ show(showInt);
   var show1 = /* @__PURE__ */ show(showNumber);
@@ -3592,56 +3069,28 @@
       };
     })("MODEL:\n")(["gameStepNumber " + show4(m.gameStepNumber), "screenWidth " + show1(m.screenWidth), "screenHeight " + show1(m.screenHeight), "lastUpdateTime " + show22(m.lastUpdateTime), "actors " + show32(m.actors)]);
   };
-  var initialModel = function(currentTime) {
-    return {
-      gameStepNumber: 0,
-      screenWidth: 150,
-      screenHeight: 100,
-      sprites: empty4,
-      lastUpdateTime: currentTime,
-      actors: []
-    };
-  };
-  var actorBall = /* @__PURE__ */ function() {
-    return {
-      name: "jupiter",
-      x: 17,
-      y: 22,
-      vx: 31 / 100,
-      vy: 23 / 100,
-      spriteName: "jupiter"
-    };
+  var initialModelZeroTime = /* @__PURE__ */ function() {
+    var v = instant(0);
+    if (v instanceof Just) {
+      return {
+        gameStepNumber: 0,
+        screenWidth: 150,
+        screenHeight: 100,
+        sprites: empty4,
+        lastUpdateTime: v.value0,
+        actors: []
+      };
+    }
+    ;
+    throw new Error("Failed pattern match at Engine.Model (line 60, column 7 - line 60, column 45): " + [v.constructor.name]);
   }();
-  var populateActors = function(m) {
-    return {
-      gameStepNumber: m.gameStepNumber,
-      screenWidth: m.screenWidth,
-      screenHeight: m.screenHeight,
-      sprites: m.sprites,
-      lastUpdateTime: m.lastUpdateTime,
-      actors: [actorBall]
-    };
-  };
-  var initGame = function __do() {
-    var currentTime = now();
-    return populateActors(initialModel(currentTime));
-  };
 
-  // output/Render.Render/foreign.js
-  var _renderObject = function(o) {
-    return function() {
-      var el = document.getElementById(o.id);
-      el.setAttribute("class", o.css);
-      el.setAttribute("style", "left: " + (o.baseX + (o.x | 0)) + "px; top: " + (o.baseY + (o.y | 0)) + "px");
-    };
-  };
-
-  // output/Render.Render/index.js
+  // output/Engine.Render.Render/index.js
   var when2 = /* @__PURE__ */ when(applicativeEffect);
   var $$for2 = /* @__PURE__ */ $$for(applicativeEffect)(traversableArray);
   var render = function(conf) {
     return function(m) {
-      return function __do2() {
+      return function __do() {
         when2(conf.debug)(log(showModel(m)))();
         $$for2(m.actors)(function(actor) {
           var actorObj = {
@@ -3659,376 +3108,95 @@
     };
   };
 
-  // output/Affjax/foreign.js
-  function _ajax(platformSpecificDriver, timeoutErrorMessageIdent, requestFailedMessageIdent, mkHeader, options) {
-    return function(errback, callback) {
-      var xhr = platformSpecificDriver.newXHR();
-      var fixedUrl = platformSpecificDriver.fixupUrl(options.url, xhr);
-      xhr.open(options.method || "GET", fixedUrl, true, options.username, options.password);
-      if (options.headers) {
-        try {
-          for (var i = 0, header; (header = options.headers[i]) != null; i++) {
-            xhr.setRequestHeader(header.field, header.value);
-          }
-        } catch (e) {
-          errback(e);
-        }
-      }
-      var onerror = function(msgIdent) {
-        return function() {
-          errback(new Error(msgIdent));
-        };
-      };
-      xhr.onerror = onerror(requestFailedMessageIdent);
-      xhr.ontimeout = onerror(timeoutErrorMessageIdent);
-      xhr.onload = function() {
-        callback({
-          status: xhr.status,
-          statusText: xhr.statusText,
-          headers: xhr.getAllResponseHeaders().split("\r\n").filter(function(header2) {
-            return header2.length > 0;
-          }).map(function(header2) {
-            var i2 = header2.indexOf(":");
-            return mkHeader(header2.substring(0, i2))(header2.substring(i2 + 2));
-          }),
-          body: xhr.response
+  // output/Signal/foreign.js
+  function make(initial) {
+    var subs = [];
+    var val = initial;
+    var sig = {
+      subscribe: function(sub2) {
+        subs.push(sub2);
+        sub2(val);
+      },
+      get: function() {
+        return val;
+      },
+      set: function(newval) {
+        val = newval;
+        subs.forEach(function(sub2) {
+          sub2(newval);
         });
-      };
-      xhr.responseType = options.responseType;
-      xhr.withCredentials = options.withCredentials;
-      xhr.timeout = options.timeout;
-      xhr.send(options.content);
-      return function(error3, cancelErrback, cancelCallback) {
-        try {
-          xhr.abort();
-        } catch (e) {
-          return cancelErrback(e);
-        }
-        return cancelCallback();
-      };
-    };
-  }
-
-  // output/Data.MediaType.Common/index.js
-  var applicationJSON = "application/json";
-  var applicationFormURLEncoded = "application/x-www-form-urlencoded";
-
-  // output/Affjax.RequestBody/index.js
-  var ArrayView = /* @__PURE__ */ function() {
-    function ArrayView2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    ArrayView2.create = function(value0) {
-      return new ArrayView2(value0);
-    };
-    return ArrayView2;
-  }();
-  var Blob = /* @__PURE__ */ function() {
-    function Blob3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Blob3.create = function(value0) {
-      return new Blob3(value0);
-    };
-    return Blob3;
-  }();
-  var Document = /* @__PURE__ */ function() {
-    function Document3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Document3.create = function(value0) {
-      return new Document3(value0);
-    };
-    return Document3;
-  }();
-  var $$String = /* @__PURE__ */ function() {
-    function $$String3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    $$String3.create = function(value0) {
-      return new $$String3(value0);
-    };
-    return $$String3;
-  }();
-  var FormData = /* @__PURE__ */ function() {
-    function FormData2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    FormData2.create = function(value0) {
-      return new FormData2(value0);
-    };
-    return FormData2;
-  }();
-  var FormURLEncoded = /* @__PURE__ */ function() {
-    function FormURLEncoded2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    FormURLEncoded2.create = function(value0) {
-      return new FormURLEncoded2(value0);
-    };
-    return FormURLEncoded2;
-  }();
-  var Json = /* @__PURE__ */ function() {
-    function Json3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Json3.create = function(value0) {
-      return new Json3(value0);
-    };
-    return Json3;
-  }();
-  var toMediaType = function(v) {
-    if (v instanceof FormURLEncoded) {
-      return new Just(applicationFormURLEncoded);
-    }
-    ;
-    if (v instanceof Json) {
-      return new Just(applicationJSON);
-    }
-    ;
-    return Nothing.value;
-  };
-
-  // output/Affjax.RequestHeader/index.js
-  var unwrap2 = /* @__PURE__ */ unwrap();
-  var Accept = /* @__PURE__ */ function() {
-    function Accept2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Accept2.create = function(value0) {
-      return new Accept2(value0);
-    };
-    return Accept2;
-  }();
-  var ContentType = /* @__PURE__ */ function() {
-    function ContentType2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    ContentType2.create = function(value0) {
-      return new ContentType2(value0);
-    };
-    return ContentType2;
-  }();
-  var RequestHeader = /* @__PURE__ */ function() {
-    function RequestHeader2(value0, value1) {
-      this.value0 = value0;
-      this.value1 = value1;
-    }
-    ;
-    RequestHeader2.create = function(value0) {
-      return function(value1) {
-        return new RequestHeader2(value0, value1);
-      };
-    };
-    return RequestHeader2;
-  }();
-  var value = function(v) {
-    if (v instanceof Accept) {
-      return unwrap2(v.value0);
-    }
-    ;
-    if (v instanceof ContentType) {
-      return unwrap2(v.value0);
-    }
-    ;
-    if (v instanceof RequestHeader) {
-      return v.value1;
-    }
-    ;
-    throw new Error("Failed pattern match at Affjax.RequestHeader (line 26, column 1 - line 26, column 33): " + [v.constructor.name]);
-  };
-  var name2 = function(v) {
-    if (v instanceof Accept) {
-      return "Accept";
-    }
-    ;
-    if (v instanceof ContentType) {
-      return "Content-Type";
-    }
-    ;
-    if (v instanceof RequestHeader) {
-      return v.value0;
-    }
-    ;
-    throw new Error("Failed pattern match at Affjax.RequestHeader (line 21, column 1 - line 21, column 32): " + [v.constructor.name]);
-  };
-
-  // output/Affjax.ResponseFormat/index.js
-  var identity8 = /* @__PURE__ */ identity(categoryFn);
-  var $$ArrayBuffer = /* @__PURE__ */ function() {
-    function $$ArrayBuffer2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    $$ArrayBuffer2.create = function(value0) {
-      return new $$ArrayBuffer2(value0);
-    };
-    return $$ArrayBuffer2;
-  }();
-  var Blob2 = /* @__PURE__ */ function() {
-    function Blob3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Blob3.create = function(value0) {
-      return new Blob3(value0);
-    };
-    return Blob3;
-  }();
-  var Document2 = /* @__PURE__ */ function() {
-    function Document3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Document3.create = function(value0) {
-      return new Document3(value0);
-    };
-    return Document3;
-  }();
-  var Json2 = /* @__PURE__ */ function() {
-    function Json3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Json3.create = function(value0) {
-      return new Json3(value0);
-    };
-    return Json3;
-  }();
-  var $$String2 = /* @__PURE__ */ function() {
-    function $$String3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    $$String3.create = function(value0) {
-      return new $$String3(value0);
-    };
-    return $$String3;
-  }();
-  var Ignore = /* @__PURE__ */ function() {
-    function Ignore2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Ignore2.create = function(value0) {
-      return new Ignore2(value0);
-    };
-    return Ignore2;
-  }();
-  var toResponseType = function(v) {
-    if (v instanceof $$ArrayBuffer) {
-      return "arraybuffer";
-    }
-    ;
-    if (v instanceof Blob2) {
-      return "blob";
-    }
-    ;
-    if (v instanceof Document2) {
-      return "document";
-    }
-    ;
-    if (v instanceof Json2) {
-      return "text";
-    }
-    ;
-    if (v instanceof $$String2) {
-      return "text";
-    }
-    ;
-    if (v instanceof Ignore) {
-      return "";
-    }
-    ;
-    throw new Error("Failed pattern match at Affjax.ResponseFormat (line 44, column 3 - line 50, column 19): " + [v.constructor.name]);
-  };
-  var toMediaType2 = function(v) {
-    if (v instanceof Json2) {
-      return new Just(applicationJSON);
-    }
-    ;
-    return Nothing.value;
-  };
-  var string = /* @__PURE__ */ function() {
-    return new $$String2(identity8);
-  }();
-  var ignore = /* @__PURE__ */ function() {
-    return new Ignore(identity8);
-  }();
-
-  // output/Affjax.ResponseHeader/index.js
-  var ResponseHeader = /* @__PURE__ */ function() {
-    function ResponseHeader2(value0, value1) {
-      this.value0 = value0;
-      this.value1 = value1;
-    }
-    ;
-    ResponseHeader2.create = function(value0) {
-      return function(value1) {
-        return new ResponseHeader2(value0, value1);
-      };
-    };
-    return ResponseHeader2;
-  }();
-
-  // output/Control.Monad.Except/index.js
-  var unwrap3 = /* @__PURE__ */ unwrap();
-  var runExcept = function($3) {
-    return unwrap3(runExceptT($3));
-  };
-
-  // output/Data.Argonaut.Core/foreign.js
-  function id(x) {
-    return x;
-  }
-  function stringify(j) {
-    return JSON.stringify(j);
-  }
-  function _caseJson(isNull3, isBool, isNum, isStr, isArr, isObj, j) {
-    if (j == null)
-      return isNull3();
-    else if (typeof j === "boolean")
-      return isBool(j);
-    else if (typeof j === "number")
-      return isNum(j);
-    else if (typeof j === "string")
-      return isStr(j);
-    else if (Object.prototype.toString.call(j) === "[object Array]")
-      return isArr(j);
-    else
-      return isObj(j);
-  }
-
-  // output/Foreign.Object/foreign.js
-  var empty5 = {};
-  function _lookup(no, yes, k, m) {
-    return k in m ? yes(m[k]) : no;
-  }
-  function toArrayWithKey(f) {
-    return function(m) {
-      var r = [];
-      for (var k in m) {
-        if (hasOwnProperty.call(m, k)) {
-          r.push(f(k)(m[k]));
-        }
       }
-      return r;
+    };
+    return sig;
+  }
+  var constant = make;
+  function mapSig(fun) {
+    return function(sig) {
+      var out = make(fun(sig.get()));
+      sig.subscribe(function(val) {
+        out.set(fun(val));
+      });
+      return out;
     };
   }
-  var keys = Object.keys || toArrayWithKey(function(k) {
+  function runSignal(sig) {
     return function() {
-      return k;
+      sig.subscribe(function(val) {
+        val();
+      });
+      return {};
     };
-  });
+  }
+
+  // output/Signal/index.js
+  var functorSignal = {
+    map: mapSig
+  };
+
+  // output/Signal.DOM/foreign.js
+  function keyPressedP(constant2) {
+    return function(keyCode) {
+      return function() {
+        var out = constant2(false);
+        window.addEventListener("keydown", function(e) {
+          if (e.keyCode === keyCode)
+            out.set(true);
+        });
+        window.addEventListener("keyup", function(e) {
+          if (e.keyCode === keyCode)
+            out.set(false);
+        });
+        return out;
+      };
+    };
+  }
+
+  // output/Signal.DOM/index.js
+  var keyPressed = /* @__PURE__ */ keyPressedP(constant);
+
+  // output/Engine.UserInput/index.js
+  var map5 = /* @__PURE__ */ map(functorSignal);
+  var getUserInput = /* @__PURE__ */ map(functorEffect)(/* @__PURE__ */ map5(function(k) {
+    var n = function() {
+      if (k) {
+        return 32;
+      }
+      ;
+      return 0;
+    }();
+    return {
+      key: n
+    };
+  }))(/* @__PURE__ */ keyPressed(32));
+  var runUserInput = function(queue) {
+    var processUserInput = function(n) {
+      return launchAff_(write3(queue)(n));
+    };
+    return function __do() {
+      var userInputSignal = getUserInput();
+      return runSignal(map5(processUserInput)(userInputSignal))();
+    };
+  };
 
   // output/Data.Array/foreign.js
   var replicateFill = function(count, value2) {
@@ -4200,7 +3368,7 @@
   var thaw = /* @__PURE__ */ runSTFn1(thawImpl);
   var withArray = function(f) {
     return function(xs) {
-      return function __do2() {
+      return function __do() {
         var result = thaw(xs)();
         f(result)();
         return unsafeFreeze(result)();
@@ -4245,6 +3413,532 @@
       return append2([x])(xs);
     };
   };
+
+  // output/Engine.Utils.Utils/index.js
+  var bind3 = /* @__PURE__ */ bind(bindAff);
+  var pure4 = /* @__PURE__ */ pure(applicativeAff);
+  var map6 = /* @__PURE__ */ map(functorAff);
+  var readAllQueue = function(queue) {
+    var readAllQueue$prime = function(accum) {
+      return bind3(tryRead3(queue))(function(element) {
+        if (element instanceof Just) {
+          return readAllQueue$prime(cons2(element.value0)(accum));
+        }
+        ;
+        if (element instanceof Nothing) {
+          return pure4(accum);
+        }
+        ;
+        throw new Error("Failed pattern match at Engine.Utils.Utils (line 20, column 5 - line 22, column 28): " + [element.constructor.name]);
+      });
+    };
+    return map6(reverse)(readAllQueue$prime([]));
+  };
+  var mapLeft = function(f) {
+    return either(function($6) {
+      return Left.create(f($6));
+    })(Right.create);
+  };
+
+  // output/Engine.WebSocket.WSSignalChan/foreign.js
+  var _wsocket = function(url) {
+    return function() {
+      return new WebSocket(url);
+    };
+  };
+  var _addEventListenerConnectionIsOpen = function(socket) {
+    return function() {
+      socket.addEventListener("open", (event) => {
+        console.log("WebSocket connection opened:", event);
+      });
+    };
+  };
+  var _addEventListenerMessageRecieved = function(socket) {
+    return function(signalFunc) {
+      return function() {
+        socket.addEventListener("message", (event) => {
+          signalFunc(event.data)();
+        });
+      };
+    };
+  };
+  var _addEventListenerConnectionIsClose = function(socket) {
+    return function() {
+      socket.addEventListener("close", (event) => {
+        console.log("WebSocket connection closed:", event);
+      });
+    };
+  };
+
+  // output/Engine.WebSocket.WSSignalChan/index.js
+  var onOpen = _addEventListenerConnectionIsOpen;
+  var onMessage = _addEventListenerMessageRecieved;
+  var onClose = _addEventListenerConnectionIsClose;
+  var initWebSocket = _wsocket;
+
+  // output/Engine.GameLoop/index.js
+  var bind4 = /* @__PURE__ */ bind(bindAff);
+  var liftEffect4 = /* @__PURE__ */ liftEffect(monadEffectAff);
+  var discard3 = /* @__PURE__ */ discard(discardUnit)(bindAff);
+  var diff2 = /* @__PURE__ */ diff(durationMilliseconds);
+  var when3 = /* @__PURE__ */ when(applicativeAff);
+  var logShow2 = /* @__PURE__ */ logShow(/* @__PURE__ */ showArray(showString));
+  var logShow1 = /* @__PURE__ */ logShow(/* @__PURE__ */ showArray(/* @__PURE__ */ showRecord()()(/* @__PURE__ */ showRecordFieldsConsNil({
+    reflectSymbol: function() {
+      return "key";
+    }
+  })(showInt))));
+  var pure5 = /* @__PURE__ */ pure(applicativeAff);
+  var runWS = function(conf) {
+    return function(queue) {
+      return bind4(liftEffect4(initWebSocket(conf.websocketUrl)))(function(sock) {
+        return discard3(liftEffect4(onOpen(sock)))(function() {
+          return discard3(liftEffect4(onClose(sock)))(function() {
+            return liftEffect4(onMessage(sock)(function(str) {
+              return launchAff_(write3(queue)(str));
+            }));
+          });
+        });
+      });
+    };
+  };
+  var mainLoop = function(conf) {
+    return function(queueWS) {
+      return function(queueInput) {
+        return function(gameStep2) {
+          return function(model) {
+            return discard3(liftEffect4(render(conf)(model)))(function() {
+              return bind4(liftEffect4(now))(function(currentTime) {
+                var v = diff2(currentTime)(model.lastUpdateTime);
+                return bind4(readAllQueue(queueWS))(function(messages) {
+                  return discard3(when3(conf.debug)(liftEffect4(log("MESSAGES:"))))(function() {
+                    return discard3(when3(conf.debug)(liftEffect4(logShow2(messages))))(function() {
+                      return bind4(readAllQueue(queueInput))(function(inputs) {
+                        return discard3(when3(conf.debug)(liftEffect4(log("INPUTS:"))))(function() {
+                          return discard3(when3(conf.debug)(liftEffect4(logShow1(inputs))))(function() {
+                            var newModel0 = gameStep2(v)(messages)(inputs)(model);
+                            var newModel = {
+                              lastUpdateTime: currentTime,
+                              actors: newModel0.actors,
+                              gameStepNumber: newModel0.gameStepNumber,
+                              screenHeight: newModel0.screenHeight,
+                              screenWidth: newModel0.screenWidth,
+                              sprites: newModel0.sprites
+                            };
+                            return bind4(liftEffect4(_requestAnimationFrame(launchAff_(mainLoop(conf)(queueWS)(queueInput)(gameStep2)(newModel)))))(function() {
+                              return pure5(unit);
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          };
+        };
+      };
+    };
+  };
+  var runGame = function(conf) {
+    return function(gameStep2) {
+      return function(model) {
+        return bind4($$new4)(function(v) {
+          return discard3(liftEffect4(runUserInput(v)))(function() {
+            return bind4($$new4)(function(v1) {
+              return discard3(runWS(conf)(v1))(function() {
+                return bind4(liftEffect4(now))(function(currentTime) {
+                  var gameModel = {
+                    lastUpdateTime: currentTime,
+                    actors: model.actors,
+                    gameStepNumber: model.gameStepNumber,
+                    screenHeight: model.screenHeight,
+                    screenWidth: model.screenWidth,
+                    sprites: model.sprites
+                  };
+                  return discard3(mainLoop(conf)(v1)(v)(gameStep2)(gameModel))(function() {
+                    return pure5(unit);
+                  });
+                });
+              });
+            });
+          });
+        });
+      };
+    };
+  };
+
+  // output/Affjax/foreign.js
+  function _ajax(platformSpecificDriver, timeoutErrorMessageIdent, requestFailedMessageIdent, mkHeader, options) {
+    return function(errback, callback) {
+      var xhr = platformSpecificDriver.newXHR();
+      var fixedUrl = platformSpecificDriver.fixupUrl(options.url, xhr);
+      xhr.open(options.method || "GET", fixedUrl, true, options.username, options.password);
+      if (options.headers) {
+        try {
+          for (var i = 0, header; (header = options.headers[i]) != null; i++) {
+            xhr.setRequestHeader(header.field, header.value);
+          }
+        } catch (e) {
+          errback(e);
+        }
+      }
+      var onerror = function(msgIdent) {
+        return function() {
+          errback(new Error(msgIdent));
+        };
+      };
+      xhr.onerror = onerror(requestFailedMessageIdent);
+      xhr.ontimeout = onerror(timeoutErrorMessageIdent);
+      xhr.onload = function() {
+        callback({
+          status: xhr.status,
+          statusText: xhr.statusText,
+          headers: xhr.getAllResponseHeaders().split("\r\n").filter(function(header2) {
+            return header2.length > 0;
+          }).map(function(header2) {
+            var i2 = header2.indexOf(":");
+            return mkHeader(header2.substring(0, i2))(header2.substring(i2 + 2));
+          }),
+          body: xhr.response
+        });
+      };
+      xhr.responseType = options.responseType;
+      xhr.withCredentials = options.withCredentials;
+      xhr.timeout = options.timeout;
+      xhr.send(options.content);
+      return function(error3, cancelErrback, cancelCallback) {
+        try {
+          xhr.abort();
+        } catch (e) {
+          return cancelErrback(e);
+        }
+        return cancelCallback();
+      };
+    };
+  }
+
+  // output/Data.MediaType.Common/index.js
+  var applicationJSON = "application/json";
+  var applicationFormURLEncoded = "application/x-www-form-urlencoded";
+
+  // output/Affjax.RequestBody/index.js
+  var ArrayView = /* @__PURE__ */ function() {
+    function ArrayView2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    ArrayView2.create = function(value0) {
+      return new ArrayView2(value0);
+    };
+    return ArrayView2;
+  }();
+  var Blob = /* @__PURE__ */ function() {
+    function Blob3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Blob3.create = function(value0) {
+      return new Blob3(value0);
+    };
+    return Blob3;
+  }();
+  var Document = /* @__PURE__ */ function() {
+    function Document3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Document3.create = function(value0) {
+      return new Document3(value0);
+    };
+    return Document3;
+  }();
+  var $$String = /* @__PURE__ */ function() {
+    function $$String3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    $$String3.create = function(value0) {
+      return new $$String3(value0);
+    };
+    return $$String3;
+  }();
+  var FormData = /* @__PURE__ */ function() {
+    function FormData2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    FormData2.create = function(value0) {
+      return new FormData2(value0);
+    };
+    return FormData2;
+  }();
+  var FormURLEncoded = /* @__PURE__ */ function() {
+    function FormURLEncoded2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    FormURLEncoded2.create = function(value0) {
+      return new FormURLEncoded2(value0);
+    };
+    return FormURLEncoded2;
+  }();
+  var Json = /* @__PURE__ */ function() {
+    function Json3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Json3.create = function(value0) {
+      return new Json3(value0);
+    };
+    return Json3;
+  }();
+  var toMediaType = function(v) {
+    if (v instanceof FormURLEncoded) {
+      return new Just(applicationFormURLEncoded);
+    }
+    ;
+    if (v instanceof Json) {
+      return new Just(applicationJSON);
+    }
+    ;
+    return Nothing.value;
+  };
+
+  // output/Affjax.RequestHeader/index.js
+  var unwrap3 = /* @__PURE__ */ unwrap();
+  var Accept = /* @__PURE__ */ function() {
+    function Accept2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Accept2.create = function(value0) {
+      return new Accept2(value0);
+    };
+    return Accept2;
+  }();
+  var ContentType = /* @__PURE__ */ function() {
+    function ContentType2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    ContentType2.create = function(value0) {
+      return new ContentType2(value0);
+    };
+    return ContentType2;
+  }();
+  var RequestHeader = /* @__PURE__ */ function() {
+    function RequestHeader2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    RequestHeader2.create = function(value0) {
+      return function(value1) {
+        return new RequestHeader2(value0, value1);
+      };
+    };
+    return RequestHeader2;
+  }();
+  var value = function(v) {
+    if (v instanceof Accept) {
+      return unwrap3(v.value0);
+    }
+    ;
+    if (v instanceof ContentType) {
+      return unwrap3(v.value0);
+    }
+    ;
+    if (v instanceof RequestHeader) {
+      return v.value1;
+    }
+    ;
+    throw new Error("Failed pattern match at Affjax.RequestHeader (line 26, column 1 - line 26, column 33): " + [v.constructor.name]);
+  };
+  var name2 = function(v) {
+    if (v instanceof Accept) {
+      return "Accept";
+    }
+    ;
+    if (v instanceof ContentType) {
+      return "Content-Type";
+    }
+    ;
+    if (v instanceof RequestHeader) {
+      return v.value0;
+    }
+    ;
+    throw new Error("Failed pattern match at Affjax.RequestHeader (line 21, column 1 - line 21, column 32): " + [v.constructor.name]);
+  };
+
+  // output/Affjax.ResponseFormat/index.js
+  var identity6 = /* @__PURE__ */ identity(categoryFn);
+  var $$ArrayBuffer = /* @__PURE__ */ function() {
+    function $$ArrayBuffer2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    $$ArrayBuffer2.create = function(value0) {
+      return new $$ArrayBuffer2(value0);
+    };
+    return $$ArrayBuffer2;
+  }();
+  var Blob2 = /* @__PURE__ */ function() {
+    function Blob3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Blob3.create = function(value0) {
+      return new Blob3(value0);
+    };
+    return Blob3;
+  }();
+  var Document2 = /* @__PURE__ */ function() {
+    function Document3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Document3.create = function(value0) {
+      return new Document3(value0);
+    };
+    return Document3;
+  }();
+  var Json2 = /* @__PURE__ */ function() {
+    function Json3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Json3.create = function(value0) {
+      return new Json3(value0);
+    };
+    return Json3;
+  }();
+  var $$String2 = /* @__PURE__ */ function() {
+    function $$String3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    $$String3.create = function(value0) {
+      return new $$String3(value0);
+    };
+    return $$String3;
+  }();
+  var Ignore = /* @__PURE__ */ function() {
+    function Ignore2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Ignore2.create = function(value0) {
+      return new Ignore2(value0);
+    };
+    return Ignore2;
+  }();
+  var toResponseType = function(v) {
+    if (v instanceof $$ArrayBuffer) {
+      return "arraybuffer";
+    }
+    ;
+    if (v instanceof Blob2) {
+      return "blob";
+    }
+    ;
+    if (v instanceof Document2) {
+      return "document";
+    }
+    ;
+    if (v instanceof Json2) {
+      return "text";
+    }
+    ;
+    if (v instanceof $$String2) {
+      return "text";
+    }
+    ;
+    if (v instanceof Ignore) {
+      return "";
+    }
+    ;
+    throw new Error("Failed pattern match at Affjax.ResponseFormat (line 44, column 3 - line 50, column 19): " + [v.constructor.name]);
+  };
+  var toMediaType2 = function(v) {
+    if (v instanceof Json2) {
+      return new Just(applicationJSON);
+    }
+    ;
+    return Nothing.value;
+  };
+  var string = /* @__PURE__ */ function() {
+    return new $$String2(identity6);
+  }();
+  var ignore = /* @__PURE__ */ function() {
+    return new Ignore(identity6);
+  }();
+
+  // output/Affjax.ResponseHeader/index.js
+  var ResponseHeader = /* @__PURE__ */ function() {
+    function ResponseHeader2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    ResponseHeader2.create = function(value0) {
+      return function(value1) {
+        return new ResponseHeader2(value0, value1);
+      };
+    };
+    return ResponseHeader2;
+  }();
+
+  // output/Control.Monad.Except/index.js
+  var unwrap4 = /* @__PURE__ */ unwrap();
+  var runExcept = function($3) {
+    return unwrap4(runExceptT($3));
+  };
+
+  // output/Data.Argonaut.Core/foreign.js
+  function id(x) {
+    return x;
+  }
+  function stringify(j) {
+    return JSON.stringify(j);
+  }
+  function _caseJson(isNull3, isBool, isNum, isStr, isArr, isObj, j) {
+    if (j == null)
+      return isNull3();
+    else if (typeof j === "boolean")
+      return isBool(j);
+    else if (typeof j === "number")
+      return isNum(j);
+    else if (typeof j === "string")
+      return isStr(j);
+    else if (Object.prototype.toString.call(j) === "[object Array]")
+      return isArr(j);
+    else
+      return isObj(j);
+  }
+
+  // output/Foreign.Object/foreign.js
+  var empty5 = {};
+  function _lookup(no, yes, k, m) {
+    return k in m ? yes(m[k]) : no;
+  }
+  function toArrayWithKey(f) {
+    return function(m) {
+      var r = [];
+      for (var k in m) {
+        if (hasOwnProperty.call(m, k)) {
+          r.push(f(k)(m[k]));
+        }
+      }
+      return r;
+    };
+  }
+  var keys = Object.keys || toArrayWithKey(function(k) {
+    return function() {
+      return k;
+    };
+  });
 
   // output/Foreign.Object/index.js
   var lookup = /* @__PURE__ */ function() {
@@ -4343,7 +4037,7 @@
 
   // output/Data.FormURLEncoded/index.js
   var apply2 = /* @__PURE__ */ apply(applyMaybe);
-  var map5 = /* @__PURE__ */ map(functorMaybe);
+  var map7 = /* @__PURE__ */ map(functorMaybe);
   var traverse2 = /* @__PURE__ */ traverse(traversableArray)(applicativeMaybe);
   var toArray2 = function(v) {
     return v;
@@ -4355,7 +4049,7 @@
       }
       ;
       if (v.value1 instanceof Just) {
-        return apply2(map5(function(key) {
+        return apply2(map7(function(key) {
           return function(val) {
             return key + ("=" + val);
           };
@@ -4364,7 +4058,7 @@
       ;
       throw new Error("Failed pattern match at Data.FormURLEncoded (line 37, column 16 - line 39, column 114): " + [v.constructor.name]);
     };
-    var $37 = map5(joinWith("&"));
+    var $37 = map7(joinWith("&"));
     var $38 = traverse2(encodePart);
     return function($39) {
       return $37($38(toArray2($39)));
@@ -4581,7 +4275,7 @@
   // output/Effect.Aff.Compat/index.js
   var fromEffectFnAff = function(v) {
     return makeAff(function(k) {
-      return function __do2() {
+      return function __do() {
         var v1 = v(function($9) {
           return k(Left.create($9))();
         }, function($10) {
@@ -4589,7 +4283,7 @@
         });
         return function(e) {
           return makeAff(function(k2) {
-            return function __do3() {
+            return function __do2() {
               v1(e, function($11) {
                 return k2(Left.create($11))();
               }, function($12) {
@@ -4662,12 +4356,12 @@
   };
 
   // output/Affjax/index.js
-  var pure4 = /* @__PURE__ */ pure(/* @__PURE__ */ applicativeExceptT(monadIdentity));
+  var pure6 = /* @__PURE__ */ pure(/* @__PURE__ */ applicativeExceptT(monadIdentity));
   var fail2 = /* @__PURE__ */ fail(monadIdentity);
   var unsafeReadTagged2 = /* @__PURE__ */ unsafeReadTagged(monadIdentity);
   var alt2 = /* @__PURE__ */ alt(/* @__PURE__ */ altExceptT(semigroupNonEmptyList)(monadIdentity));
   var composeKleisliFlipped2 = /* @__PURE__ */ composeKleisliFlipped(/* @__PURE__ */ bindExceptT(monadIdentity));
-  var map6 = /* @__PURE__ */ map(functorMaybe);
+  var map8 = /* @__PURE__ */ map(functorMaybe);
   var any2 = /* @__PURE__ */ any(foldableArray)(heytingAlgebraBoolean);
   var eq2 = /* @__PURE__ */ eq(eqString);
   var bindFlipped2 = /* @__PURE__ */ bindFlipped(bindMaybe);
@@ -4726,12 +4420,12 @@
     return function(req) {
       var parseJSON = function(v2) {
         if (v2 === "") {
-          return pure4(jsonEmptyObject);
+          return pure6(jsonEmptyObject);
         }
         ;
         return either(function($74) {
           return fail2(ForeignError.create($74));
-        })(pure4)(jsonParser(v2));
+        })(pure6)(jsonParser(v2));
       };
       var fromResponse = function() {
         if (req.responseFormat instanceof $$ArrayBuffer) {
@@ -4759,7 +4453,7 @@
         }
         ;
         if (req.responseFormat instanceof Ignore) {
-          return $$const(req.responseFormat.value0(pure4(unit)));
+          return $$const(req.responseFormat.value0(pure6(unit)));
         }
         ;
         throw new Error("Failed pattern match at Affjax (line 274, column 18 - line 283, column 57): " + [req.responseFormat.constructor.name]);
@@ -4786,7 +4480,7 @@
         }
         ;
         if (v2 instanceof FormURLEncoded) {
-          return note("Body contains values that cannot be encoded as application/x-www-form-urlencoded")(map6(unsafeToForeign)(encode(v2.value0)));
+          return note("Body contains values that cannot be encoded as application/x-www-form-urlencoded")(map8(unsafeToForeign)(encode(v2.value0)));
         }
         ;
         if (v2 instanceof Json) {
@@ -4805,7 +4499,7 @@
         };
       };
       var headers = function(reqContent) {
-        return addHeader(map6(ContentType.create)(bindFlipped2(toMediaType)(reqContent)))(addHeader(map6(Accept.create)(toMediaType2(req.responseFormat)))(req.headers));
+        return addHeader(map8(ContentType.create)(bindFlipped2(toMediaType)(reqContent)))(addHeader(map8(Accept.create)(toMediaType2(req.responseFormat)))(req.headers));
       };
       var ajaxRequest = function(v2) {
         return {
@@ -4822,7 +4516,7 @@
           username: toNullable(req.username),
           password: toNullable(req.password),
           withCredentials: req.withCredentials,
-          timeout: fromMaybe(0)(map6(function(v1) {
+          timeout: fromMaybe(0)(map8(function(v1) {
             return v1;
           })(req.timeout))
         };
@@ -5037,9 +4731,9 @@
       }
       return arr;
     }
-    return function(apply3, map12, f) {
+    return function(apply3, map11, f) {
       var buildFrom = function(x, ys) {
-        return apply3(map12(consList)(f(x)))(ys);
+        return apply3(map11(consList)(f(x)))(ys);
       };
       var go = function(acc, currentLen, xs) {
         if (currentLen === 0) {
@@ -5053,12 +4747,12 @@
         }
       };
       return function(array) {
-        var acc = map12(finalCell)(f(array[array.length - 1]));
+        var acc = map11(finalCell)(f(array[array.length - 1]));
         var result = go(acc, array.length - 1, array);
         while (result instanceof Cont) {
           result = result.fn();
         }
-        return map12(listToArray)(result);
+        return map11(listToArray)(result);
       };
     };
   }();
@@ -5120,9 +4814,9 @@
   };
 
   // output/Data.Argonaut.Decode.Class/index.js
-  var bind3 = /* @__PURE__ */ bind(bindEither);
+  var bind5 = /* @__PURE__ */ bind(bindEither);
   var lmap3 = /* @__PURE__ */ lmap(bifunctorEither);
-  var map7 = /* @__PURE__ */ map(functorMaybe);
+  var map9 = /* @__PURE__ */ map(functorMaybe);
   var gDecodeJsonNil = {
     gDecodeJson: function(v) {
       return function(v1) {
@@ -5177,8 +4871,8 @@
                   var fieldValue = lookup(fieldName)(object);
                   var v1 = decodeJsonField1(fieldValue);
                   if (v1 instanceof Just) {
-                    return bind3(lmap3(AtKey.create(fieldName))(v1.value0))(function(val) {
-                      return bind3(gDecodeJson1(object)($$Proxy.value))(function(rest) {
+                    return bind5(lmap3(AtKey.create(fieldName))(v1.value0))(function(val) {
+                      return bind5(gDecodeJson1(object)($$Proxy.value))(function(rest) {
                         return new Right(insert4($$Proxy.value)(val)(rest));
                       });
                     });
@@ -5207,7 +4901,7 @@
     var decodeJson1 = decodeJson(dictDecodeJson);
     return {
       decodeJsonField: function(j) {
-        return map7(decodeJson1)(j);
+        return map9(decodeJson1)(j);
       }
     };
   };
@@ -5217,33 +4911,7 @@
     };
   };
 
-  // output/Utils.Utils/index.js
-  var bind4 = /* @__PURE__ */ bind(bindAff);
-  var pure5 = /* @__PURE__ */ pure(applicativeAff);
-  var map8 = /* @__PURE__ */ map(functorAff);
-  var readAllQueue = function(queue) {
-    var readAllQueue$prime = function(accum) {
-      return bind4(tryRead3(queue))(function(element) {
-        if (element instanceof Just) {
-          return readAllQueue$prime(cons2(element.value0)(accum));
-        }
-        ;
-        if (element instanceof Nothing) {
-          return pure5(accum);
-        }
-        ;
-        throw new Error("Failed pattern match at Utils.Utils (line 20, column 5 - line 22, column 28): " + [element.constructor.name]);
-      });
-    };
-    return map8(reverse)(readAllQueue$prime([]));
-  };
-  var mapLeft = function(f) {
-    return either(function($6) {
-      return Left.create(f($6));
-    })(Right.create);
-  };
-
-  // output/Config/index.js
+  // output/Engine.Config/index.js
   var show6 = /* @__PURE__ */ show(showJsonDecodeError);
   var gDecodeJsonCons2 = /* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString));
   var gDecodeJsonCons1 = /* @__PURE__ */ gDecodeJsonCons2(gDecodeJsonNil);
@@ -5281,68 +4949,9 @@
     };
   }();
 
-  // output/Graphics.Canvas/foreign.js
-  function tryLoadImageImpl(src) {
-    return function(e) {
-      return function(f) {
-        return function() {
-          var img = new Image();
-          img.src = src;
-          img.addEventListener("load", function() {
-            f(img)();
-          }, false);
-          img.addEventListener("error", function() {
-            e();
-          }, false);
-        };
-      };
-    };
-  }
-
-  // output/Graphics.Canvas/index.js
-  var tryLoadImage = function(path) {
-    return function(k) {
-      return tryLoadImageImpl(path)(k(Nothing.value))(function($54) {
-        return k(Just.create($54));
-      });
-    };
-  };
-
-  // output/ResourceLoader/index.js
-  var mempty2 = /* @__PURE__ */ mempty(monoidCanceler);
-  var bind5 = /* @__PURE__ */ bind(bindAff);
-  var traverse3 = /* @__PURE__ */ traverse(traversableArray)(applicativeAff);
-  var map9 = /* @__PURE__ */ map(functorAff);
+  // output/Engine.ResourceLoader/index.js
+  var bind6 = /* @__PURE__ */ bind(bindAff);
   var pure12 = /* @__PURE__ */ pure(applicativeAff);
-  var fromFoldable5 = /* @__PURE__ */ fromFoldable(ordString)(foldableArray);
-  var tryLoadImageAff = function(path) {
-    var wrappedFn = function(done) {
-      return function __do2() {
-        tryLoadImage(path)(function(maybeImage) {
-          if (maybeImage instanceof Just) {
-            return done(new Right(maybeImage.value0));
-          }
-          ;
-          if (maybeImage instanceof Nothing) {
-            return done(new Left(error("tryLoadImageAff Error: Could not load " + path)));
-          }
-          ;
-          throw new Error("Failed pattern match at ResourceLoader (line 59, column 24 - line 61, column 92): " + [maybeImage.constructor.name]);
-        })();
-        return mempty2;
-      };
-    };
-    return makeAff(wrappedFn);
-  };
-  var loadImages = function(files) {
-    return bind5(traverse3(function(v) {
-      return map9(function(img) {
-        return new Tuple(v.name, img);
-      })(tryLoadImageAff(v.path));
-    })(files))(function(images) {
-      return pure12(fromFoldable5(images));
-    });
-  };
   var fileLoader = function(resource) {
     var settings = {
       url: resource,
@@ -5355,7 +4964,7 @@
       username: defaultRequest.username,
       withCredentials: defaultRequest.withCredentials
     };
-    return bind5(request(driver)(settings))(function(res) {
+    return bind6(request(driver)(settings))(function(res) {
       if (res instanceof Right) {
         return pure12(new Just(res.value0.body));
       }
@@ -5364,11 +4973,11 @@
         return pure12(Nothing.value);
       }
       ;
-      throw new Error("Failed pattern match at ResourceLoader (line 31, column 3 - line 33, column 29): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Engine.ResourceLoader (line 31, column 3 - line 33, column 29): " + [res.constructor.name]);
     });
   };
   var parseConfigFile = function(configFilePath2) {
-    return bind5(fileLoader(configFilePath2))(function(mbConf) {
+    return bind6(fileLoader(configFilePath2))(function(mbConf) {
       if (mbConf instanceof Nothing) {
         return pure12(new Left("Config file not found"));
       }
@@ -5383,14 +4992,14 @@
           return pure12(fromJson(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at ResourceLoader (line 49, column 7 - line 51, column 43): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Engine.ResourceLoader (line 49, column 7 - line 51, column 43): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at ResourceLoader (line 46, column 3 - line 51, column 43): " + [mbConf.constructor.name]);
+      throw new Error("Failed pattern match at Engine.ResourceLoader (line 46, column 3 - line 51, column 43): " + [mbConf.constructor.name]);
     });
   };
 
-  // output/UpdateModel/index.js
+  // output/GameStep/index.js
   var map10 = /* @__PURE__ */ map(functorArray);
   var moveActor = function(dt) {
     return function(actor) {
@@ -5399,16 +5008,16 @@
       return {
         name: actor.name,
         x: function() {
-          var $7 = newX > 1300;
-          if ($7) {
+          var $8 = newX > 1300;
+          if ($8) {
             return newX - 1300;
           }
           ;
           return newX;
         }(),
         y: function() {
-          var $8 = newY > 800;
-          if ($8) {
+          var $9 = newY > 800;
+          if ($9) {
             return newY - 800;
           }
           ;
@@ -5420,250 +5029,47 @@
       };
     };
   };
-  var updateModel = function(dt) {
-    return function(m) {
-      var newActors = map10(moveActor(dt))(m.actors);
-      return {
-        gameStepNumber: m.gameStepNumber,
-        screenWidth: m.screenWidth,
-        screenHeight: m.screenHeight,
-        sprites: m.sprites,
-        lastUpdateTime: m.lastUpdateTime,
-        actors: newActors
-      };
-    };
-  };
-
-  // output/Signal/foreign.js
-  function make(initial) {
-    var subs = [];
-    var val = initial;
-    var sig = {
-      subscribe: function(sub2) {
-        subs.push(sub2);
-        sub2(val);
-      },
-      get: function() {
-        return val;
-      },
-      set: function(newval) {
-        val = newval;
-        subs.forEach(function(sub2) {
-          sub2(newval);
-        });
-      }
-    };
-    return sig;
-  }
-  var constant = make;
-  function mapSig(fun) {
-    return function(sig) {
-      var out = make(fun(sig.get()));
-      sig.subscribe(function(val) {
-        out.set(fun(val));
-      });
-      return out;
-    };
-  }
-  function runSignal(sig) {
-    return function() {
-      sig.subscribe(function(val) {
-        val();
-      });
-      return {};
-    };
-  }
-
-  // output/Signal/index.js
-  var functorSignal = {
-    map: mapSig
-  };
-
-  // output/Signal.DOM/foreign.js
-  function keyPressedP(constant2) {
-    return function(keyCode) {
-      return function() {
-        var out = constant2(false);
-        window.addEventListener("keydown", function(e) {
-          if (e.keyCode === keyCode)
-            out.set(true);
-        });
-        window.addEventListener("keyup", function(e) {
-          if (e.keyCode === keyCode)
-            out.set(false);
-        });
-        return out;
-      };
-    };
-  }
-
-  // output/Signal.DOM/index.js
-  var keyPressed = /* @__PURE__ */ keyPressedP(constant);
-
-  // output/UserInput/index.js
-  var map11 = /* @__PURE__ */ map(functorSignal);
-  var getUserInput = /* @__PURE__ */ map(functorEffect)(/* @__PURE__ */ map11(function(k) {
-    var n = function() {
-      if (k) {
-        return 32;
-      }
-      ;
-      return 0;
-    }();
-    return {
-      key: n
-    };
-  }))(/* @__PURE__ */ keyPressed(32));
-  var runUserInput = function(queue) {
-    var processUserInput = function(n) {
-      return launchAff_(write3(queue)(n));
-    };
-    return function __do2() {
-      var userInputSignal = getUserInput();
-      return runSignal(map11(processUserInput)(userInputSignal))();
-    };
-  };
-
-  // output/WebSocket.WSSignalChan/foreign.js
-  var _wsocket = function(url) {
-    return function() {
-      return new WebSocket(url);
-    };
-  };
-  var _addEventListenerConnectionIsOpen = function(socket) {
-    return function() {
-      socket.addEventListener("open", (event) => {
-        console.log("WebSocket connection opened:", event);
-      });
-    };
-  };
-  var _addEventListenerMessageRecieved = function(socket) {
-    return function(signalFunc) {
-      return function() {
-        socket.addEventListener("message", (event) => {
-          signalFunc(event.data)();
-        });
-      };
-    };
-  };
-  var _addEventListenerConnectionIsClose = function(socket) {
-    return function() {
-      socket.addEventListener("close", (event) => {
-        console.log("WebSocket connection closed:", event);
-      });
-    };
-  };
-
-  // output/WebSocket.WSSignalChan/index.js
-  var onOpen = _addEventListenerConnectionIsOpen;
-  var onMessage = _addEventListenerMessageRecieved;
-  var onClose = _addEventListenerConnectionIsClose;
-  var initWebSocket = _wsocket;
-
-  // output/GameLoop/index.js
-  var bind6 = /* @__PURE__ */ bind(bindAff);
-  var liftEffect4 = /* @__PURE__ */ liftEffect(monadEffectAff);
-  var discard3 = /* @__PURE__ */ discard(discardUnit)(bindAff);
-  var diff2 = /* @__PURE__ */ diff(durationMilliseconds);
-  var when3 = /* @__PURE__ */ when(applicativeAff);
-  var logShow2 = /* @__PURE__ */ logShow(/* @__PURE__ */ showArray(showString));
-  var logShow1 = /* @__PURE__ */ logShow(/* @__PURE__ */ showArray(/* @__PURE__ */ showRecord()()(/* @__PURE__ */ showRecordFieldsConsNil({
-    reflectSymbol: function() {
-      return "key";
-    }
-  })(showInt))));
-  var pure6 = /* @__PURE__ */ pure(applicativeAff);
-  var runWS = function(conf) {
-    return function(queue) {
-      return bind6(liftEffect4(initWebSocket(conf.websocketUrl)))(function(sock) {
-        return discard3(liftEffect4(onOpen(sock)))(function() {
-          return discard3(liftEffect4(onClose(sock)))(function() {
-            return liftEffect4(onMessage(sock)(function(str) {
-              return launchAff_(write3(queue)(str));
-            }));
-          });
-        });
-      });
-    };
-  };
   var gameStep = function(dt) {
     return function(wsMessages) {
       return function(userInputs) {
         return function(model) {
-          var model0 = updateModel(dt)(model);
+          var newActors = map10(moveActor(dt))(model.actors);
           return {
             gameStepNumber: model.gameStepNumber + 1 | 0,
-            screenWidth: model0.screenWidth,
-            screenHeight: model0.screenHeight,
-            sprites: model0.sprites,
-            lastUpdateTime: model0.lastUpdateTime,
-            actors: model0.actors
+            screenWidth: model.screenWidth,
+            screenHeight: model.screenHeight,
+            sprites: model.sprites,
+            lastUpdateTime: model.lastUpdateTime,
+            actors: newActors
           };
         };
       };
     };
   };
-  var mainLoop = function(conf) {
-    return function(queueWS) {
-      return function(queueInput) {
-        return function(model) {
-          return discard3(liftEffect4(render(conf)(model)))(function() {
-            return bind6(liftEffect4(now))(function(currentTime) {
-              var v = diff2(currentTime)(model.lastUpdateTime);
-              return bind6(readAllQueue(queueWS))(function(messages) {
-                return discard3(when3(conf.debug)(liftEffect4(log("MESSAGES:"))))(function() {
-                  return discard3(when3(conf.debug)(liftEffect4(logShow2(messages))))(function() {
-                    return bind6(readAllQueue(queueInput))(function(inputs) {
-                      return discard3(when3(conf.debug)(liftEffect4(log("INPUTS:"))))(function() {
-                        return discard3(when3(conf.debug)(liftEffect4(logShow1(inputs))))(function() {
-                          var newModel0 = gameStep(v)(messages)(inputs)(model);
-                          var newModel = {
-                            lastUpdateTime: currentTime,
-                            actors: newModel0.actors,
-                            gameStepNumber: newModel0.gameStepNumber,
-                            screenHeight: newModel0.screenHeight,
-                            screenWidth: newModel0.screenWidth,
-                            sprites: newModel0.sprites
-                          };
-                          return bind6(liftEffect4(_requestAnimationFrame(launchAff_(mainLoop(conf)(queueWS)(queueInput)(newModel)))))(function() {
-                            return pure6(unit);
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        };
-      };
+
+  // output/InitGame/index.js
+  var actorBall = /* @__PURE__ */ function() {
+    return {
+      name: "jupiter",
+      x: 17,
+      y: 22,
+      vx: 31 / 100,
+      vy: 23 / 100,
+      spriteName: "jupiter"
+    };
+  }();
+  var populateActors = function(m) {
+    return {
+      gameStepNumber: m.gameStepNumber,
+      screenWidth: m.screenWidth,
+      screenHeight: m.screenHeight,
+      sprites: m.sprites,
+      lastUpdateTime: m.lastUpdateTime,
+      actors: [actorBall]
     };
   };
-  var runGame = function(conf) {
-    return bind6($$new4)(function(v) {
-      return discard3(liftEffect4(runUserInput(v)))(function() {
-        return bind6($$new4)(function(v1) {
-          return discard3(runWS(conf)(v1))(function() {
-            return bind6(liftEffect4(initGame))(function(gameModel$prime) {
-              return bind6(loadImages(conf.images))(function(spritesMap) {
-                var gameModel = {
-                  sprites: spritesMap,
-                  actors: gameModel$prime.actors,
-                  gameStepNumber: gameModel$prime.gameStepNumber,
-                  lastUpdateTime: gameModel$prime.lastUpdateTime,
-                  screenHeight: gameModel$prime.screenHeight,
-                  screenWidth: gameModel$prime.screenWidth
-                };
-                return discard3(mainLoop(conf)(v1)(v)(gameModel))(function() {
-                  return pure6(unit);
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+  var initGame = function(conf) {
+    return populateActors(initialModelZeroTime);
   };
 
   // output/Main/index.js
@@ -5703,12 +5109,13 @@
     }
     ;
     if (eitherConf instanceof Right) {
+      var model = initGame(eitherConf.value0);
       return discard4(when4(eitherConf.value0.debug)(liftEffect5(logShow3(eitherConf.value0))))(function() {
-        return runGame(eitherConf.value0);
+        return runGame(eitherConf.value0)(gameStep)(model);
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 21, column 9 - line 25, column 27): " + [eitherConf.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 24, column 9 - line 29, column 42): " + [eitherConf.constructor.name]);
   }));
 
   // <stdin>
