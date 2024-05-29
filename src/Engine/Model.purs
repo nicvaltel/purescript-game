@@ -4,11 +4,9 @@ module Engine.Model
   , initialModel
   , initialModelZeroTime
   , showModel
-  )
-  where
+  ) where
 
 import Prelude
-
 import Data.DateTime.Instant (Instant, instant)
 import Data.Foldable (foldr)
 import Data.Map (Map)
@@ -52,18 +50,19 @@ showModel m =
       ]
 
 initialModel :: Instant -> Model
-initialModel currentTime = initialModelZeroTime{lastUpdateTime = currentTime}
-
+initialModel currentTime = initialModelZeroTime { lastUpdateTime = currentTime }
 
 initialModelZeroTime :: Model
-initialModelZeroTime = unsafePartial $
-  let Just time = instant (Milliseconds 0.0)
-  in 
-    { gameStepNumber: 0
-    -- , gameTime: 0.0
-    , screenWidth: 150.0
-    , screenHeight: 100.0
-    , sprites: Map.empty
-    , lastUpdateTime: time
-    , actors: []
-    }
+initialModelZeroTime =
+  unsafePartial
+    $ let
+        Just time = instant (Milliseconds 0.0)
+      in
+        { gameStepNumber: 0
+        -- , gameTime: 0.0
+        , screenWidth: 150.0
+        , screenHeight: 100.0
+        , sprites: Map.empty
+        , lastUpdateTime: time
+        , actors: []
+        }

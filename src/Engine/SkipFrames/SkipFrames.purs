@@ -53,9 +53,6 @@ runExample = do
   time <- new currentTime
   runSignal (render time <$> processSignal)
 
-
-
-
 -- mainLoop :: Config -> Q.Queue String -> Q.Queue UserInput -> Model -> Aff Unit
 -- mainLoop conf queueWS queueInput model = do
 --   -- liftEffect (render conf model) 
@@ -64,7 +61,6 @@ runExample = do
 --   let (Milliseconds deltaTime) = diff currentTime model.lastUpdateTime
 --       timeToWait = conf.frameRateNumber - deltaTime
 --   when (timeToWait > 0.0) $ delay (Milliseconds timeToWait)
-
 --   messages <- readAllQueue queueWS
 --   when conf.debug $ liftEffect $ log "MESSAGES:"
 --   when conf.debug $ liftEffect $ logShow messages

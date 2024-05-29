@@ -1,12 +1,9 @@
 module Engine.ResourceLoader
-  ( 
-    loadImages
+  ( loadImages
   , parseConfigFile
-  )
-  where
+  ) where
 
 import Prelude
-
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
 import Affjax.Web (driver)
@@ -62,7 +59,7 @@ tryLoadImageAff path = makeAff wrappedFn
       )
     pure mempty
 
-loadImages :: Array {name :: String, path :: String} -> Aff ( Map String CanvasImageSource)
-loadImages files = do 
-  images <- traverse (\{name, path} -> (\img -> Tuple name img) <$> tryLoadImageAff path) files
+loadImages :: Array { name :: String, path :: String } -> Aff (Map String CanvasImageSource)
+loadImages files = do
+  images <- traverse (\{ name, path } -> (\img -> Tuple name img) <$> tryLoadImageAff path) files
   pure $ Map.fromFoldable images

@@ -1,7 +1,6 @@
 module Engine.Render.Render1ViaCanvas (render) where
 
 import Prelude
-
 import Engine.Config (Config)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -21,7 +20,6 @@ import Engine.Utils.Utils (undefined)
 --   , width: toNumber size
 --   , height: toNumber size
 --   }
-
 render :: Config -> Model -> Effect Unit
 render conf m =
   unsafePartial
@@ -40,12 +38,13 @@ render conf m =
         --       , height: canvasDim.height
         --       }
         -- clearRect ctx $ { x: 0.0, y: 0.0, width: 300.0, height: 200.0 }
-
         -- drawImage :: Context2D -> CanvasImageSource -> Number -> Number -> Effect Unit
-        _ <- for m.actors $ \actor -> do
-            let sprite = fromMaybe undefined (Map.lookup actor.spriteName m.sprites)
-            drawImage ctx sprite (floor actor.x) (floor actor.y)
-
+        _ <-
+          for m.actors
+            $ \actor -> do
+                let
+                  sprite = fromMaybe undefined (Map.lookup actor.spriteName m.sprites)
+                drawImage ctx sprite (floor actor.x) (floor actor.y)
         -- let redBall = fromMaybe undefined (Map.lookup "red_ball" m.sprites)
         -- drawImage ctx redBall (toNumber m.gameStepNumber) (toNumber m.gameStepNumber)
         restore ctx

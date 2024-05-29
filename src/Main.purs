@@ -1,7 +1,6 @@
 module Main where
 
 import Prelude
-
 import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
@@ -24,6 +23,7 @@ main =
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
-            let model = initGame config
+            let
+              model = initGame config
             when config.debug $ liftEffect $ logShow config
             runGame config gameStep model
