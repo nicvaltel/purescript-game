@@ -93,8 +93,18 @@
   };
 
   // output/Control.Apply/index.js
+  var identity2 = /* @__PURE__ */ identity(categoryFn);
   var apply = function(dict) {
     return dict.apply;
+  };
+  var applySecond = function(dictApply) {
+    var apply1 = apply(dictApply);
+    var map11 = map(dictApply.Functor0());
+    return function(a) {
+      return function(b) {
+        return apply1(map11($$const(identity2))(a))(b);
+      };
+    };
   };
 
   // output/Control.Applicative/index.js
@@ -404,7 +414,7 @@
   };
 
   // output/Data.Maybe/index.js
-  var identity2 = /* @__PURE__ */ identity(categoryFn);
+  var identity3 = /* @__PURE__ */ identity(categoryFn);
   var Nothing = /* @__PURE__ */ function() {
     function Nothing2() {
     }
@@ -450,7 +460,7 @@
   };
   var map2 = /* @__PURE__ */ map(functorMaybe);
   var fromMaybe = function(a) {
-    return maybe(a)(identity2);
+    return maybe(a)(identity3);
   };
   var applyMaybe = {
     apply: function(v) {
@@ -1879,14 +1889,14 @@
   };
 
   // output/Data.Bifunctor/index.js
-  var identity3 = /* @__PURE__ */ identity(categoryFn);
+  var identity4 = /* @__PURE__ */ identity(categoryFn);
   var bimap = function(dict) {
     return dict.bimap;
   };
   var lmap = function(dictBifunctor) {
     var bimap1 = bimap(dictBifunctor);
     return function(f) {
-      return bimap1(f)(identity3);
+      return bimap1(f)(identity4);
     };
   };
   var bifunctorEither = {
@@ -1935,6 +1945,18 @@
   var alaF2 = /* @__PURE__ */ alaF()()()();
   var foldr = function(dict) {
     return dict.foldr;
+  };
+  var traverse_ = function(dictApplicative) {
+    var applySecond2 = applySecond(dictApplicative.Apply0());
+    var pure7 = pure(dictApplicative);
+    return function(dictFoldable) {
+      var foldr22 = foldr(dictFoldable);
+      return function(f) {
+        return foldr22(function($454) {
+          return applySecond2(f($454));
+        })(pure7(unit));
+      };
+    };
   };
   var foldl = function(dict) {
     return dict.foldl;
@@ -2021,14 +2043,14 @@
   }();
 
   // output/Data.Traversable/index.js
-  var identity4 = /* @__PURE__ */ identity(categoryFn);
+  var identity5 = /* @__PURE__ */ identity(categoryFn);
   var traverse = function(dict) {
     return dict.traverse;
   };
   var sequenceDefault = function(dictTraversable) {
     var traverse22 = traverse(dictTraversable);
     return function(dictApplicative) {
-      return traverse22(dictApplicative)(identity4);
+      return traverse22(dictApplicative)(identity5);
     };
   };
   var traversableArray = {
@@ -2064,7 +2086,7 @@
   var show2 = /* @__PURE__ */ show(showNumber);
   var over2 = /* @__PURE__ */ over()();
   var negate2 = /* @__PURE__ */ negate(ringNumber);
-  var identity5 = /* @__PURE__ */ identity(categoryFn);
+  var identity6 = /* @__PURE__ */ identity(categoryFn);
   var Milliseconds = function(x) {
     return x;
   };
@@ -2095,8 +2117,8 @@
     };
   };
   var durationMilliseconds = {
-    fromDuration: identity5,
-    toDuration: identity5
+    fromDuration: identity6,
+    toDuration: identity6
   };
 
   // output/Partial.Unsafe/foreign.js
@@ -3469,17 +3491,27 @@
       });
     };
   };
+  var _sendMessage = function(socket) {
+    return function(message2) {
+      return function() {
+        socket.send(message2);
+      };
+    };
+  };
 
   // output/Engine.WebSocket.WSSignalChan/index.js
+  var sendMessage = _sendMessage;
   var onOpen = _addEventListenerConnectionIsOpen;
   var onMessage = _addEventListenerMessageRecieved;
   var onClose = _addEventListenerConnectionIsClose;
   var initWebSocket = _wsocket;
 
   // output/Engine.GameLoop/index.js
+  var traverse_2 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableArray);
   var bind4 = /* @__PURE__ */ bind(bindAff);
   var liftEffect4 = /* @__PURE__ */ liftEffect(monadEffectAff);
   var discard3 = /* @__PURE__ */ discard(discardUnit)(bindAff);
+  var pure5 = /* @__PURE__ */ pure(applicativeAff);
   var diff2 = /* @__PURE__ */ diff(durationMilliseconds);
   var when3 = /* @__PURE__ */ when(applicativeAff);
   var logShow2 = /* @__PURE__ */ logShow(/* @__PURE__ */ showArray(showString));
@@ -3488,45 +3520,55 @@
       return "key";
     }
   })(showInt))));
-  var pure5 = /* @__PURE__ */ pure(applicativeAff);
+  var sendWsOutMessages = function(socket) {
+    return function(msgs) {
+      return traverse_2(sendMessage(socket))(msgs);
+    };
+  };
   var runWS = function(conf) {
     return function(queue) {
       return bind4(liftEffect4(initWebSocket(conf.websocketUrl)))(function(sock) {
         return discard3(liftEffect4(onOpen(sock)))(function() {
           return discard3(liftEffect4(onClose(sock)))(function() {
-            return liftEffect4(onMessage(sock)(function(str) {
+            return discard3(liftEffect4(onMessage(sock)(function(str) {
               return launchAff_(write3(queue)(str));
-            }));
+            })))(function() {
+              return pure5(sock);
+            });
           });
         });
       });
     };
   };
   var mainLoop = function(conf) {
-    return function(queueWS) {
-      return function(queueInput) {
-        return function(gameStep2) {
-          return function(model) {
-            return discard3(liftEffect4(render(conf)(model)))(function() {
-              return bind4(liftEffect4(now))(function(currentTime) {
-                var v = diff2(currentTime)(model.lastUpdateTime);
-                return bind4(readAllQueue(queueWS))(function(messages) {
-                  return discard3(when3(conf.debug)(liftEffect4(log("MESSAGES:"))))(function() {
-                    return discard3(when3(conf.debug)(liftEffect4(logShow2(messages))))(function() {
-                      return bind4(readAllQueue(queueInput))(function(inputs) {
-                        return discard3(when3(conf.debug)(liftEffect4(log("INPUTS:"))))(function() {
-                          return discard3(when3(conf.debug)(liftEffect4(logShow1(inputs))))(function() {
-                            var newModel0 = gameStep2(v)(messages)(inputs)(model);
-                            var newModel = {
-                              lastUpdateTime: currentTime,
-                              actors: newModel0.actors,
-                              gameStepNumber: newModel0.gameStepNumber,
-                              screenHeight: newModel0.screenHeight,
-                              screenWidth: newModel0.screenWidth,
-                              sprites: newModel0.sprites
-                            };
-                            return bind4(liftEffect4(_requestAnimationFrame(launchAff_(mainLoop(conf)(queueWS)(queueInput)(gameStep2)(newModel)))))(function() {
-                              return pure5(unit);
+    return function(socket) {
+      return function(queueWS) {
+        return function(queueInput) {
+          return function(gameStep2) {
+            return function(model) {
+              return discard3(liftEffect4(render(conf)(model)))(function() {
+                return bind4(liftEffect4(now))(function(currentTime) {
+                  var v = diff2(currentTime)(model.lastUpdateTime);
+                  return bind4(readAllQueue(queueWS))(function(messages) {
+                    return discard3(when3(conf.debug)(liftEffect4(log("MESSAGES:"))))(function() {
+                      return discard3(when3(conf.debug)(liftEffect4(logShow2(messages))))(function() {
+                        return bind4(readAllQueue(queueInput))(function(inputs) {
+                          return discard3(when3(conf.debug)(liftEffect4(log("INPUTS:"))))(function() {
+                            return discard3(when3(conf.debug)(liftEffect4(logShow1(inputs))))(function() {
+                              var v1 = gameStep2(v)(messages)(inputs)(model);
+                              var newModel = {
+                                lastUpdateTime: currentTime,
+                                actors: v1.value0.actors,
+                                gameStepNumber: v1.value0.gameStepNumber,
+                                screenHeight: v1.value0.screenHeight,
+                                screenWidth: v1.value0.screenWidth,
+                                sprites: v1.value0.sprites
+                              };
+                              return discard3(liftEffect4(sendWsOutMessages(socket)(v1.value1)))(function() {
+                                return bind4(liftEffect4(_requestAnimationFrame(launchAff_(mainLoop(conf)(socket)(queueWS)(queueInput)(gameStep2)(newModel)))))(function() {
+                                  return pure5(unit);
+                                });
+                              });
                             });
                           });
                         });
@@ -3535,7 +3577,7 @@
                   });
                 });
               });
-            });
+            };
           };
         };
       };
@@ -3547,7 +3589,7 @@
         return bind4($$new4)(function(v) {
           return discard3(liftEffect4(runUserInput(v)))(function() {
             return bind4($$new4)(function(v1) {
-              return discard3(runWS(conf)(v1))(function() {
+              return bind4(runWS(conf)(v1))(function(socket) {
                 return bind4(liftEffect4(now))(function(currentTime) {
                   var gameModel = {
                     lastUpdateTime: currentTime,
@@ -3557,7 +3599,7 @@
                     screenWidth: model.screenWidth,
                     sprites: model.sprites
                   };
-                  return discard3(mainLoop(conf)(v1)(v)(gameStep2)(gameModel))(function() {
+                  return discard3(mainLoop(conf)(socket)(v1)(v)(gameStep2)(gameModel))(function() {
                     return pure5(unit);
                   });
                 });
@@ -3773,7 +3815,7 @@
   };
 
   // output/Affjax.ResponseFormat/index.js
-  var identity6 = /* @__PURE__ */ identity(categoryFn);
+  var identity7 = /* @__PURE__ */ identity(categoryFn);
   var $$ArrayBuffer = /* @__PURE__ */ function() {
     function $$ArrayBuffer2(value0) {
       this.value0 = value0;
@@ -3869,10 +3911,10 @@
     return Nothing.value;
   };
   var string = /* @__PURE__ */ function() {
-    return new $$String2(identity6);
+    return new $$String2(identity7);
   }();
   var ignore = /* @__PURE__ */ function() {
-    return new Ignore(identity6);
+    return new Ignore(identity7);
   }();
 
   // output/Affjax.ResponseHeader/index.js
@@ -5034,29 +5076,43 @@
       return function(userInputs) {
         return function(model) {
           var newActors = map10(moveActor(dt))(model.actors);
-          return {
+          return new Tuple({
+            actors: newActors,
             gameStepNumber: model.gameStepNumber + 1 | 0,
-            screenWidth: model.screenWidth,
-            screenHeight: model.screenHeight,
-            sprites: model.sprites,
             lastUpdateTime: model.lastUpdateTime,
-            actors: newActors
-          };
+            screenHeight: model.screenHeight,
+            screenWidth: model.screenWidth,
+            sprites: model.sprites
+          }, wsMessages);
         };
       };
     };
   };
 
   // output/InitGame/index.js
-  var actorBall = /* @__PURE__ */ function() {
-    return {
+  var actorBalls = /* @__PURE__ */ function() {
+    return [{
       name: "jupiter",
       x: 17,
       y: 22,
       vx: 31 / 100,
       vy: 23 / 100,
       spriteName: "jupiter"
-    };
+    }, {
+      name: "billiard",
+      x: 63,
+      y: 57,
+      vx: 17 / 100,
+      vy: 27 / 100,
+      spriteName: "billiard"
+    }, {
+      name: "white",
+      x: 123,
+      y: 17,
+      vx: 20 / 100,
+      vy: 13 / 100,
+      spriteName: "white"
+    }];
   }();
   var populateActors = function(m) {
     return {
@@ -5065,7 +5121,7 @@
       screenHeight: m.screenHeight,
       sprites: m.sprites,
       lastUpdateTime: m.lastUpdateTime,
-      actors: [actorBall]
+      actors: actorBalls
     };
   };
   var initGame = function(conf) {
@@ -5115,7 +5171,7 @@
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 23, column 9 - line 29, column 42): " + [eitherConf.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 22, column 9 - line 28, column 42): " + [eitherConf.constructor.name]);
   }));
 
   // <stdin>

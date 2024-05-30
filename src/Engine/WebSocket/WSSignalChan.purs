@@ -1,11 +1,13 @@
 module Engine.WebSocket.WSSignalChan
-  ( WSocket(..)
+  ( WSMessage
+  , WSocket(..)
   , exampleOfUsageWSSignalChan
   , initWSSignal
   , initWebSocket
   , onClose
   , onMessage
   , onOpen
+  , sendMessage
   ) where
 
 import Prelude
@@ -19,6 +21,9 @@ data WSocket
 type WSURL
   = String
 
+type WSMessage
+  = String
+
 foreign import _wsocket :: String -> Effect WSocket
 
 foreign import _addEventListenerConnectionIsOpen :: WSocket -> Effect Unit
@@ -26,6 +31,11 @@ foreign import _addEventListenerConnectionIsOpen :: WSocket -> Effect Unit
 foreign import _addEventListenerConnectionIsClose :: WSocket -> Effect Unit
 
 foreign import _addEventListenerMessageRecieved :: forall a. WSocket -> (String -> Effect a) -> Effect a
+
+foreign import _sendMessage :: WSocket -> String -> Effect Unit
+
+sendMessage ∷ WSocket → String → Effect Unit
+sendMessage = _sendMessage
 
 initWebSocket :: WSURL -> Effect WSocket
 initWebSocket = _wsocket

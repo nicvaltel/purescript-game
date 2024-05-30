@@ -37,3 +37,13 @@ export const _addEventListenerConnectionIsClose = function (socket) {
         });
     }
 };
+
+
+export const _sendMessage = function(socket) {
+    return function (message) {
+        return function(){
+            // socket.send('Hello, server!');
+            socket.send(message);
+        }
+    }
+};

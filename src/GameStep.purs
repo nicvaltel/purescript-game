@@ -6,6 +6,8 @@ import Prelude
 import Engine.Types (Time)
 import Engine.UserInput (UserInput)
 import Engine.Model (Model, Actor)
+import Engine.WebSocket.WSSignalChan as WS
+import Data.Tuple (Tuple(..))
 
 moveActor :: Time -> Actor -> Actor
 moveActor dt actor =
@@ -19,9 +21,11 @@ moveActor dt actor =
       , y = if newY > 800.0 then newY - 800.0 else newY
       }
 
-gameStep :: Time -> Array String -> Array UserInput -> Model -> Model
+gameStep :: Time -> Array WS.WSMessage -> Array UserInput -> Model -> Tuple Model (Array String)
 gameStep dt wsMessages userInputs model =
   let
     newActors = map (moveActor dt) model.actors
+
+    wsOut = wsMessages --[]
   in
-    model { actors = newActors, gameStepNumber = model.gameStepNumber + 1 }
+    Tuple model { actors = newActors, gameStepNumber = model.gameStepNumber + 1 } wsOut

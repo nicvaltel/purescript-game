@@ -1,6 +1,8 @@
 {
   "frameRateNumber": 10.0,
-  "websocketUrl": "ws://95.140.155.123:1234/ws",
+  "websocketUrlBackup": "ws://95.140.155.123:1234/ws",
+  "websocketUrlRunTestServer": "websocat -s 1234",
+  "websocketUrl": "ws://127.0.0.1:1234/ws",
   "debug": false ,
   "images" : [
     {

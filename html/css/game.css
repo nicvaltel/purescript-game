@@ -19,3 +19,20 @@
     left: -512px;
     background: url(../images/Jupiter@72p.png);
 }
+
+#billiard {
+    position: absolute;
+    width: 73px;
+    height: 73px;
+    left: -512px;
+    background: url(../images/1_Billiard_Ball@72p@72p.png);
+}
+
+
+#white {
+    position: absolute;
+    width: 128px;
+    height: 128px;
+    left: -512px;
+    background: url(../images/white_00.png);
+}
