@@ -18,7 +18,7 @@ import Engine.Config (Config)
 import Engine.Model (Model)
 import Engine.Render.Render (render)
 import Engine.Types (Time)
-import Engine.UserInput (UserInput, runUserInput)
+import Engine.UserInput (class Control, UserInput, runUserInput)
 import Engine.Utils.Utils (readAllQueue)
 import Engine.WebSocket.WSSignalChan as WS
 
@@ -27,10 +27,10 @@ newtype RequestAnimationFrameId
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
 
-type GameStepFunc
-  = Time -> Array WS.WSMessage -> Array UserInput -> Model -> Tuple Model (Array String)
+type GameStepFunc a
+  = Time -> Array WS.WSMessage -> Array (UserInput a) -> Model -> Tuple Model (Array String)
 
-mainLoop :: Config -> WS.WSocket -> Q.Queue String -> Q.Queue UserInput -> GameStepFunc -> Model -> Aff Unit
+mainLoop :: forall a. Show a => Config -> WS.WSocket -> Q.Queue String -> Q.Queue (UserInput a) -> GameStepFunc a -> Model -> Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
   -- _ <- forkAff $ liftEffect (render conf model)
   liftEffect (render conf model)
@@ -64,9 +64,9 @@ runWS conf queue = do
         launchAff_ $ Q.write queue str
   pure sock
 
-runGame :: Config -> GameStepFunc -> Model -> Aff Unit
+runGame :: forall a. Control a => Show a => Config -> GameStepFunc a -> Model -> Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded
-  queueUserInput :: Q.Queue UserInput <- Q.new
+  queueUserInput :: Q.Queue (UserInput a) <- Q.new
   liftEffect $ runUserInput queueUserInput
   queueWS :: Q.Queue String <- Q.new
   socket <- runWS conf queueWS

@@ -3,11 +3,11 @@ module GameStep
   ) where
 
 import Prelude
-import Engine.Types (Time)
-import Engine.UserInput (UserInput)
-import Engine.Model (Model, Actor)
-import Engine.WebSocket.WSSignalChan as WS
 import Data.Tuple (Tuple(..))
+import Engine.Model (Model, Actor)
+import Engine.Types (Time)
+import Engine.UserInput (class Control, UserInput)
+import Engine.WebSocket.WSSignalChan as WS
 
 moveActor :: Time -> Actor -> Actor
 moveActor dt actor =
@@ -21,7 +21,7 @@ moveActor dt actor =
       , y = if newY > 800.0 then newY - 800.0 else newY
       }
 
-gameStep :: Time -> Array WS.WSMessage -> Array UserInput -> Model -> Tuple Model (Array String)
+gameStep :: forall a. Control a => Show a => Time -> Array WS.WSMessage -> Array (UserInput a) -> Model -> Tuple Model (Array String)
 gameStep dt wsMessages userInputs model =
   let
     newActors = map (moveActor dt) model.actors

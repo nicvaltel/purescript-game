@@ -1,12 +1,15 @@
 module Main where
 
 import Prelude
+import Control (ControlKey)
 import Data.Either (Either(..))
 import Effect (Effect)
-import Effect.Aff (launchAff_)
+import Effect.Aff (launchAff_, Aff)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
-import Engine.GameLoop (runGame)
+import Engine.Config (Config)
+import Engine.GameLoop (GameStepFunc, runGame)
+import Engine.Model (Model)
 import Engine.ResourceLoader (parseConfigFile)
 import GameStep (gameStep)
 import InitGame (initGame)
@@ -25,4 +28,6 @@ main =
             let
               model = initGame config
             when config.debug $ liftEffect $ logShow config
-            runGame config gameStep model
+            let
+              rGame = runGame :: Config -> GameStepFunc ControlKey -> Model -> Aff Unit
+            rGame config gameStep model

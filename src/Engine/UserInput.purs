@@ -1,31 +1,66 @@
 module Engine.UserInput
   ( UserInput(..)
+  , class Control
+  , controlKeyMap
+  , inverseControlKeyMap
   , runUserInput
   ) where
 
 import Prelude
+import Concurrent.Queue as Q
+import Data.Array (catMaybes, filter, head, zip)
+import Data.Enum (class Enum, enumFromTo)
+import Data.Maybe (Maybe(..))
+import Data.Traversable (sequence, traverse)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
+import Effect.Aff (launchAff_)
+import Engine.Utils.Utils (undefined)
 import Signal (Signal, runSignal)
 import Signal.DOM (keyPressed)
-import Engine.Utils.Utils (undefined)
-import Concurrent.Queue as Q
-import Effect.Aff (launchAff_)
 
-type UserInput
-  = { key :: Int
+type UserInput a
+  = { keys :: Array a
     }
 
-getUserInput :: Effect (Signal UserInput)
-getUserInput = map (\k -> let n = if k then 32 else 0 in { key: n }) <$> (keyPressed 32)
+class
+  (Bounded a, Enum a) <= Control a where
+  controlKeyMap :: a -> Int
 
-runUserInput :: Q.Queue UserInput -> Effect Unit
+inverseControlKeyMap ∷ forall a. Control a => Int -> Maybe a
+inverseControlKeyMap n = inverseMap controlKeyMap n
+
+inverseMap ∷ forall a k. Bounded a => Enum a => Ord k => (a -> k) -> k -> Maybe a
+inverseMap forwardMap k =
+  head
+    $ filter (\a -> forwardMap a == k)
+    $ enumFromTo (bottom :: a) (top :: a)
+
+getUserInput :: forall a. Control a => Array Int -> Effect (Signal (UserInput a))
+getUserInput keysToListen = do
+  signalKeyboard <- getInputKeyboard keysToListen
+  pure $ (\ks -> { keys: catMaybes (map inverseControlKeyMap ks) }) <$> signalKeyboard
+
+getInputKeyboard ∷ Array Int → Effect (Signal (Array Int))
+getInputKeyboard keysToListen = do
+  keysBoolSeqs <- traverse keyPressed keysToListen
+  let
+    keysBool = sequence keysBoolSeqs
+  let
+    maybeKeys = map (\bools -> map (\(Tuple n b) -> if b then Just n else Nothing) (zip keysToListen bools)) keysBool
+  pure (catMaybes <$> maybeKeys)
+
+runUserInput :: forall a. Control a => Q.Queue (UserInput a) -> Effect Unit
 runUserInput queue = do
-  userInputSignal <- getUserInput
+  userInputSignal <- getUserInput (mkKeysToListen (bottom :: a) (top :: a))
   runSignal (processUserInput <$> userInputSignal)
   where
-  processUserInput :: UserInput -> Effect Unit
+  processUserInput :: UserInput a -> Effect Unit
   processUserInput = \n -> do
     launchAff_ $ Q.write queue n
+
+  mkKeysToListen :: a -> a -> Array Int
+  mkKeysToListen kmin kmax = map controlKeyMap $ enumFromTo kmin kmax
 
 -- type AllInput
 --   = { key :: Int
