@@ -2,85 +2,102 @@ module Engine.UserInput
   ( UserInput(..)
   , class Control
   , controlKeyMap
-  , inverseControlKeyMap
   , runUserInput
   , showUserInput
-  )
-  where
+  ) where
 
 import Prelude
-
 import Concurrent.Queue as Q
-import Data.Array (catMaybes, filter, head, zip)
+import Data.Array (catMaybes, zip)
 import Data.Enum (class Enum, enumFromTo)
+import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
-import Engine.Utils.Utils (undefined)
-import Signal (Signal, runSignal, map3)
-import Signal.DOM (CoordinatePair(..), MouseButton(..), keyPressed, mouseButton, mouseButtonPressed, mousePos)
-import Data.Foldable(intercalate)
+import Engine.Utils.Utils (inverseMap, undefined)
+import Signal (Signal, map3, runSignal)
+import Signal.DOM (CoordinatePair, MouseButton(..), keyPressed, mouseButtonPressed, mousePos)
+import Engine.Utils.Html (getElementCoordinatesById)
 
-type UserInput a
-  = { keys :: Array a,
-      mouseX :: Int,
-      mouseY :: Int,
-      mouseBtns :: Array MouseButton
-    }
-
-showUserInput :: forall a. Show a => UserInput a -> String
-showUserInput {keys, mouseX, mouseY, mouseBtns} = 
-    "[{ " <>
-    "keys: " <> show keys <> ", " <>
-    "mouseX: " <> show mouseX <> ", " <>
-    "mouseY: " <> show mouseY <> ", " <>
-    "mouseBtns: " <> (intercalate ", " $ map showMouseBtn mouseBtns )
-    <> " }]"
-    where
-      showMouseBtn :: MouseButton -> String
-      showMouseBtn MouseLeftButton = "MouseLeftButton"
-      showMouseBtn MouseRightButton = "MouseRightButton"
-      showMouseBtn MouseMiddleButton = "MouseMiddleButton"
-      showMouseBtn MouseIE8MiddleButton = "MouseIE8MiddleButton"
+foreign import _getElementCoord :: String -> Effect CoordinatePair
 
 class
   (Bounded a, Enum a, Show a) <= Control a where
   controlKeyMap :: a -> Int
 
-inverseControlKeyMap ∷ forall a. Control a => Int -> Maybe a
-inverseControlKeyMap n = inverseMap controlKeyMap n
+type UserInput a
+  = { keys :: Array a
+    , mouseX :: Int
+    , mouseY :: Int
+    , mouseRelativePos :: CoordinatePair
+    , mouseBtns :: Array MouseButton
+    }
 
-inverseMap ∷ forall a k. Bounded a => Enum a => Ord k => (a -> k) -> k -> Maybe a
-inverseMap forwardMap k =
-  head
-    $ filter (\a -> forwardMap a == k)
-    $ enumFromTo (bottom :: a) (top :: a)
-
-getUserInput :: forall a. Control a => Array Int -> Effect (Signal (UserInput a))
-getUserInput keysToListen = do
-  signalKeyboard <- getInputKeyboard keysToListen
-  mouseCoord <- mousePos
-  mouseBtns <- getInputMouseBtns
-  pure $ 
-    map3 mkUserInput
-      signalKeyboard 
-      mouseCoord
-      mouseBtns
+showUserInput :: forall a. Show a => UserInput a -> String
+showUserInput { keys, mouseX, mouseY, mouseRelativePos, mouseBtns } =
+  "[{ "
+    <> "keys: "
+    <> show keys
+    <> ", "
+    <> "mouseX: "
+    <> show mouseX
+    <> ", "
+    <> "mouseY: "
+    <> show mouseY
+    <> ", "
+    <> "mouseRelativePos: "
+    <> show mouseRelativePos
+    <> ", "
+    <> "mouseBtns: "
+    <> (intercalate ", " $ map showMouseBtn mouseBtns)
+    <> " }]"
   where
-    mkUserInput ks mpos mbtns = 
-            { 
-              keys: catMaybes (map inverseControlKeyMap ks), 
-              mouseX : mpos.x, 
-              mouseY : mpos.y,
-              mouseBtns : mbtns 
-            }
-  -- pure $ (\ks -> { keys: catMaybes (map inverseControlKeyMap ks), mouseX : 0, mouseY : 0 }) <$> signalKeyboard
+  showMouseBtn :: MouseButton -> String
+  showMouseBtn MouseLeftButton = "MouseLeftButton"
+
+  showMouseBtn MouseRightButton = "MouseRightButton"
+
+  showMouseBtn MouseMiddleButton = "MouseMiddleButton"
+
+  showMouseBtn MouseIE8MiddleButton = "MouseIE8MiddleButton"
+
+-- addEventListenerMouseRelativeMove :: String -> Effect (Signal CoordinatePair)
+-- addEventListenerMouseRelativeMove canvasName = do
+--   _addEventListenerMouseRelativeMove (\event -> pure (constant event)) canvasName
+getUserInput :: forall a. Control a => Array Int -> String -> Effect (Signal (UserInput a))
+getUserInput keysToListen canvasElementId = do
+  signalKeyboard <- getInputKeyboard keysToListen
+  mouseCoordSignal <- mousePos
+  mouseBtnsSignal <- getInputMouseBtns
+  mbCanvasPos <- getElementCoordinatesById canvasElementId
+  let
+    canvasPos = case mbCanvasPos of
+      Just pos -> pos
+      Nothing -> { x: 0, y: 0 }
+  pure
+    $ map3 (mkUserInput canvasPos)
+        signalKeyboard
+        mouseCoordSignal
+        mouseBtnsSignal
+  where
+  mkUserInput :: CoordinatePair -> Array Int -> CoordinatePair -> Array MouseButton -> UserInput a
+  mkUserInput canvasPos ks mpos mbtns =
+    { keys: catMaybes (map inverseControlKeyMap ks)
+    , mouseX: mpos.x
+    , mouseY: mpos.y
+    , mouseRelativePos: { x: mpos.x - canvasPos.x, y: mpos.y - canvasPos.y }
+    , mouseBtns: mbtns
+    }
+
+  inverseControlKeyMap ∷ Control a => Int -> Maybe a
+  inverseControlKeyMap n = inverseMap controlKeyMap n
 
 getInputMouseBtns :: Effect (Signal (Array MouseButton))
 getInputMouseBtns = do
-  let btnsToListen = [MouseLeftButton, MouseRightButton, MouseMiddleButton, MouseIE8MiddleButton]
+  let
+    btnsToListen = [ MouseLeftButton, MouseRightButton, MouseMiddleButton, MouseIE8MiddleButton ]
   btnsBoolSeqs <- traverse mouseButtonPressed btnsToListen
   let
     keysBool = sequence btnsBoolSeqs
@@ -97,9 +114,9 @@ getInputKeyboard keysToListen = do
     maybeKeys = map (\bools -> map (\(Tuple n b) -> if b then Just n else Nothing) (zip keysToListen bools)) keysBool
   pure (catMaybes <$> maybeKeys)
 
-runUserInput :: forall a. Control a => Q.Queue (UserInput a) -> Effect Unit
-runUserInput queue = do
-  userInputSignal <- getUserInput (mkKeysToListen (bottom :: a) (top :: a))
+runUserInput :: forall a. Control a => Q.Queue (UserInput a) -> String -> Effect Unit
+runUserInput queue canvasElementId = do
+  userInputSignal <- getUserInput (mkKeysToListen (bottom :: a) (top :: a)) canvasElementId
   runSignal (processUserInput <$> userInputSignal)
   where
   processUserInput :: UserInput a -> Effect Unit

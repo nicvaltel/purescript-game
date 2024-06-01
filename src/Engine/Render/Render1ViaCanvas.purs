@@ -24,7 +24,7 @@ render :: Config -> Model -> Effect Unit
 render conf m =
   unsafePartial
     $ do
-        when conf.debug $ log (showModel m)
+        when conf.debugModel $ log (showModel m)
         Just canvas <- getCanvasElementById "canvas"
         ctx <- getContext2D canvas
         canvasDim <- getCanvasDimensions canvas

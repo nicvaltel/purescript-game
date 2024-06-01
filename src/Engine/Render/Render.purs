@@ -15,7 +15,7 @@ foreign import _renderObject :: ActorObj -> Effect Unit
 
 render :: Config -> Model -> Effect Unit
 render conf m = do
-  when conf.debug $ log (showModel m)
+  when conf.debugModel $ log (showModel m)
   _ <-
     for m.actors
       $ \actor -> do

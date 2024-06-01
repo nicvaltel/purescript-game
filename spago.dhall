@@ -20,7 +20,7 @@ to generate this file without the comments in this block.
     "maybe", 
     -- "numbers",
     "foldable-traversable",
-    -- "integers",
+    "integers",
     -- "lists",
     -- "psci-support",
     "quickcheck",
@@ -50,6 +50,10 @@ to generate this file without the comments in this block.
     "now",
     "numbers",
     "enums",
+    "debug",
+    "nullable",
+    "web-dom",
+    "web-html"
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

@@ -9,7 +9,11 @@ import Engine.Utils.Utils (mapLeft)
 type Config
   = { frameRateNumber :: Number
     , websocketUrl :: String
-    , debug :: Boolean
+    , canvasElementId :: String
+    , debugConfig :: Boolean
+    , debugModel :: Boolean
+    , debugWebsocket :: Boolean
+    , debugUserInput :: Boolean
     , images :: Array { name :: String, path :: String }
     }
 

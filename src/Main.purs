@@ -27,7 +27,7 @@ main =
           Right config -> do
             let
               model = initGame config
-            when config.debug $ liftEffect $ logShow config
+            when config.debugConfig $ liftEffect $ logShow config
             let
               rGame = runGame :: Config -> GameStepFunc ControlKey -> Model -> Aff Unit
             rGame config gameStep model
