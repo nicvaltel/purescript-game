@@ -4,8 +4,10 @@ module Engine.GameLoop
   ) where
 
 import Prelude
+
 import Concurrent.Queue as Q
 import Data.DateTime.Instant (diff)
+import Data.Foldable (null, intercalate)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
@@ -18,7 +20,7 @@ import Engine.Config (Config)
 import Engine.Model (Model)
 import Engine.Render.Render (render)
 import Engine.Types (Time)
-import Engine.UserInput (class Control, UserInput, runUserInput)
+import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
 import Engine.Utils.Utils (readAllQueue)
 import Engine.WebSocket.WSSignalChan as WS
 
@@ -30,7 +32,7 @@ foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationF
 type GameStepFunc a
   = Time -> Array WS.WSMessage -> Array (UserInput a) -> Model -> Tuple Model (Array String)
 
-mainLoop :: forall a. Show a => Config -> WS.WSocket -> Q.Queue String -> Q.Queue (UserInput a) -> GameStepFunc a -> Model -> Aff Unit
+mainLoop :: forall a. Show a=> Config -> WS.WSocket -> Q.Queue String -> Q.Queue (UserInput a) -> GameStepFunc a -> Model -> Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
   -- _ <- forkAff $ liftEffect (render conf model)
   liftEffect (render conf model)
@@ -41,8 +43,11 @@ mainLoop conf socket queueWS queueInput gameStep model = do
   when conf.debug $ liftEffect $ log "MESSAGES:"
   when conf.debug $ liftEffect $ logShow messages
   inputs <- readAllQueue queueInput
+  when (not $ null inputs) $ liftEffect do
+    log "INPUTS:"
+    log $ intercalate "; " $ map showUserInput inputs
   when conf.debug $ liftEffect $ log "INPUTS:"
-  when conf.debug $ liftEffect $ logShow inputs
+  when conf.debug $ liftEffect $ log $ intercalate "; " $ map showUserInput inputs
   let
     (Tuple newModel' wsOut) = gameStep deltaTime messages inputs model
 
@@ -64,7 +69,7 @@ runWS conf queue = do
         launchAff_ $ Q.write queue str
   pure sock
 
-runGame :: forall a. Control a => Show a => Config -> GameStepFunc a -> Model -> Aff Unit
+runGame :: forall a. Control a => Config -> GameStepFunc a -> Model -> Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded
   queueUserInput :: Q.Queue (UserInput a) <- Q.new
   liftEffect $ runUserInput queueUserInput

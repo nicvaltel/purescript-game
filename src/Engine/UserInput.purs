@@ -4,9 +4,12 @@ module Engine.UserInput
   , controlKeyMap
   , inverseControlKeyMap
   , runUserInput
-  ) where
+  , showUserInput
+  )
+  where
 
 import Prelude
+
 import Concurrent.Queue as Q
 import Data.Array (catMaybes, filter, head, zip)
 import Data.Enum (class Enum, enumFromTo)
@@ -16,15 +19,34 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Engine.Utils.Utils (undefined)
-import Signal (Signal, runSignal)
-import Signal.DOM (keyPressed)
+import Signal (Signal, runSignal, map3)
+import Signal.DOM (CoordinatePair(..), MouseButton(..), keyPressed, mouseButton, mouseButtonPressed, mousePos)
+import Data.Foldable(intercalate)
 
 type UserInput a
-  = { keys :: Array a
+  = { keys :: Array a,
+      mouseX :: Int,
+      mouseY :: Int,
+      mouseBtns :: Array MouseButton
     }
 
+showUserInput :: forall a. Show a => UserInput a -> String
+showUserInput {keys, mouseX, mouseY, mouseBtns} = 
+    "[{ " <>
+    "keys: " <> show keys <> ", " <>
+    "mouseX: " <> show mouseX <> ", " <>
+    "mouseY: " <> show mouseY <> ", " <>
+    "mouseBtns: " <> (intercalate ", " $ map showMouseBtn mouseBtns )
+    <> " }]"
+    where
+      showMouseBtn :: MouseButton -> String
+      showMouseBtn MouseLeftButton = "MouseLeftButton"
+      showMouseBtn MouseRightButton = "MouseRightButton"
+      showMouseBtn MouseMiddleButton = "MouseMiddleButton"
+      showMouseBtn MouseIE8MiddleButton = "MouseIE8MiddleButton"
+
 class
-  (Bounded a, Enum a) <= Control a where
+  (Bounded a, Enum a, Show a) <= Control a where
   controlKeyMap :: a -> Int
 
 inverseControlKeyMap ∷ forall a. Control a => Int -> Maybe a
@@ -39,7 +61,32 @@ inverseMap forwardMap k =
 getUserInput :: forall a. Control a => Array Int -> Effect (Signal (UserInput a))
 getUserInput keysToListen = do
   signalKeyboard <- getInputKeyboard keysToListen
-  pure $ (\ks -> { keys: catMaybes (map inverseControlKeyMap ks) }) <$> signalKeyboard
+  mouseCoord <- mousePos
+  mouseBtns <- getInputMouseBtns
+  pure $ 
+    map3 mkUserInput
+      signalKeyboard 
+      mouseCoord
+      mouseBtns
+  where
+    mkUserInput ks mpos mbtns = 
+            { 
+              keys: catMaybes (map inverseControlKeyMap ks), 
+              mouseX : mpos.x, 
+              mouseY : mpos.y,
+              mouseBtns : mbtns 
+            }
+  -- pure $ (\ks -> { keys: catMaybes (map inverseControlKeyMap ks), mouseX : 0, mouseY : 0 }) <$> signalKeyboard
+
+getInputMouseBtns :: Effect (Signal (Array MouseButton))
+getInputMouseBtns = do
+  let btnsToListen = [MouseLeftButton, MouseRightButton, MouseMiddleButton, MouseIE8MiddleButton]
+  btnsBoolSeqs <- traverse mouseButtonPressed btnsToListen
+  let
+    keysBool = sequence btnsBoolSeqs
+  let
+    maybeBtns = map (\bools -> map (\(Tuple n b) -> if b then Just n else Nothing) (zip btnsToListen bools)) keysBool
+  pure (catMaybes <$> maybeBtns)
 
 getInputKeyboard ∷ Array Int → Effect (Signal (Array Int))
 getInputKeyboard keysToListen = do

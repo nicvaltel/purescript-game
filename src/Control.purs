@@ -1,14 +1,11 @@
 module Control
   ( ControlKey(..)
-  -- , controlKeyMap
-  -- , keysToListen
   ) where
 
 import Prelude
 import Data.Bounded as B
 import Data.Enum as E
 import Data.Maybe (Maybe(..))
-import Engine.UserInput (inverseControlKeyMap)
 import Engine.UserInput as UI
 
 data ControlKey

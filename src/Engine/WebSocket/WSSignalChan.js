@@ -42,8 +42,10 @@ export const _addEventListenerConnectionIsClose = function (socket) {
 export const _sendMessage = function(socket) {
     return function (message) {
         return function(){
-            // socket.send('Hello, server!');
-            socket.send(message);
+            if (socket && socket.readyState == WebSocket.OPEN && socket.readyState !== WebSocket.CLOSED){ // check not null or undefined
+                // socket.send('Hello, server!');
+                socket.send(message);
+            }
         }
     }
 };

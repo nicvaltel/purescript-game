@@ -3,6 +3,7 @@ module GameStep
   ) where
 
 import Prelude
+
 import Data.Tuple (Tuple(..))
 import Engine.Model (Model, Actor)
 import Engine.Types (Time)
@@ -21,11 +22,14 @@ moveActor dt actor =
       , y = if newY > 800.0 then newY - 800.0 else newY
       }
 
-gameStep :: forall a. Control a => Show a => Time -> Array WS.WSMessage -> Array (UserInput a) -> Model -> Tuple Model (Array String)
+gameStep :: forall a. Control a => Time -> Array WS.WSMessage -> Array (UserInput a) -> Model -> Tuple Model (Array String)
 gameStep dt wsMessages userInputs model =
   let
     newActors = map (moveActor dt) model.actors
-
     wsOut = wsMessages --[]
+    -- wsOut = 
+    --   if userInputs /= []
+    --     then [show userInputs] <> wsMessages
+    --     else wsMessages --[]
   in
     Tuple model { actors = newActors, gameStepNumber = model.gameStepNumber + 1 } wsOut
