@@ -1,6 +1,7 @@
 module Main where
 
 import Prelude
+
 import Control (ControlKey)
 import Data.Either (Either(..))
 import Effect (Effect)
@@ -12,7 +13,7 @@ import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.Model (Model)
 import Engine.ResourceLoader (parseConfigFile)
 import GameStep (gameStep)
-import InitGame (initGame)
+import InitGame (GameModel, GameState, ActorState, initGame)
 
 configFilePath ∷ String
 configFilePath = "config.json"
@@ -29,5 +30,5 @@ main =
               model = initGame config
             when config.debugConfig $ liftEffect $ logShow config
             let
-              rGame = runGame :: Config -> GameStepFunc ControlKey -> Model -> Aff Unit
+              rGame = runGame :: Config -> GameStepFunc ControlKey GameState ActorState -> GameModel -> Aff Unit
             rGame config gameStep model

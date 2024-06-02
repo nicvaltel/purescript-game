@@ -20,7 +20,7 @@ import Engine.Utils.Utils (undefined)
 --   , width: toNumber size
 --   , height: toNumber size
 --   }
-render :: Config -> Model -> Effect Unit
+render :: forall gm ac. Show gm => Show ac => Config -> Model gm ac -> Effect Unit
 render conf m =
   unsafePartial
     $ do
@@ -43,7 +43,7 @@ render conf m =
           for m.actors
             $ \actor -> do
                 let
-                  sprite = fromMaybe undefined (Map.lookup actor.spriteName m.sprites)
+                  sprite = fromMaybe undefined (Map.lookup actor.nameId m.sprites)
                 drawImage ctx sprite (floor actor.x) (floor actor.y)
         -- let redBall = fromMaybe undefined (Map.lookup "red_ball" m.sprites)
         -- drawImage ctx redBall (toNumber m.gameStepNumber) (toNumber m.gameStepNumber)

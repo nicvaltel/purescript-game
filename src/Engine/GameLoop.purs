@@ -30,10 +30,10 @@ newtype RequestAnimationFrameId
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
 
-type GameStepFunc a
-  = Time -> Array WS.WSMessage -> Array (UserInput a) -> Model -> Tuple Model (Array String)
+type GameStepFunc ui gm ac
+  = Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac -> Tuple (Model gm ac) (Array String)
 
-mainLoop :: forall a. Show a=> Config -> WS.WSocket -> Q.Queue String -> Q.Queue (UserInput a) -> GameStepFunc a -> Model -> Aff Unit
+mainLoop :: forall ui gm ac. Show ui => Show gm => Show ac => Config -> WS.WSocket -> Q.Queue String -> Q.Queue (UserInput ui) -> GameStepFunc ui gm ac -> Model gm ac -> Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
   -- _ <- forkAff $ liftEffect (render conf model)
   liftEffect (render conf model)
@@ -71,9 +71,9 @@ runWS conf queue = do
         launchAff_ $ Q.write queue str
   pure sock
 
-runGame :: forall a. Control a => Config -> GameStepFunc a -> Model -> Aff Unit
+runGame :: forall ui gm ac. Control ui => Show gm => Show ac => Config -> GameStepFunc ui gm ac -> Model gm ac -> Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded
-  queueUserInput :: Q.Queue (UserInput a) <- Q.new
+  queueUserInput :: Q.Queue (UserInput ui) <- Q.new
   liftEffect $ runUserInput queueUserInput conf.canvasElementId
   queueWS :: Q.Queue String <- Q.new
   socket <- runWS conf queueWS

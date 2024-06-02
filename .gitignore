@@ -10,4 +10,4 @@ _back/
 /.psa*
 /.spago
 /tmp_to_delete
-/html/scripts
+/html/scripts/*

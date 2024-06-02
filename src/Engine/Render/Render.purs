@@ -13,7 +13,7 @@ type ActorObj
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
-render :: Config -> Model -> Effect Unit
+render :: forall gm ac. Show gm => Show ac => Config -> Model gm ac -> Effect Unit
 render conf m = do
   when conf.debugModel $ log (showModel m)
   _ <-
@@ -21,7 +21,7 @@ render conf m = do
       $ \actor -> do
           let
             actorObj =
-              { id: actor.name
+              { id: actor.nameId
               , css: ""
               , baseX: 0.0
               , baseY: 0.0

@@ -1,10 +1,10 @@
 #canvas {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 1300px;
-    height: 800px;
-    background: url(../images/clouds.png);
+    top: 100px;
+    left: 600px;
+    width: 450px;
+    height: 450px;
+    background: url(../images/gomoku/board.jpg);
     background-size: cover;
     overflow: hidden;
     -moz-transform-origin: 0 0;
@@ -12,27 +12,42 @@
     transform-origin: 0 0;
 }
 
-#jupiter {
+#black_stone {
     position: absolute;
-    width: 72px;
-    height: 73px;
-    left: -512px;
-    background: url(../images/Jupiter@72p.png);
-}
-
-#billiard {
-    position: absolute;
-    width: 73px;
-    height: 73px;
-    left: -512px;
-    background: url(../images/1_Billiard_Ball@72p@72p.png);
-}
-
-
-#white {
-    position: absolute;
+    scale: 25%;
     width: 128px;
     height: 128px;
     left: -512px;
-    background: url(../images/white_00.png);
+    transform-origin: top left; /* Scale from the top left corner */
+    background: url(../images/gomoku/black_stone.png);
+}
+
+#white_stone {
+    position: absolute;
+    scale: 25%;
+    width: 128px;
+    height: 128px;
+    left: -512px;
+    transform-origin: top left; /* Scale from the top left corner */
+    background: url(../images/gomoku/white_stone.png);
+}
+
+#black_hole {
+    position: absolute;
+    scale: 25%;
+    width: 128px;
+    height: 128px;
+    left: -512px;
+    transform-origin: top left; /* Scale from the top left corner */
+    background: url(../images/gomoku/black_hole.png);
+}
+
+#white_hole {
+    position: absolute;
+    scale: 25%;
+    width: 128px;
+    height: 128px;
+    left: -512px;
+    transform-origin: top left; /* Scale from the top left corner */
+    background: url(../images/gomoku/white_hole.png);
 }

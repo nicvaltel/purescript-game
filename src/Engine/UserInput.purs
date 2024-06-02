@@ -24,18 +24,18 @@ import Engine.Utils.Html (getElementCoordinatesById)
 foreign import _getElementCoord :: String -> Effect CoordinatePair
 
 class
-  (Bounded a, Enum a, Show a) <= Control a where
-  controlKeyMap :: a -> Int
+  (Bounded ui, Enum ui, Show ui) <= Control ui where
+  controlKeyMap :: ui -> Int
 
-type UserInput a
-  = { keys :: Array a
+type UserInput ui
+  = { keys :: Array ui
     , mouseX :: Int
     , mouseY :: Int
     , mouseRelativePos :: CoordinatePair
     , mouseBtns :: Array MouseButton
     }
 
-showUserInput :: forall a. Show a => UserInput a -> String
+showUserInput :: forall ui. Show ui => UserInput ui -> String
 showUserInput { keys, mouseX, mouseY, mouseRelativePos, mouseBtns } =
   "[{ "
     <> "keys: "
@@ -66,7 +66,7 @@ showUserInput { keys, mouseX, mouseY, mouseRelativePos, mouseBtns } =
 -- addEventListenerMouseRelativeMove :: String -> Effect (Signal CoordinatePair)
 -- addEventListenerMouseRelativeMove canvasName = do
 --   _addEventListenerMouseRelativeMove (\event -> pure (constant event)) canvasName
-getUserInput :: forall a. Control a => Array Int -> String -> Effect (Signal (UserInput a))
+getUserInput :: forall ui. Control ui => Array Int -> String -> Effect (Signal (UserInput ui))
 getUserInput keysToListen canvasElementId = do
   signalKeyboard <- getInputKeyboard keysToListen
   mouseCoordSignal <- mousePos
@@ -82,7 +82,7 @@ getUserInput keysToListen canvasElementId = do
         mouseCoordSignal
         mouseBtnsSignal
   where
-  mkUserInput :: CoordinatePair -> Array Int -> CoordinatePair -> Array MouseButton -> UserInput a
+  mkUserInput :: CoordinatePair -> Array Int -> CoordinatePair -> Array MouseButton -> UserInput ui
   mkUserInput canvasPos ks mpos mbtns =
     { keys: catMaybes (map inverseControlKeyMap ks)
     , mouseX: mpos.x
@@ -91,7 +91,7 @@ getUserInput keysToListen canvasElementId = do
     , mouseBtns: mbtns
     }
 
-  inverseControlKeyMap ∷ Control a => Int -> Maybe a
+  inverseControlKeyMap ∷ Control ui => Int -> Maybe ui
   inverseControlKeyMap n = inverseMap controlKeyMap n
 
 getInputMouseBtns :: Effect (Signal (Array MouseButton))
@@ -114,16 +114,16 @@ getInputKeyboard keysToListen = do
     maybeKeys = map (\bools -> map (\(Tuple n b) -> if b then Just n else Nothing) (zip keysToListen bools)) keysBool
   pure (catMaybes <$> maybeKeys)
 
-runUserInput :: forall a. Control a => Q.Queue (UserInput a) -> String -> Effect Unit
+runUserInput :: forall ui. Control ui => Q.Queue (UserInput ui) -> String -> Effect Unit
 runUserInput queue canvasElementId = do
-  userInputSignal <- getUserInput (mkKeysToListen (bottom :: a) (top :: a)) canvasElementId
+  userInputSignal <- getUserInput (mkKeysToListen (bottom :: ui) (top :: ui)) canvasElementId
   runSignal (processUserInput <$> userInputSignal)
   where
-  processUserInput :: UserInput a -> Effect Unit
+  processUserInput :: UserInput ui -> Effect Unit
   processUserInput = \n -> do
     launchAff_ $ Q.write queue n
 
-  mkKeysToListen :: a -> a -> Array Int
+  mkKeysToListen :: ui -> ui -> Array Int
   mkKeysToListen kmin kmax = map controlKeyMap $ enumFromTo kmin kmax
 
 -- type AllInput

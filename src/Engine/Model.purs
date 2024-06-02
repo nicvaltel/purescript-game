@@ -19,26 +19,24 @@ import Effect.Now (now)
 import Graphics.Canvas (CanvasImageSource)
 import Partial.Unsafe (unsafePartial)
 
-type Actor
-  = { name :: String
+type Actor ac
+  = { nameId :: String
     , x :: Number
     , y :: Number
-    , vx :: Number
-    , vy :: Number
-    , spriteName :: String
+    , state :: ac
     }
 
-type Model
+type Model gm ac
   = { gameStepNumber :: Int
-    -- , gameTime :: Time
     , screenWidth :: Number
     , screenHeight :: Number
     , sprites :: Map String CanvasImageSource
     , lastUpdateTime :: Instant
-    , actors :: Array Actor
+    , actors :: Array (Actor ac)
+    , gameState :: gm
     }
 
-showModel :: Model -> String
+showModel :: forall gm ac. Show gm => Show ac => Model gm ac -> String
 showModel m =
   foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
     $ [ "gameStepNumber " <> show m.gameStepNumber
@@ -47,13 +45,14 @@ showModel m =
       , "screenHeight " <> show m.screenHeight
       , "lastUpdateTime " <> show m.lastUpdateTime
       , "actors " <> show m.actors
+      , "gameState" <> show (m.gameState)
       ]
 
-initialModel :: Instant -> Model
-initialModel currentTime = initialModelZeroTime { lastUpdateTime = currentTime }
+initialModel :: forall gm ac. Instant -> gm -> Model gm ac
+initialModel currentTime gameState = (initialModelZeroTime gameState) { lastUpdateTime = currentTime }
 
-initialModelZeroTime :: Model
-initialModelZeroTime =
+initialModelZeroTime :: forall gm ac. gm -> Model gm ac
+initialModelZeroTime gameState =
   unsafePartial
     $ let
         Just time = instant (Milliseconds 0.0)
@@ -65,4 +64,5 @@ initialModelZeroTime =
         , sprites: Map.empty
         , lastUpdateTime: time
         , actors: []
+        , gameState
         }
