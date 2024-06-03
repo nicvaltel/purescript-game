@@ -5,9 +5,9 @@
   "websocketUrl": "ws://127.0.0.1:1234/ws",
   "canvasElementId": "canvas",
   "debugConfig": true,
-  "debugModel": true,
+  "debugModel": false,
   "debugWebsocket": true,
-  "debugUserInput": true,
+  "debugUserInput": false,
   "images" : [
     {
       "name": "red_ball1",
@@ -21,6 +21,13 @@
       "name": "red_ball",
       "path": "images/white_00.png"
     }
-    ]
+    ],
+  "configState" : {
+    "gridNSize": 15,
+    "boardPixelSize": 450,
+    "boardBorderPixelSize": 19,
+    "stoneSpriteSize": 128,
+    "stoneScale": 0.25  
+  }
 }
 

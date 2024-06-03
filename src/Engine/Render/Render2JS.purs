@@ -20,7 +20,7 @@ foreign import _getElementById :: String -> Effect Img
 
 foreign import _setElementById :: String -> String -> Effect Unit
 
-render :: forall gm ac. Show gm => Show ac => Config -> Model gm ac -> Effect Unit
+render :: forall gm ac ui cfg. Show gm => Show ac => Config cfg -> Model gm ac ui -> Effect Unit
 render conf m =
   unsafePartial
     $ do

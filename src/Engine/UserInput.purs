@@ -2,9 +2,11 @@ module Engine.UserInput
   ( UserInput(..)
   , class Control
   , controlKeyMap
+  , emptyUserInput
   , runUserInput
   , showUserInput
-  ) where
+  )
+  where
 
 import Prelude
 import Concurrent.Queue as Q
@@ -62,6 +64,15 @@ showUserInput { keys, mouseX, mouseY, mouseRelativePos, mouseBtns } =
   showMouseBtn MouseMiddleButton = "MouseMiddleButton"
 
   showMouseBtn MouseIE8MiddleButton = "MouseIE8MiddleButton"
+
+emptyUserInput :: forall ui. UserInput ui
+emptyUserInput = 
+    { keys : []
+    , mouseX : 0
+    , mouseY : 0
+    , mouseRelativePos : {x:0, y: 0}
+    , mouseBtns : []
+    }
 
 -- addEventListenerMouseRelativeMove :: String -> Effect (Signal CoordinatePair)
 -- addEventListenerMouseRelativeMove canvasName = do

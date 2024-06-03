@@ -8,12 +8,11 @@ import Effect (Effect)
 import Effect.Aff (launchAff_, Aff)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
-import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
-import Engine.Model (Model)
 import Engine.ResourceLoader (parseConfigFile)
+import GameModel (ActorState, GameConfig, GameModel, GameState, ConfigState)
 import GameStep (gameStep)
-import InitGame (GameModel, GameState, ActorState, initGame)
+import InitGame (initGame)
 
 configFilePath ∷ String
 configFilePath = "config.json"
@@ -30,5 +29,5 @@ main =
               model = initGame config
             when config.debugConfig $ liftEffect $ logShow config
             let
-              rGame = runGame :: Config -> GameStepFunc ControlKey GameState ActorState -> GameModel -> Aff Unit
+              rGame = runGame :: GameConfig -> GameStepFunc ControlKey GameState ActorState ConfigState -> GameModel -> Aff Unit
             rGame config gameStep model

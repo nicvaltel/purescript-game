@@ -21,6 +21,7 @@ import Effect.Exception (Error, error)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
 import Data.Tuple (Tuple(..))
 import Engine.Types
+import Data.Argonaut.Decode.Class (class DecodeJsonField)
 
 fileLoader :: FilePath -> Aff (Maybe String)
 fileLoader resource = do
@@ -37,7 +38,7 @@ fileLoader resource = do
         }
     )
 
-parseConfigFile :: FilePath -> Aff (Either String Config)
+parseConfigFile :: forall cfg. DecodeJsonField cfg => FilePath -> Aff (Either String (Config cfg))
 parseConfigFile configFilePath = do
   mbConf <- fileLoader configFilePath
   case mbConf of

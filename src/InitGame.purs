@@ -1,23 +1,12 @@
 module InitGame
-  ( ActorState
-  , GameActor
-  , GameModel
-  , GameState
-  , initGame
+  ( initGame
   )
   where
 
 import Prelude
-import Engine.Config (Config)
-import Engine.Model (Actor, Model, initialModelZeroTime)
 
-type GameState = Int
-type ActorState = {
-  vx :: Number,
-  vy :: Number
-}
-type GameModel = Model GameState ActorState
-type GameActor = Actor ActorState
+import Engine.Model (initialModelZeroTime)
+import GameModel (GameActor, GameConfig, GameModel, GameState)
 
 actorBalls :: Array GameActor
 actorBalls =
@@ -50,8 +39,15 @@ actorBalls =
 populateActors :: GameModel -> GameModel
 populateActors m = m { actors = actorBalls }
 
-initGame :: Config -> GameModel
-initGame conf = populateActors $ initialModelZeroTime 0
+initialGameState :: GameState
+initialGameState = {
+  gridSize : 0
+}
+
+initGame :: GameConfig -> GameModel
+initGame conf = populateActors $ initialModelZeroTime initialGameState
+
+
 
 -- initGame :: Effect Model
 -- initGame = do

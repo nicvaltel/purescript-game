@@ -20,7 +20,7 @@ import Engine.Utils.Utils (undefined)
 --   , width: toNumber size
 --   , height: toNumber size
 --   }
-render :: forall gm ac. Show gm => Show ac => Config -> Model gm ac -> Effect Unit
+render :: forall gm ac ui cfg. Show gm => Show ac => Config cfg -> Model gm ac ui -> Effect Unit
 render conf m =
   unsafePartial
     $ do

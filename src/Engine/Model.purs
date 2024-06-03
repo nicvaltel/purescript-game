@@ -7,6 +7,7 @@ module Engine.Model
   ) where
 
 import Prelude
+
 import Data.DateTime.Instant (Instant, instant)
 import Data.Foldable (foldr)
 import Data.Map (Map)
@@ -16,6 +17,7 @@ import Data.Time (Millisecond)
 import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Now (now)
+import Engine.UserInput (UserInput, emptyUserInput)
 import Graphics.Canvas (CanvasImageSource)
 import Partial.Unsafe (unsafePartial)
 
@@ -26,7 +28,7 @@ type Actor ac
     , state :: ac
     }
 
-type Model gm ac
+type Model gm ac ui
   = { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
@@ -34,9 +36,10 @@ type Model gm ac
     , lastUpdateTime :: Instant
     , actors :: Array (Actor ac)
     , gameState :: gm
+    , prevUserInput :: UserInput ui
     }
 
-showModel :: forall gm ac. Show gm => Show ac => Model gm ac -> String
+showModel :: forall gm ac ui. Show gm => Show ac => Model gm ac ui -> String
 showModel m =
   foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
     $ [ "gameStepNumber " <> show m.gameStepNumber
@@ -48,10 +51,10 @@ showModel m =
       , "gameState" <> show (m.gameState)
       ]
 
-initialModel :: forall gm ac. Instant -> gm -> Model gm ac
+initialModel :: forall gm ac ui. Instant -> gm -> Model gm ac ui
 initialModel currentTime gameState = (initialModelZeroTime gameState) { lastUpdateTime = currentTime }
 
-initialModelZeroTime :: forall gm ac. gm -> Model gm ac
+initialModelZeroTime :: forall gm ac ui. gm -> Model gm ac ui
 initialModelZeroTime gameState =
   unsafePartial
     $ let
@@ -65,4 +68,5 @@ initialModelZeroTime gameState =
         , lastUpdateTime: time
         , actors: []
         , gameState
+        , prevUserInput : emptyUserInput
         }
