@@ -30,10 +30,12 @@ instance showMaybeHTMLElem :: Show MaybeHTMLElem where
       Nothing -> "Nothing"
       Just _ -> "Just HtmlElement"
 
+
 type Actor ac
   = { nameId :: String
     , x :: Number
     , y :: Number
+    , z :: Int
     , htmlElement :: MaybeHTMLElem
     , state :: ac
     }
@@ -53,7 +55,6 @@ showModel :: forall gm ac ui. Show gm => Show ac => Model gm ac ui -> String
 showModel m =
   foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
     $ [ "gameStepNumber " <> show m.gameStepNumber
-      -- , "gameTime " <> show m.gameTime
       , "screenWidth " <> show m.screenWidth
       , "screenHeight " <> show m.screenHeight
       , "lastUpdateTime " <> show m.lastUpdateTime

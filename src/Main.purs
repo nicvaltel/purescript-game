@@ -12,10 +12,15 @@ import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.ResourceLoader (parseConfigFile)
 import GameModel (ActorState, GameConfig, GameModel, GameState, ConfigState)
 import GameStep (gameStep)
-import InitGame (initGame)
+import Engine.InitGame (initGame)
 
 configFilePath ∷ String
 configFilePath = "config.json"
+
+initialGameState :: GameState
+initialGameState =
+  { gridSize: 0
+  }
 
 main :: Effect Unit
 main =
@@ -25,7 +30,7 @@ main =
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
-            model <- liftEffect $ initGame config
+            model <- liftEffect $ initGame config initialGameState
             when config.debugConfig $ liftEffect $ logShow config
             let
               rGame = runGame :: GameConfig -> GameStepFunc ControlKey GameState ActorState ConfigState -> GameModel -> Aff Unit
