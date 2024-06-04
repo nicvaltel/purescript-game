@@ -1,10 +1,12 @@
 module Engine.Model
   ( Actor
+  , MaybeHTMLElem(..)
   , Model(..)
   , initialModel
   , initialModelZeroTime
   , showModel
-  ) where
+  )
+  where
 
 import Prelude
 
@@ -20,16 +22,27 @@ import Effect.Now (now)
 import Engine.UserInput (UserInput, emptyUserInput)
 import Graphics.Canvas (CanvasImageSource)
 import Partial.Unsafe (unsafePartial)
+import Web.HTML (HTMLElement)
+
+
+newtype MaybeHTMLElem = MaybeHTMLElem {unMaybeHtmlElem :: Maybe HTMLElement}
+
+instance showMaybeHTMLElem :: Show MaybeHTMLElem where
+  show (MaybeHTMLElem mbElem) = case mbElem.unMaybeHtmlElem of
+      Nothing -> "Nothing"
+      Just _ -> "Just HtmlElement"
 
 type Actor ac
   = { nameId :: String
     , x :: Number
     , y :: Number
+    , htmlElement :: MaybeHTMLElem
     , state :: ac
     }
 
-type Model gm ac ui
-  = { gameStepNumber :: Int
+
+type Model gm ac ui =
+    { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
     , sprites :: Map String CanvasImageSource

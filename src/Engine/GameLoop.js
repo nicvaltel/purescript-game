@@ -1,3 +1,9 @@
+export const _getHtmlElenentById = function (name) {
+  return function () {
+    return document.getElementById(name);
+  }
+}
+
 export function _requestAnimationFrame(fn) {
   // return function(window) {
     return function() {

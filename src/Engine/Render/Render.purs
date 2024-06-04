@@ -1,15 +1,18 @@
 module Engine.Render.Render (render) where
 
 import Prelude
-import Engine.Config (Config)
+
+import Data.Maybe (Maybe(..))
 import Data.Number (floor)
 import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
-import Engine.Model (Model, showModel)
+import Engine.Config (Config)
+import Engine.Model (MaybeHTMLElem(..), Model, showModel)
+import Web.HTML (HTMLElement)
 
 type ActorObj
-  = { id :: String, css :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number }
+  = { elem :: HTMLElement, css :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number }
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
@@ -19,14 +22,18 @@ render conf m = do
   _ <-
     for m.actors
       $ \actor -> do
-          let
-            actorObj =
-              { id: actor.nameId
-              , css: ""
-              , baseX: 0.0
-              , baseY: 0.0
-              , x: floor $ actor.x
-              , y: floor $ actor.y
-              }
-          _renderObject actorObj
+          let (MaybeHTMLElem mbElem) = actor.htmlElement
+          case mbElem.unMaybeHtmlElem of
+            Nothing -> pure unit
+            Just el ->
+              let
+                actorObj =
+                  { elem: el
+                  , css: ""
+                  , baseX: 0.0
+                  , baseY: 0.0
+                  , x: floor $ actor.x
+                  , y: floor $ actor.y
+                  }
+              in _renderObject actorObj
   pure unit

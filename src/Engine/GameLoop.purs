@@ -9,7 +9,10 @@ import Concurrent.Queue as Q
 import Data.Array (head)
 import Data.DateTime.Instant (diff)
 import Data.Foldable (null, intercalate)
+import Data.Maybe (Maybe(..))
+import Data.Nullable (Nullable, toMaybe)
 import Data.Time.Duration (Milliseconds(..))
+import Data.Traversable (traverse)
 import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
@@ -18,18 +21,20 @@ import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Now (now)
 import Engine.Config (Config)
-import Engine.Model (Model)
+import Engine.Model (Actor, MaybeHTMLElem(..), Model)
 import Engine.Render.Render (render)
 import Engine.Types (Time)
 import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
 import Engine.Utils.Utils (readAllQueue)
 import Engine.WebSocket.WSSignalChan as WS
+import Web.HTML (HTMLElement)
+
 
 newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
-
+foreign import _getHtmlElenentById :: String -> Effect (Nullable HTMLElement)
 type GameStepFunc ui gm ac cfg
   = Config cfg -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
 
@@ -78,6 +83,13 @@ runWS conf queue = do
         launchAff_ $ Q.write queue str
   pure sock
 
+getActorHtmlElements :: forall ac. Actor ac -> Effect (Actor ac)
+getActorHtmlElements actor = do 
+  foreignElem <- _getHtmlElenentById actor.nameId
+  case toMaybe foreignElem of
+   Nothing -> pure actor
+   Just elem -> pure actor{htmlElement = MaybeHTMLElem {unMaybeHtmlElem : Just elem}}
+
 runGame :: forall ui gm ac cfg. Control ui => Show gm => Show ac => 
   Config cfg-> 
   GameStepFunc ui gm ac cfg -> 
@@ -89,7 +101,8 @@ runGame conf gameStep model = do --onDOMContentLoaded
   queueWS :: Q.Queue String <- Q.new
   socket <- runWS conf queueWS
   currentTime <- liftEffect now
+  actorsWithHtmlElems <- liftEffect $ traverse getActorHtmlElements model.actors
   let
-    gameModel = model { lastUpdateTime = currentTime }
+    gameModel = model { lastUpdateTime = currentTime, actors = actorsWithHtmlElems }
   mainLoop conf socket queueWS queueUserInput gameStep gameModel
   pure unit

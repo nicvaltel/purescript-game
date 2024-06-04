@@ -5,7 +5,8 @@ module InitGame
 
 import Prelude
 
-import Engine.Model (initialModelZeroTime)
+import Data.Maybe (Maybe(..))
+import Engine.Model (MaybeHTMLElem(..), initialModelZeroTime)
 import GameModel (GameActor, GameConfig, GameModel, GameState)
 
 actorBalls :: Array GameActor
@@ -13,6 +14,7 @@ actorBalls =
   [ { nameId: "black_stone"
     , x: 17.0
     , y: 22.0
+    , htmlElement : MaybeHTMLElem {unMaybeHtmlElem : Nothing}
     , state : {
         vx: 31.0 / 100.0
       , vy: 23.0 / 100.0
@@ -21,6 +23,7 @@ actorBalls =
     { nameId: "white_stone"
     , x: 63.0
     , y: 57.0
+    , htmlElement : MaybeHTMLElem {unMaybeHtmlElem : Nothing}
     , state : {
         vx: 18.0 / 100.0
       , vy: 27.0 / 100.0
@@ -29,6 +32,7 @@ actorBalls =
     { nameId: "black_hole"
     , x: 0.0
     , y: 0.0
+    , htmlElement : MaybeHTMLElem {unMaybeHtmlElem : Nothing}
     , state : {
         vx: 0.0 / 100.0
       , vy: 0.0 / 100.0
