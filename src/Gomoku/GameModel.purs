@@ -1,4 +1,4 @@
-module GameModel
+module Gomoku.GameModel
   ( ActorState
   , ConfigState
   , GameActor
@@ -11,7 +11,7 @@ module GameModel
 import Prelude
 import Engine.Config (Config)
 import Engine.Model (Actor, Model)
-import Control(ControlKey)
+import Gomoku.Control(ControlKey)
 
 type GameState = {
   gridSize :: Int

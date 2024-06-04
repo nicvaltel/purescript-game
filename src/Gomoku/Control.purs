@@ -1,4 +1,4 @@
-module Control
+module Gomoku.Control
   ( ControlKey(..)
   ) where
 

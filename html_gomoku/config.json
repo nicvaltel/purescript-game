@@ -1,0 +1,60 @@
+{
+  "frameRateNumber": 10.0,
+  "websocketUrlBackup": "ws://95.140.155.123:1234/ws",
+  "websocketUrlRunTestServer": "websocat -s 1234",
+  "websocketUrl": "ws://127.0.0.1:1234/ws",
+  "canvasElementId": "canvas",
+  "debugConfig": false,
+  "debugModel": true,
+  "debugWebsocket": false,
+  "debugUserInput": false,
+  "actors" : [
+    {
+      "nameId": "black_stone",
+      "x": 17.0,
+      "y": 22.0,
+      "z": 1,
+      "state": {
+        "vx": 0.11,
+        "vy": 0.13
+      }
+    },
+    {
+      "nameId": "white_stone",
+      "x": 63.0,
+      "y": 57.0,
+      "z": 1,
+      "state": {
+        "vx": 0.08,
+        "vy": 0.07
+      }
+    },
+    {
+      "nameId": "black_hole",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 10,
+      "state": {
+        "vx": 0.0,
+        "vy": 0.0
+      }
+    },
+    {
+      "nameId": "white_hole",
+      "x": 100.0,
+      "y": 100.0,
+      "z": 5,
+      "state": {
+        "vx": 0.010,
+        "vy": 0.010
+      }
+    }
+    ],
+  "configState" : {
+    "gridNSize": 15,
+    "boardPixelSize": 450,
+    "boardBorderPixelSize": 19,
+    "stoneSpriteSize": 128,
+    "stoneScale": 0.25  
+  }
+}

@@ -1,4 +1,4 @@
-module GameStep
+module Gomoku.GameStep
   ( gameStep
   , gridCoords
   )
@@ -6,7 +6,7 @@ module GameStep
 
 import Prelude
 
-import Control (ControlKey)
+import Gomoku.Control (ControlKey)
 import Data.Array (filter, head, (:), range, unsafeIndex)
 import Data.Int (round, toNumber)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -15,7 +15,7 @@ import Engine.Types (Time)
 import Engine.UserInput (UserInput)
 import Engine.Utils.Utils (undefined)
 import Engine.WebSocket.WSSignalChan as WS
-import GameModel (ConfigState, GameActor, GameModel, GameConfig)
+import Gomoku.GameModel (ConfigState, GameActor, GameModel, GameConfig)
 import Partial.Unsafe (unsafePartial)
 import Signal.DOM (CoordinatePair)
 

@@ -11,3 +11,4 @@ _back/
 /.spago
 /tmp_to_delete
 /html/scripts/*
+/html_gomoku/scripts/*
