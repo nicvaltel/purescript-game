@@ -49,10 +49,3 @@ instance controlControlKey :: UI.Control ControlKey where
   controlKeyMap Up = 38
   controlKeyMap Right = 39
   controlKeyMap Down = 40
-
--- keysToListen :: Array Int
--- keysToListen = map controlKeyMap $ E.enumFromTo bottom top 
--- class Control a where
---   controlKeyMap :: a -> Int
--- keysToListen :: forall a. Control a => E.Enum a => B.Bounded a => Array Int
--- keysToListen = map controlKeyMap $ E.enumFromTo (bottom :: a) (top :: a) 

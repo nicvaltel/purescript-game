@@ -8,18 +8,46 @@
   "debugModel": true,
   "debugWebsocket": false,
   "debugUserInput": false,
-  "images" : [
+  "actors" : [
     {
-      "name": "red_ball1",
-      "path": "images/1_Billiard_Ball@72p@72p.png"
-    },
-    { 
-      "name": "jupiter",
-      "path": "images/Jupiter@72p.png"
+      "nameId": "black_stone",
+      "x": 17.0,
+      "y": 22.0,
+      "z": 1,
+      "state": {
+        "vx": 0.31,
+        "vy": 0.23
+      }
     },
     {
-      "name": "red_ball",
-      "path": "images/white_00.png"
+      "nameId": "white_stone",
+      "x": 63.0,
+      "y": 57.0,
+      "z": 1,
+      "state": {
+        "vx": 0.18,
+        "vy": 0.27
+      }
+    },
+    {
+      "nameId": "black_hole",
+      "x": 0.0,
+      "y": 0.0,
+      "z": -1,
+      "state": {
+        "vx": 0.0,
+        "vy": 0.0
+      }
+    },
+    {
+      "nameId": "white_hole",
+      "x": 100.0,
+      "y": 100.0,
+      "z": -1,
+      "state": {
+        "vx": 0.10,
+        "vy": 0.10
+      }
     }
     ],
   "configState" : {
@@ -30,4 +58,3 @@
     "stoneScale": 0.25  
   }
 }
-

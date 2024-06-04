@@ -1,27 +1,34 @@
 module Engine.ResourceLoader
-  ( loadImages
+  ( getHtmlElement
+  , loadImages
   , parseConfigFile
-  ) where
+  )
+  where
 
+import Engine.Types
 import Prelude
+
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
 import Affjax.Web (driver)
-import Engine.Config (Config, fromJson)
+import Data.Argonaut.Decode.Class (class DecodeJsonField)
 import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
+import Data.Nullable (Nullable, toMaybe)
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Canceler, Aff, makeAff)
 import Effect.Exception (Error, error)
+import Engine.Config (Config, fromJson)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
-import Data.Tuple (Tuple(..))
-import Engine.Types
-import Data.Argonaut.Decode.Class (class DecodeJsonField)
+import Web.HTML (HTMLElement)
+
+foreign import _getHtmlElenentById :: String -> Effect (Nullable HTMLElement)
 
 fileLoader :: FilePath -> Aff (Maybe String)
 fileLoader resource = do
@@ -38,7 +45,7 @@ fileLoader resource = do
         }
     )
 
-parseConfigFile :: forall cfg. DecodeJsonField cfg => FilePath -> Aff (Either String (Config cfg))
+parseConfigFile :: forall cfg ac. DecodeJsonField cfg => DecodeJsonField ac => FilePath -> Aff (Either String (Config cfg ac))
 parseConfigFile configFilePath = do
   mbConf <- fileLoader configFilePath
   case mbConf of
@@ -64,3 +71,9 @@ loadImages :: Array { name :: String, path :: String } -> Aff (Map String Canvas
 loadImages files = do
   images <- traverse (\{ name, path } -> (\img -> Tuple name img) <$> tryLoadImageAff path) files
   pure $ Map.fromFoldable images
+
+
+getHtmlElement :: String -> Effect (Maybe HTMLElement)
+getHtmlElement nameId = do 
+  foreignElem <- _getHtmlElenentById nameId
+  pure $ toMaybe foreignElem

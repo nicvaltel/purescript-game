@@ -1,59 +1,46 @@
 module InitGame
   ( initGame
-  )
-  where
+  ) where
 
 import Prelude
-
+import Data.Functor (mapFlipped)
 import Data.Maybe (Maybe(..))
+import Data.Traversable (for)
+import Effect (Effect)
 import Engine.Model (MaybeHTMLElem(..), initialModelZeroTime)
-import GameModel (GameActor, GameConfig, GameModel, GameState)
+import Engine.ResourceLoader (getHtmlElement)
+import GameModel (GameActor, GameModel, GameState, GameConfig)
+import Data.Maybe (Maybe(..))
 
-actorBalls :: Array GameActor
-actorBalls =
-  [ { nameId: "black_stone"
-    , x: 17.0
-    , y: 22.0
-    , htmlElement : MaybeHTMLElem {unMaybeHtmlElem : Nothing}
-    , state : {
-        vx: 31.0 / 100.0
-      , vy: 23.0 / 100.0
-      }
-    },
-    { nameId: "white_stone"
-    , x: 63.0
-    , y: 57.0
-    , htmlElement : MaybeHTMLElem {unMaybeHtmlElem : Nothing}
-    , state : {
-        vx: 18.0 / 100.0
-      , vy: 27.0 / 100.0
-      }
-    },
-    { nameId: "black_hole"
-    , x: 0.0
-    , y: 0.0
-    , htmlElement : MaybeHTMLElem {unMaybeHtmlElem : Nothing}
-    , state : {
-        vx: 0.0 / 100.0
-      , vy: 0.0 / 100.0
-      }
-    }
-  ]
+mkActors :: GameConfig -> Effect (Array GameActor)
+mkActors conf = do
+  for conf.actors
+    $ \a -> do
+        mbElem <- getHtmlElement a.nameId
+        let
+          mbHtmlElem = case mbElem of
+            Just el -> MaybeHTMLElem { unMaybeHtmlElem: Just el }
+            Nothing -> MaybeHTMLElem { unMaybeHtmlElem: Nothing }
+        pure
+          { nameId: a.nameId
+          , x: a.x
+          , y: a.y
+          , htmlElement: mbHtmlElem
+          , state:
+              { vx: a.state.vx
+              , vy: a.state.vy
+              }
+          }
 
-populateActors :: GameModel -> GameModel
-populateActors m = m { actors = actorBalls }
+populateActors :: GameConfig -> GameModel -> Effect GameModel
+populateActors conf m = do
+  actors <- mkActors conf
+  pure m{ actors = actors }
 
 initialGameState :: GameState
-initialGameState = {
-  gridSize : 0
-}
+initialGameState =
+  { gridSize: 0
+  }
 
-initGame :: GameConfig -> GameModel
-initGame conf = populateActors $ initialModelZeroTime initialGameState
-
-
-
--- initGame :: Effect Model
--- initGame = do
---   currentTime <- now
---   pure $ populateActors $ initialModel currentTime
+initGame :: GameConfig -> Effect GameModel
+initGame conf = populateActors conf $ initialModelZeroTime initialGameState

@@ -25,8 +25,7 @@ main =
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
-            let
-              model = initGame config
+            model <- liftEffect $ initGame config
             when config.debugConfig $ liftEffect $ logShow config
             let
               rGame = runGame :: GameConfig -> GameStepFunc ControlKey GameState ActorState ConfigState -> GameModel -> Aff Unit
