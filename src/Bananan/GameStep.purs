@@ -7,6 +7,7 @@ import Bananan.Reexport
 
 import Bananan.Actors (ActorState(..), Ball, BallQueue, Dragon, Gun)
 import Bananan.Control (ControlKey)
+import Bananan.Control as C
 import Bananan.GameModel (GameActor, GameConfig, GameModel)
 import Engine.Types (Time)
 import Engine.UserInput (UserInput)
@@ -22,8 +23,21 @@ moveBall dt ball actor =
           newY = actor.y + dt * vy
       in actor { x = newX , y = newY}
 
-moveGun :: Time -> Gun -> GameActor -> GameActor
-moveGun dt gun actor = actor
+moveGun :: Time -> Maybe (UserInput ControlKey) -> Gun -> GameActor -> GameActor
+moveGun dt mbUserInput gun actor = 
+  let 
+      newSpeed = case mbUserInput of
+                Nothing -> 0.0
+                Just userInput ->
+                  let leftPressed = C.Left `elem` userInput.keys
+                      rightPressed = C.Right `elem` userInput.keys
+                  in case Tuple leftPressed rightPressed of
+                                  Tuple true false -> -gun.maxAngleSpeed
+                                  Tuple false true -> gun.maxAngleSpeed
+                                  _ -> 0.0
+      newAngle' = actor.angle + newSpeed * dt
+      newAngle = clamp gun.maxLeftAngle gun.maxRightAngle newAngle'
+  in actor{angle = newAngle, state = ActorGun gun{angleSpeed = newSpeed}}
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
 moveDragon dt dragon actor = actor
@@ -31,10 +45,10 @@ moveDragon dt dragon actor = actor
 moveBallQueue :: Time -> BallQueue -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
-moveActor :: Time -> GameActor -> GameActor
-moveActor dt actor = case actor.state of
+moveActor :: Time -> Maybe (UserInput ControlKey) -> GameActor -> GameActor
+moveActor dt mbUserInput actor = case actor.state of
   ActorBall ball -> moveBall dt ball actor
-  ActorGun gun -> moveGun dt gun actor
+  ActorGun gun -> moveGun dt  mbUserInput gun actor
   ActorDragon dragon -> moveDragon dt dragon actor
   ActorBallQueue queue -> moveBallQueue dt queue actor
 
@@ -44,7 +58,7 @@ gameStep conf dt wsMessages userInputs model =
     newUserInput = case head userInputs of
       Just input -> input
       Nothing -> model.prevUserInput
-    newActors = map (moveActor dt) model.actors
+    newActors = map (moveActor dt (head userInputs)) model.actors
     wsOut = wsMessages --[]
   in
     Tuple model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, prevUserInput = newUserInput } wsOut

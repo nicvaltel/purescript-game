@@ -18,7 +18,8 @@
     width: 93px;
     height: 277px;
     left: -512px;
-    transform-origin: top left; /* Scale from the top left corner */
+    transform: rotate(45deg);
+    transform-origin: bottom center; /* Scale from the top left corner */
     background: url(../images/gun.png);
 }
 

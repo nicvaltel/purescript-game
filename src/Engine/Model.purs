@@ -36,6 +36,8 @@ type Actor ac
     , x :: Number
     , y :: Number
     , z :: Int
+    , visible :: Boolean
+    , angle :: Number -- 0 is normal unrotated image
     , htmlElement :: MaybeHTMLElem
     , state :: ac
     }

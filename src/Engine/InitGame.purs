@@ -24,6 +24,8 @@ mkActors conf = do
           , x: a.x
           , y: a.y
           , z: a.z
+          , visible : true
+          , angle : 0.0
           , htmlElement: mbHtmlElem
           , state: a.state
           }

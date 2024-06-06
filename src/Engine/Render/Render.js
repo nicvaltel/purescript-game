@@ -5,7 +5,9 @@ export const _renderObject = function (o) {
     const attr = 
       'left: ' + (o.baseX + (o.x | 0)) + 'px' + 
       '; top: ' + (o.baseY + (o.y | 0)) + 'px' +
-      '; z-index: ' + (o.z | 0);
+      '; z-index: ' + (o.z | 0) + 
+      '; transform: rotate(' + o.angle + 'deg)'
+      ;
     o.elem.setAttribute('style', attr);
   }
 }

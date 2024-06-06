@@ -34,7 +34,10 @@ instance decodeJsonBallColor :: DecodeJson BallColor where
         _ -> Nothing
 
 type Gun = {
-  angle :: Number
+    angleSpeed :: Number
+  , maxAngleSpeed :: Number
+  , maxLeftAngle :: Number
+  , maxRightAngle :: Number
 }
 
 type Dragon = {

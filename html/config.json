@@ -5,18 +5,23 @@
   "websocketUrl": "ws://127.0.0.1:1234/ws",
   "canvasElementId": "canvas",
   "debugConfig": false,
-  "debugModel": true,
+  "debugModel": false,
   "debugWebsocket": false,
-  "debugUserInput": false,
+  "debugUserInput": true,
   "actors" : [
     {
       "nameId": "gun",
       "x": 300.0,
-      "y": 820.0,
+      "y": 600.0,
       "z": 1,
       "state": {
           "type" : "gun"
-        , "data": {"angle": 90.0}
+        , "data": { 
+            "angleSpeed" : 0.0
+          , "maxAngleSpeed" : 0.2
+          , "maxLeftAngle" : -45.0
+          , "maxRightAngle" : 45.0 
+        }
       }
     },
     {

@@ -12,7 +12,7 @@ import Engine.Model (MaybeHTMLElem(..), Model, Actor, showModel)
 import Web.HTML (HTMLElement)
 
 type ActorObj
-  = { elem :: HTMLElement, css :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int }
+  = { elem :: HTMLElement, css :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number }
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
@@ -38,4 +38,5 @@ render conf m = do
                   , x: floor $ actor.x
                   , y: floor $ actor.y
                   , z : actor.z
+                  , angle : actor.angle
                   }
