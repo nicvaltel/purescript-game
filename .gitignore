@@ -1,4 +1,5 @@
 _back/
+assets/
 /bower_components/
 /node_modules/
 /.pulp-cache/

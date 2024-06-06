@@ -1,10 +1,10 @@
 #canvas {
     position: absolute;
-    top: 100px;
+    top: 0px;
     left: 600px;
-    width: 450px;
-    height: 450px;
-    background: url(../images/board.jpg);
+    width: 640px;
+    height: 896px;
+    background: url(../images/clouds.png);
     background-size: cover;
     overflow: hidden;
     -moz-transform-origin: 0 0;
@@ -12,42 +12,32 @@
     transform-origin: 0 0;
 }
 
-#black_stone {
+#gun {
     position: absolute;
     scale: 25%;
-    width: 128px;
-    height: 128px;
+    width: 93px;
+    height: 277px;
     left: -512px;
     transform-origin: top left; /* Scale from the top left corner */
-    background: url(../images/black_stone.png);
+    background: url(../images/gun.png);
 }
 
-#white_stone {
+#dragon {
     position: absolute;
     scale: 25%;
     width: 128px;
     height: 128px;
     left: -512px;
     transform-origin: top left; /* Scale from the top left corner */
-    background: url(../images/white_stone.png);
+    background: url(../images/gun.png);
 }
 
-#black_hole {
+#balls_queue {
     position: absolute;
     scale: 25%;
     width: 128px;
     height: 128px;
     left: -512px;
     transform-origin: top left; /* Scale from the top left corner */
-    background: url(../images/black_hole.png);
-}
-
-#white_hole {
-    position: absolute;
-    scale: 25%;
-    width: 128px;
-    height: 128px;
-    left: -512px;
-    transform-origin: top left; /* Scale from the top left corner */
-    background: url(../images/white_hole.png);
+    background: url(../images/gun.png);
 }

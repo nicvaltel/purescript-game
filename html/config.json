@@ -10,43 +10,33 @@
   "debugUserInput": false,
   "actors" : [
     {
-      "nameId": "black_stone",
-      "x": 17.0,
-      "y": 22.0,
+      "nameId": "gun",
+      "x": 300.0,
+      "y": 820.0,
       "z": 1,
       "state": {
-        "vx": 0.11,
-        "vy": 0.13
+          "type" : "gun"
+        , "data": {"angle": 90.0}
       }
     },
     {
-      "nameId": "white_stone",
+      "nameId": "dragon",
       "x": 63.0,
       "y": 57.0,
       "z": 1,
       "state": {
-        "vx": 0.08,
-        "vy": 0.07
+        "type" : "dragon"
+      , "data": {"animation": "gragon.gif"}
       }
     },
     {
-      "nameId": "black_hole",
+      "nameId": "ball_queue",
       "x": 0.0,
       "y": 0.0,
       "z": 10,
       "state": {
-        "vx": 0.0,
-        "vy": 0.0
-      }
-    },
-    {
-      "nameId": "white_hole",
-      "x": 100.0,
-      "y": 100.0,
-      "z": 5,
-      "state": {
-        "vx": 0.010,
-        "vy": 0.010
+        "type" : "ball_queue"
+      , "data": {"queue": []}
       }
     }
     ],
