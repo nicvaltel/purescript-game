@@ -50,7 +50,7 @@ parseConfigFile :: forall cfgac cfgst.
   DecodeJsonField cfgac => 
   DecodeJsonField cfgst => 
   FilePath -> 
-  Aff (Either String (Config cfgst cfgac))
+  Aff (Either String (Config cfgac cfgst))
 parseConfigFile configFilePath = do
   mbConf <- fileLoader configFilePath
   case mbConf of

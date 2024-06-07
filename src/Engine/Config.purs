@@ -14,17 +14,15 @@ type Config cfgac cfgst
     , debugModel :: Boolean
     , debugWebsocket :: Boolean
     , debugUserInput :: Boolean
-    , actors :: cfgac
     , state :: cfgst
-    -- , actors :: Array 
-    --     { 
-    --       nameId :: String
-    --     , x :: Number
-    --     , y :: Number
-    --     , z :: Int
-    --     , state :: ac 
-    --     }
-    -- , configState :: cfgst
+    , actors :: Array 
+        { 
+          nameId :: String
+        , x :: Number
+        , y :: Number
+        , z :: Int
+        , data :: cfgac 
+        }
     }
 
 -- decodeJson :: DecodeJson a => Json -> Either JsonDecodeError a

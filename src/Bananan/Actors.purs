@@ -5,7 +5,7 @@ module Bananan.Actors
   , BallQueue(..)
   , Dragon(..)
   , Gun(..)
-  , mkActors
+  , mkActorData
   )
   where
 
@@ -83,5 +83,5 @@ instance decodeJsonActorState :: DecodeJson ActorData where
 
 
 
-mkActors :: forall cfgst cfgac  ac. Config cfgst cfgac -> Effect (Array (Actor ac))
-mkActors conf = pure []
+mkActorData :: Int -> ActorData
+mkActorData conf = undefined

@@ -17,10 +17,10 @@ type ActorObj
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
-render :: forall gm ac ui cfgst cfgac. 
+render :: forall gm ac ui cfgac cfgst. 
   Show gm => 
   Show ac => 
-  Config cfgst cfgac -> 
+  Config cfgac cfgst -> 
   Model gm ac ui -> 
   Effect Unit
 render conf m = do

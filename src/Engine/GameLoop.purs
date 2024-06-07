@@ -34,8 +34,8 @@ newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
-type GameStepFunc cfgst cfgac ui gm ac = 
-  Config cfgst cfgac -> 
+type GameStepFunc cfgac cfgst ui gm ac = 
+  Config cfgac cfgst -> 
   Time -> 
   Array WS.WSMessage -> 
   Array (UserInput ui) -> 
@@ -46,15 +46,15 @@ type GameStepFunc cfgst cfgac ui gm ac =
 --   = Config cfg ac -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
 
 
-mainLoop :: forall cfgst cfgac ui gm ac. 
+mainLoop :: forall cfgac cfgst ui gm ac. 
   Show ui => 
   Show gm => 
   Show ac => 
-  Config cfgst cfgac -> 
+  Config cfgac cfgst -> 
   WS.WSocket -> 
   Q.Queue String -> 
   Q.Queue (UserInput ui) -> 
-  GameStepFunc cfgst cfgac ui gm ac -> 
+  GameStepFunc cfgac cfgst ui gm ac -> 
   Model gm ac ui-> 
   Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
@@ -99,12 +99,12 @@ runWS conf queue = do
 
 
 
-runGame :: forall cfgst cfgac  ui gm ac. 
+runGame :: forall cfgac cfgst  ui gm ac. 
   Control ui => 
   Show gm => 
   Show ac => 
-  Config cfgst cfgac -> 
-  GameStepFunc cfgst cfgac ui gm ac -> 
+  Config cfgac cfgst -> 
+  GameStepFunc cfgac cfgst ui gm ac -> 
   Model gm ac ui -> 
   Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded
