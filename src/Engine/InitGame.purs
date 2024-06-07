@@ -35,7 +35,11 @@ import Engine.ResourceLoader (getHtmlElement)
 -- mkActors conf = pure []
 
 
-initGame :: forall ui gm ac. Actor ac => Config -> gm -> Effect (Model gm ac ui)
+initGame :: forall cfgst cfgac ui gm ac. 
+  Actor ac => 
+  Config cfgst cfgac -> 
+  gm -> 
+  Effect (Model gm ac ui)
 initGame conf initialGameState = do
   let m = initialModelZeroTime initialGameState :: Model gm ac ui
   -- pure m

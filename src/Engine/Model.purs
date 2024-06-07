@@ -59,7 +59,7 @@ class Actor a where
   getActorVisible :: a -> Boolean
   getActorAngle :: a -> Number -- 0 is normal unrotated image
   getActorHhtmlElement :: a -> Maybe HTMLElement
-  mkActorsFromConfig :: Config -> Effect (Array a)
+  mkActorsFromConfig :: forall cfgst cfgac. Config cfgst cfgac -> Effect (Array a)
 
 type Model gm ac ui = -- Actor ac =>
     { gameStepNumber :: Int

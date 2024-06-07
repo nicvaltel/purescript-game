@@ -26,5 +26,5 @@ type ConfigState = {
 
 type GameModel = Model GameState TestBall ControlKey
 type GameActor = TestBall
-type GameConfig = Config
+type GameConfig = Config Int String
 

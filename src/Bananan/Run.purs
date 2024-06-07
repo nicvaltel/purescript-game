@@ -26,5 +26,5 @@ run =
             model <- liftEffect $ initGame config initialGameState
             when config.debugConfig $ liftEffect $ logShow config
             let
-              rGame = runGame :: GameConfig -> GameStepFunc ControlKey GameState GameActor -> GameModel -> Aff Unit
+              rGame = runGame :: GameConfig -> GameStepFunc Int String ControlKey GameState GameActor -> GameModel -> Aff Unit
             rGame config gameStep model

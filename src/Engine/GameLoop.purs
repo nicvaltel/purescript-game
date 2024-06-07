@@ -34,19 +34,28 @@ newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
-type GameStepFunc ui gm ac
-  = Config -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
+type GameStepFunc cfgst cfgac ui gm ac = 
+  Config cfgst cfgac -> 
+  Time -> 
+  Array WS.WSMessage -> 
+  Array (UserInput ui) -> 
+  Model gm ac ui -> 
+  Tuple (Model gm ac ui) (Array String)
 
 -- type GameStepFunc ui gm ac cfg
 --   = Config cfg ac -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
 
 
-mainLoop :: forall ui gm ac. Show ui => Show gm => Show ac => Actor ac =>
-  Config -> 
+mainLoop :: forall cfgst cfgac ui gm ac. 
+  Show ui => 
+  Show gm => 
+  Show ac => 
+  Actor ac =>
+  Config cfgst cfgac -> 
   WS.WSocket -> 
   Q.Queue String -> 
   Q.Queue (UserInput ui) -> 
-  GameStepFunc ui gm ac -> 
+  GameStepFunc cfgst cfgac ui gm ac -> 
   Model gm ac ui-> 
   Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
@@ -76,7 +85,10 @@ mainLoop conf socket queueWS queueInput gameStep model = do
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs
 
-runWS :: Config -> Q.Queue String -> Aff WS.WSocket
+runWS :: forall cfgac cfgst.  
+  Config cfgac cfgst -> 
+  Q.Queue String -> 
+  Aff WS.WSocket
 runWS conf queue = do
   sock <- liftEffect $ WS.initWebSocket conf.websocketUrl
   liftEffect $ WS.onOpen sock
@@ -88,9 +100,13 @@ runWS conf queue = do
 
 
 
-runGame :: forall ui gm ac. Control ui => Show gm => Show ac => Actor ac =>
-  Config -> 
-  GameStepFunc ui gm ac -> 
+runGame :: forall cfgst cfgac  ui gm ac. 
+  Control ui => 
+  Show gm => 
+  Show ac => 
+  Actor ac =>
+  Config cfgst cfgac -> 
+  GameStepFunc cfgst cfgac ui gm ac -> 
   Model gm ac ui -> 
   Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded

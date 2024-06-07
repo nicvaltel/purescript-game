@@ -46,7 +46,11 @@ fileLoader resource = do
     )
 
 -- parseConfigFile :: forall cfg ac. DecodeJsonField cfg => DecodeJsonField ac => FilePath -> Aff (Either String (Config cfg ac))
-parseConfigFile :: FilePath -> Aff (Either String Config)
+parseConfigFile :: forall cfgac cfgst. 
+  DecodeJsonField cfgac => 
+  DecodeJsonField cfgst => 
+  FilePath -> 
+  Aff (Either String (Config cfgst cfgac))
 parseConfigFile configFilePath = do
   mbConf <- fileLoader configFilePath
   case mbConf of
