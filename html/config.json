@@ -14,7 +14,7 @@
       "x": 300.0,
       "y": 600.0,
       "z": 1,
-      "state": {
+      "data": {
           "type" : "gun"
         , "data": { 
             "angleSpeed" : 0.0
@@ -29,7 +29,7 @@
       "x": 63.0,
       "y": 57.0,
       "z": 1,
-      "state": {
+      "data": {
         "type" : "dragon"
       , "data": {"animation": "gragon.gif"}
       }
@@ -39,17 +39,13 @@
       "x": 0.0,
       "y": 0.0,
       "z": 10,
-      "state": {
+      "data": {
         "type" : "ball_queue"
       , "data": {"queue": []}
       }
     }
     ],
-  "configState" : {
-    "gridNSize": 15,
-    "boardPixelSize": 450,
-    "boardBorderPixelSize": 19,
-    "stoneSpriteSize": 128,
-    "stoneScale": 0.25  
+  "state" : {
+    "score": 15
   }
 }

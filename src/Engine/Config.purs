@@ -27,8 +27,6 @@ type Config cfgac cfgst
 
 -- decodeJson :: DecodeJson a => Json -> Either JsonDecodeError a
 -- https://github.com/purescript-contrib/purescript-argonaut-codecs/blob/main/docs/README.md
-
--- fromJson :: forall cfg ac. DecodeJsonField cfg => DecodeJsonField ac => Json -> Either String (Config cfg ac)
 fromJson :: forall cfgac cfgst. 
   DecodeJsonField cfgac => 
   DecodeJsonField cfgst => 

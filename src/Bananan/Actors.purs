@@ -10,6 +10,8 @@ module Bananan.Actors
   where
 
 import Bananan.Reexport
+import Prelude
+
 import Data.Argonaut.Decode ((.:))
 import Engine.Config (Config)
 import Engine.Model (Actor)
@@ -83,5 +85,5 @@ instance decodeJsonActorState :: DecodeJson ActorData where
 
 
 
-mkActorData :: Json -> ActorData
-mkActorData conf = undefined
+mkActorData :: ActorData -> ActorData
+mkActorData = identity
