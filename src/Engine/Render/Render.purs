@@ -8,7 +8,8 @@ import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
 import Engine.Config (Config)
-import Engine.Model (MaybeHTMLElem(..), Model, Actor, showModel)
+import Engine.Model (class Actor, MaybeHTMLElem(..), Model, getActorAngle, getActorHhtmlElement, getActorX, getActorY, getActorZ, showModel)
+import Engine.ResourceLoader (getHtmlElement)
 import Web.HTML (HTMLElement)
 
 type ActorObj
@@ -16,14 +17,14 @@ type ActorObj
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
-render :: forall gm ac ui. Show gm => Show ac => Config -> Model gm ac ui -> Effect Unit
+render :: forall gm ac ui. Show gm => Show ac => Actor ac => Config -> Model gm ac ui -> Effect Unit
 render conf m = do
   when conf.debugModel $ log (showModel m)
   _ <-
     for m.actors
       $ \actor -> do
-          let (MaybeHTMLElem mbElem) = actor.htmlElement
-          case mbElem.unMaybeHtmlElem of
+          let mbElem = getActorHhtmlElement actor
+          case mbElem of
             Nothing -> pure unit
             Just el ->
               let actorObj = mkActorObj el actor
@@ -35,8 +36,8 @@ render conf m = do
                   , css: ""
                   , baseX: 0.0
                   , baseY: 0.0
-                  , x: floor $ actor.x
-                  , y: floor $ actor.y
-                  , z : actor.z
-                  , angle : actor.angle
+                  , x: floor $ getActorX actor
+                  , y: floor $ getActorY actor
+                  , z : getActorZ actor
+                  , angle : floor $ getActorAngle actor
                   }

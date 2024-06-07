@@ -3,12 +3,13 @@ module Engine.InitGame
   ) where
 
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for)
 import Effect (Effect)
-import Engine.Model (Model, Actor, MaybeHTMLElem(..), initialModelZeroTime)
+import Engine.Config (Config)
+import Engine.Model (class Actor, MaybeHTMLElem(..), Model, initialModelZeroTime, mkActorsFromConfig)
 import Engine.ResourceLoader (getHtmlElement)
-import Engine.Config(Config)
 
 -- mkActors :: forall cfg ac. Config cfg ac -> Effect (Array (Actor ac))
 -- mkActors conf = do
@@ -30,12 +31,14 @@ import Engine.Config(Config)
 --           , state: a.state
 --           }
 
-mkActors :: forall ac. Config -> Effect (Array (Actor ac))
-mkActors conf = pure []
+-- mkActors :: forall ac. Actor ac => Config -> Effect (Array ac)
+-- mkActors conf = pure []
 
 
-initGame :: forall ui gm ac. Config -> gm -> Effect (Model gm ac ui)
+initGame :: forall ui gm ac. Actor ac => Config -> gm -> Effect (Model gm ac ui)
 initGame conf initialGameState = do
-  let m = initialModelZeroTime initialGameState
-  actors <- mkActors conf
+  let m = initialModelZeroTime initialGameState :: Model gm ac ui
+  -- pure m
+  -- actors <- mkActors conf
+  actors :: Array ac <- mkActorsFromConfig conf -- :: Effect (Array ac)
   pure m{ actors = actors }

@@ -21,7 +21,7 @@ import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Now (now)
 import Engine.Config (Config)
-import Engine.Model (Actor, MaybeHTMLElem(..), Model)
+import Engine.Model (class Actor, MaybeHTMLElem(..), Model)
 import Engine.Render.Render (render)
 import Engine.Types (Time)
 import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
@@ -41,7 +41,7 @@ type GameStepFunc ui gm ac
 --   = Config cfg ac -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
 
 
-mainLoop :: forall ui gm ac. Show ui => Show gm => Show ac => 
+mainLoop :: forall ui gm ac. Show ui => Show gm => Show ac => Actor ac =>
   Config -> 
   WS.WSocket -> 
   Q.Queue String -> 
@@ -88,7 +88,7 @@ runWS conf queue = do
 
 
 
-runGame :: forall ui gm ac. Control ui => Show gm => Show ac => 
+runGame :: forall ui gm ac. Control ui => Show gm => Show ac => Actor ac =>
   Config -> 
   GameStepFunc ui gm ac -> 
   Model gm ac ui -> 

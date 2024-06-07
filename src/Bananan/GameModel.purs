@@ -7,10 +7,10 @@ module Bananan.GameModel
   )
   where
 
-import Bananan.Actors ( ActorState)
+import Bananan.Actors (TestBall)
 import Bananan.Control (ControlKey)
 import Engine.Config (Config)
-import Engine.Model (Actor, Model)
+import Engine.Model (class Actor, Model)
 
 type GameState = {
   score :: Int
@@ -24,7 +24,7 @@ type ConfigState = {
   stoneScale :: Number
 }
 
-type GameModel = Model GameState ActorState ControlKey
-type GameActor = Actor ActorState
+type GameModel = Model GameState TestBall ControlKey
+type GameActor = TestBall
 type GameConfig = Config
 
