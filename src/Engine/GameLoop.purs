@@ -21,7 +21,7 @@ import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Now (now)
 import Engine.Config (Config)
-import Engine.Model (class Actor, MaybeHTMLElem(..), Model)
+import Engine.Model (Actor(..), Model)
 import Engine.Render.Render (render)
 import Engine.Types (Time)
 import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
@@ -50,7 +50,6 @@ mainLoop :: forall cfgst cfgac ui gm ac.
   Show ui => 
   Show gm => 
   Show ac => 
-  Actor ac =>
   Config cfgst cfgac -> 
   WS.WSocket -> 
   Q.Queue String -> 
@@ -104,7 +103,6 @@ runGame :: forall cfgst cfgac  ui gm ac.
   Control ui => 
   Show gm => 
   Show ac => 
-  Actor ac =>
   Config cfgst cfgac -> 
   GameStepFunc cfgst cfgac ui gm ac -> 
   Model gm ac ui -> 

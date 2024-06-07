@@ -8,7 +8,7 @@ import Data.Maybe (Maybe(..))
 import Data.Traversable (for)
 import Effect (Effect)
 import Engine.Config (Config)
-import Engine.Model (class Actor, MaybeHTMLElem(..), Model, initialModelZeroTime, mkActorsFromConfig)
+import Engine.Model (Actor(..), Model, initialModelZeroTime)
 import Engine.ResourceLoader (getHtmlElement)
 
 -- mkActors :: forall cfg ac. Config cfg ac -> Effect (Array (Actor ac))
@@ -31,18 +31,16 @@ import Engine.ResourceLoader (getHtmlElement)
 --           , state: a.state
 --           }
 
--- mkActors :: forall ac. Actor ac => Config -> Effect (Array ac)
+-- mkActors :: forall cfgst cfgac  ac. Config cfgst cfgac -> Effect (Array (Actor ac))
 -- mkActors conf = pure []
 
 
 initGame :: forall cfgst cfgac ui gm ac. 
-  Actor ac => 
   Config cfgst cfgac -> 
   gm -> 
+  (Config cfgst cfgac -> Effect (Array (Actor ac))) ->
   Effect (Model gm ac ui)
-initGame conf initialGameState = do
+initGame conf initialGameState mkActors = do
   let m = initialModelZeroTime initialGameState :: Model gm ac ui
-  -- pure m
-  -- actors <- mkActors conf
-  actors :: Array ac <- mkActorsFromConfig conf -- :: Effect (Array ac)
+  actors :: Array (Actor ac) <- mkActors conf -- :: Effect (Array ac)
   pure m{ actors = actors }

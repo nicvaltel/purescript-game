@@ -8,7 +8,7 @@ import Bananan.Reexport
 -- import Bananan.Actors (ActorState(..), Ball, BallQueue, Dragon, Gun)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
-import Bananan.GameModel (GameActor, GameConfig, GameModel)
+import Bananan.GameModel (GameConfig, GameModel)
 import Engine.Types (Time)
 import Engine.UserInput (UserInput)
 import Engine.WebSocket.WSSignalChan as WS

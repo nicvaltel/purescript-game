@@ -1,18 +1,8 @@
 module Engine.Model
-  ( MaybeHTMLElem(..)
+  ( Actor(..)
   , Model(..)
-  , class Actor
-  , getActorNameId
-  , getActorX
-  , getActorY
-  , getActorZ
-  , getActorVisible
-  , getActorAngle
-  , getActorHhtmlElement
-  , initialModel
   , initialModelZeroTime
   , showModel
-  , mkActorsFromConfig
   )
   where
 
@@ -27,17 +17,19 @@ import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Now (now)
 import Engine.Config (Config)
+import Engine.ResourceLoader (getHtmlElement)
 import Engine.UserInput (UserInput, emptyUserInput)
+import Engine.Utils.Utils (undefined)
 import Partial.Unsafe (unsafePartial)
 import Web.HTML (HTMLElement)
 
 
-newtype MaybeHTMLElem = MaybeHTMLElem {unMaybeHtmlElem :: Maybe HTMLElement}
+-- newtype MaybeHTMLElem = MaybeHTMLElem {unMaybeHtmlElem :: Maybe HTMLElement}
 
-instance showMaybeHTMLElem :: Show MaybeHTMLElem where
-  show (MaybeHTMLElem mbElem) = case mbElem.unMaybeHtmlElem of
-      Nothing -> "Nothing"
-      Just _ -> "Just HtmlElement"
+-- instance showMaybeHTMLElem :: Show MaybeHTMLElem where
+--   show (MaybeHTMLElem mbElem) = case mbElem.unMaybeHtmlElem of
+--       Nothing -> "Nothing"
+--       Just _ -> "Just HtmlElement"
 
 
 -- type Actor ac
@@ -51,22 +43,23 @@ instance showMaybeHTMLElem :: Show MaybeHTMLElem where
 --     , data :: ad
 --     }
 
-class Actor a where
-  getActorNameId :: a -> String
-  getActorX :: a -> Number
-  getActorY :: a -> Number
-  getActorZ :: a -> Int
-  getActorVisible :: a -> Boolean
-  getActorAngle :: a -> Number -- 0 is normal unrotated image
-  getActorHhtmlElement :: a -> Maybe HTMLElement
-  mkActorsFromConfig :: forall cfgst cfgac. Config cfgst cfgac -> Effect (Array a)
+type Actor ac = {
+    nameId :: String
+  , x :: Number
+  , y :: Number
+  , z :: Int
+  , visible :: Boolean
+  , angle :: Number
+  , htmlElement :: Maybe HTMLElement 
+  , data :: ac
+}
 
 type Model gm ac ui = -- Actor ac =>
     { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
     , lastUpdateTime :: Instant
-    , actors :: Array ac
+    , actors :: Array (Actor ac)
     , gameState :: gm
     , prevUserInput :: UserInput ui
     }
@@ -83,10 +76,10 @@ showModel m = ""
   --     , "gameState" <> show (m.gameState)
   --     ]
 
-initialModel :: forall gm ac ui. Actor ac => Instant -> gm -> Model gm ac ui
+initialModel :: forall gm ac ui.Instant -> gm -> Model gm ac ui
 initialModel currentTime gameState = (initialModelZeroTime gameState) { lastUpdateTime = currentTime }
 
-initialModelZeroTime :: forall gm ac ui. Actor ac => gm -> Model gm ac ui
+initialModelZeroTime :: forall gm ac ui. gm -> Model gm ac ui
 initialModelZeroTime gameState =
   unsafePartial
     $ let
@@ -96,7 +89,7 @@ initialModelZeroTime gameState =
         , screenWidth: 150.0
         , screenHeight: 100.0
         , lastUpdateTime: time
-        , actors: [] :: Array ac
+        , actors: [] :: Array (Actor ac)
         , gameState
         , prevUserInput : emptyUserInput
         }
