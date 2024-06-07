@@ -8,40 +8,14 @@ module Engine.Model
 
 import Prelude
 
+import Data.Foldable (intercalate)
 import Data.DateTime.Instant (Instant, instant)
 import Data.Foldable (foldr)
-import Data.Map as Map
 import Data.Maybe (Maybe(..))
-import Data.Time (Millisecond)
 import Data.Time.Duration (Milliseconds(..))
-import Effect (Effect)
-import Effect.Now (now)
-import Engine.Config (Config)
-import Engine.ResourceLoader (getHtmlElement)
 import Engine.UserInput (UserInput, emptyUserInput)
-import Engine.Utils.Utils (undefined)
 import Partial.Unsafe (unsafePartial)
 import Web.HTML (HTMLElement)
-
-
--- newtype MaybeHTMLElem = MaybeHTMLElem {unMaybeHtmlElem :: Maybe HTMLElement}
-
--- instance showMaybeHTMLElem :: Show MaybeHTMLElem where
---   show (MaybeHTMLElem mbElem) = case mbElem.unMaybeHtmlElem of
---       Nothing -> "Nothing"
---       Just _ -> "Just HtmlElement"
-
-
--- type Actor ac
---   = { nameId :: String
---     , x :: Number
---     , y :: Number
---     , z :: Int
---     , visible :: Boolean
---     , angle :: Number -- 0 is normal unrotated image
---     , htmlElement :: MaybeHTMLElem
---     , data :: ad
---     }
 
 type Actor ac = {
     nameId :: String
@@ -54,7 +28,19 @@ type Actor ac = {
   , data :: ac
 }
 
-type Model gm ac ui = -- Actor ac =>
+showActor :: forall ac. Show ac => Actor ac -> String
+showActor actor = 
+  foldr (\str acc -> acc <> "\t" <> str <> "\n") "ACTOR:\n"
+    $ [ "nameId" <> show actor.nameId
+      , "x" <> show actor.x
+      , "y" <> show actor.y
+      , "z" <> show actor.z
+      , "visible" <> show actor.visible
+      , "angle" <> show actor.angle
+      , "data" <> show actor.data
+      ]
+
+type Model ac gm ui = -- Actor ac =>
     { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
@@ -65,21 +51,23 @@ type Model gm ac ui = -- Actor ac =>
     }
 
 
-showModel :: forall gm ac ui. Show gm => Show ac => Model gm ac ui -> String
-showModel m = ""
-  -- foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
-  --   $ [ "gameStepNumber " <> show m.gameStepNumber
-  --     , "screenWidth " <> show m.screenWidth
-  --     , "screenHeight " <> show m.screenHeight
-  --     , "lastUpdateTime " <> show m.lastUpdateTime
-  --     , "actors " <> show m.actors
-  --     , "gameState" <> show (m.gameState)
-  --     ]
+showModel :: forall ac gm ui. Show gm => Show ac => Model ac gm ui -> String
+showModel m =
+  foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
+    $ [ "gameStepNumber " <> show m.gameStepNumber
+      , "screenWidth " <> show m.screenWidth
+      , "screenHeight " <> show m.screenHeight
+      , "lastUpdateTime " <> show m.lastUpdateTime
+      , "actors " <> (intercalate ", " $ map showActor m.actors)
+      , "gameState" <> show (m.gameState)
+      ]
 
-initialModel :: forall gm ac ui.Instant -> gm -> Model gm ac ui
+initialModel :: forall ac gm ui. Instant -> gm -> Model ac gm ui
 initialModel currentTime gameState = (initialModelZeroTime gameState) { lastUpdateTime = currentTime }
 
-initialModelZeroTime :: forall gm ac ui. gm -> Model gm ac ui
+
+-- TODO what is it???
+initialModelZeroTime :: forall ac gm ui. gm -> Model ac gm ui
 initialModelZeroTime gameState =
   unsafePartial
     $ let

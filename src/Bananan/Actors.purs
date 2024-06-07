@@ -5,7 +5,6 @@ module Bananan.Actors
   , BallQueue(..)
   , Dragon(..)
   , Gun(..)
-  , mkActorData
   )
   where
 
@@ -83,7 +82,3 @@ instance decodeJsonActorState :: DecodeJson ActorData where
       "ball_queue"  -> ActorBallQueue <$> (obj .: "data")
       _      -> Left $ TypeMismatch $ "Unknown actor type: " <> actorType
 
-
-
-mkActorData :: ActorData -> ActorData
-mkActorData = identity

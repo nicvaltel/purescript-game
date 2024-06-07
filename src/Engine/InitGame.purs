@@ -4,24 +4,16 @@ module Engine.InitGame
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Data.Traversable (for)
 import Effect (Effect)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model, initialModelZeroTime)
+import Engine.Model (Actor, Model, initialModelZeroTime)
 import Engine.ResourceLoader (getHtmlElement)
-import Engine.Utils.Utils (undefined)
-
--- mkActorsFromConfig :: forall cfgac ui gm ac. 
---   cfgac -> 
---   (cfgac -> ac) ->
---   Effect (Actor ac)
--- mkActorsFromConfig conf mkActor = do
 
 
-mkActorsFromConfig :: forall cfgac cfgst ac. 
-  Config cfgac cfgst -> 
-  (cfgac -> ac) ->
+mkActorsFromConfig :: forall ac gm. 
+  Config ac gm -> 
+  (gm -> ac -> ac) ->
   Effect (Array (Actor ac))
 mkActorsFromConfig conf mkActorData = do
   for conf.actors
@@ -35,20 +27,15 @@ mkActorsFromConfig conf mkActorData = do
           , visible : true
           , angle : 0.0
           , htmlElement: mbElem
-          , data: mkActorData a.data
+          , data: mkActorData conf.state a.data
           }
 
-
--- mkActors :: forall cfgac cfgst  ac. Config cfgac cfgst -> Effect (Array (Actor ac))
--- mkActors conf = pure []
-
-
-initGame :: forall cfgac cfgst ui gm ac. 
-  Config cfgac cfgst -> 
+initGame :: forall ac gm ui. 
+  Config ac gm -> 
   gm -> 
-  (cfgac -> ac) ->
-  Effect (Model gm ac ui)
+  (gm -> ac -> ac) ->
+  Effect (Model ac gm ui)
 initGame conf initialGameState mkActorData = do
-  let m = initialModelZeroTime initialGameState :: Model gm ac ui
+  let m = initialModelZeroTime initialGameState :: Model ac gm ui
   actors :: Array (Actor ac) <- mkActorsFromConfig conf mkActorData
   pure m{ actors = actors }

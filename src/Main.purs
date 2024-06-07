@@ -8,6 +8,4 @@ import Bananan.Run as Bananan
 
 main :: Effect Unit
 main = do
-    log "OKAY"
-    pure unit
     Bananan.run

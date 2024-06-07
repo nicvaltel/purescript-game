@@ -6,7 +6,7 @@ import Data.Argonaut.Decode.Class (class DecodeJsonField, decodeJson)
 import Data.Either (Either)
 import Engine.Utils.Utils (mapLeft)
 
-type Config cfgac cfgst
+type Config ac gm
   = { frameRateNumber :: Number
     , websocketUrl :: String
     , canvasElementId :: String
@@ -14,22 +14,22 @@ type Config cfgac cfgst
     , debugModel :: Boolean
     , debugWebsocket :: Boolean
     , debugUserInput :: Boolean
-    , state :: cfgst
+    , state :: gm
     , actors :: Array 
         { 
           nameId :: String
         , x :: Number
         , y :: Number
         , z :: Int
-        , data :: cfgac 
+        , data :: ac 
         }
     }
 
 -- decodeJson :: DecodeJson a => Json -> Either JsonDecodeError a
 -- https://github.com/purescript-contrib/purescript-argonaut-codecs/blob/main/docs/README.md
-fromJson :: forall cfgac cfgst. 
-  DecodeJsonField cfgac => 
-  DecodeJsonField cfgst => 
+fromJson :: forall ac gm. 
+  DecodeJsonField ac => 
+  DecodeJsonField gm => 
   Json -> 
-  Either String (Config cfgac cfgst)
+  Either String (Config ac gm)
 fromJson = mapLeft (\err -> "Cannot decode json config file: " <> show err) <<< decodeJson

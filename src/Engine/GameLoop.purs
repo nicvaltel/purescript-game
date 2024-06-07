@@ -8,11 +8,8 @@ import Prelude
 import Concurrent.Queue as Q
 import Data.Array (head)
 import Data.DateTime.Instant (diff)
-import Data.Foldable (null, intercalate)
-import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable, toMaybe)
+import Data.Foldable (null)
 import Data.Time.Duration (Milliseconds(..))
-import Data.Traversable (traverse)
 import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
@@ -21,44 +18,38 @@ import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Now (now)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model)
+import Engine.Model (Model)
 import Engine.Render.Render (render)
 import Engine.Types (Time)
 import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
 import Engine.Utils.Utils (readAllQueue)
 import Engine.WebSocket.WSSignalChan as WS
-import Web.HTML (HTMLElement)
-
 
 newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
-type GameStepFunc cfgac cfgst ui gm ac = 
-  Config cfgac cfgst -> 
+type GameStepFunc ac gm ui = 
+  Config ac gm -> 
   Time -> 
   Array WS.WSMessage -> 
   Array (UserInput ui) -> 
-  Model gm ac ui -> 
-  Tuple (Model gm ac ui) (Array String)
+  Model ac gm ui -> 
+  Tuple (Model ac gm ui) (Array String)
 
--- type GameStepFunc ui gm ac cfg
---   = Config cfg ac -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
-
-
-mainLoop :: forall cfgac cfgst ui gm ac. 
+mainLoop :: forall ac gm ui. 
   Show ui => 
   Show gm => 
   Show ac => 
-  Config cfgac cfgst -> 
+  Config ac gm -> 
   WS.WSocket -> 
   Q.Queue String -> 
   Q.Queue (UserInput ui) -> 
-  GameStepFunc cfgac cfgst ui gm ac -> 
-  Model gm ac ui-> 
+  GameStepFunc ac gm ui -> 
+  Model ac gm ui -> 
   Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
-  -- _ <- forkAff $ liftEffect (render conf model)
+  -- _ <- forkAff $ liftEffect (render conf model) -- TODO make forkAff
   liftEffect (render conf model)
   currentTime <- liftEffect now
   let
@@ -84,8 +75,8 @@ mainLoop conf socket queueWS queueInput gameStep model = do
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs
 
-runWS :: forall cfgac cfgst.  
-  Config cfgac cfgst -> 
+runWS :: forall ac gm.  
+  Config ac gm -> 
   Q.Queue String -> 
   Aff WS.WSocket
 runWS conf queue = do
@@ -99,13 +90,13 @@ runWS conf queue = do
 
 
 
-runGame :: forall cfgac cfgst  ui gm ac. 
+runGame :: forall ac gm ui. 
   Control ui => 
   Show gm => 
   Show ac => 
-  Config cfgac cfgst -> 
-  GameStepFunc cfgac cfgst ui gm ac -> 
-  Model gm ac ui -> 
+  Config ac gm -> 
+  GameStepFunc ac gm ui -> 
+  Model ac gm ui -> 
   Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded
   queueUserInput :: Q.Queue (UserInput ui) <- Q.new

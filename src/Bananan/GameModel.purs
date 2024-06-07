@@ -1,9 +1,9 @@
 module Bananan.GameModel
-  ( ConfigState
+  ( GameActor
   , GameConfig
   , GameModel
   , GameState
-  , GameActor
+  , mkActorData
   )
   where
 
@@ -18,14 +18,10 @@ type GameState = {
   score :: Int
 }
 
-type ConfigState = {
-  gridNSize :: Int,
-  boardPixelSize :: Int,
-  boardBorderPixelSize :: Int,
-  stoneSpriteSize :: Int,
-  stoneScale :: Number
-}
 
-type GameModel = Model GameState ActorData ControlKey
+type GameModel = Model ActorData GameState ControlKey
 type GameConfig = Config ActorData GameState
 type GameActor = Actor ActorData
+
+mkActorData :: GameState -> ActorData -> ActorData
+mkActorData gm actorData = actorData

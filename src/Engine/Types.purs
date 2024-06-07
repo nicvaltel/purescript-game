@@ -1,7 +1,5 @@
 module Engine.Types where
 
-import Prelude
-
 type Time
   = Number
 

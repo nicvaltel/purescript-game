@@ -8,8 +8,7 @@ import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model, showModel)
-import Engine.ResourceLoader (getHtmlElement)
+import Engine.Model (Model, showModel)
 import Web.HTML (HTMLElement)
 
 type ActorObj
@@ -17,11 +16,11 @@ type ActorObj
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
-render :: forall gm ac ui cfgac cfgst. 
+render :: forall ac gm ui. 
   Show gm => 
   Show ac => 
-  Config cfgac cfgst -> 
-  Model gm ac ui -> 
+  Config ac gm -> 
+  Model ac gm ui -> 
   Effect Unit
 render conf m = do
   when conf.debugModel $ log (showModel m)

@@ -74,9 +74,6 @@ emptyUserInput =
     , mouseBtns : []
     }
 
--- addEventListenerMouseRelativeMove :: String -> Effect (Signal CoordinatePair)
--- addEventListenerMouseRelativeMove canvasName = do
---   _addEventListenerMouseRelativeMove (\event -> pure (constant event)) canvasName
 getUserInput :: forall ui. Control ui => Array Int -> String -> Effect (Signal (UserInput ui))
 getUserInput keysToListen canvasElementId = do
   signalKeyboard <- getInputKeyboard keysToListen

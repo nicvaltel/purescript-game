@@ -5,7 +5,6 @@ module Engine.ResourceLoader
   )
   where
 
-import Engine.Types
 import Prelude
 
 import Affjax as AX
@@ -25,6 +24,7 @@ import Effect (Effect)
 import Effect.Aff (Canceler, Aff, makeAff)
 import Effect.Exception (Error, error)
 import Engine.Config (Config, fromJson)
+import Engine.Types (FilePath)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
 import Web.HTML (HTMLElement)
 
@@ -45,12 +45,11 @@ fileLoader resource = do
         }
     )
 
--- parseConfigFile :: forall cfg ac. DecodeJsonField cfg => DecodeJsonField ac => FilePath -> Aff (Either String (Config cfg ac))
-parseConfigFile :: forall cfgac cfgst. 
-  DecodeJsonField cfgac => 
-  DecodeJsonField cfgst => 
+parseConfigFile :: forall ac gm. 
+  DecodeJsonField ac => 
+  DecodeJsonField gm => 
   FilePath -> 
-  Aff (Either String (Config cfgac cfgst))
+  Aff (Either String (Config ac gm))
 parseConfigFile configFilePath = do
   mbConf <- fileLoader configFilePath
   case mbConf of
