@@ -18,7 +18,7 @@ import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Now (now)
 import Engine.Config (Config)
-import Engine.Model (Model)
+import Engine.Model (Model(..))
 import Engine.Render.Render (render)
 import Engine.Types (Time)
 import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
@@ -48,12 +48,12 @@ mainLoop :: forall ac gm ui.
   GameStepFunc ac gm ui -> 
   Model ac gm ui -> 
   Aff Unit
-mainLoop conf socket queueWS queueInput gameStep model = do
+mainLoop conf socket queueWS queueInput gameStep model@(Model m) = do
   -- _ <- forkAff $ liftEffect (render conf model) -- TODO make forkAff
   liftEffect (render conf model)
   currentTime <- liftEffect now
   let
-    (Milliseconds deltaTime) = diff currentTime model.lastUpdateTime
+    (Milliseconds deltaTime) = diff currentTime m.lastUpdateTime
   messages <- readAllQueue queueWS
   when conf.debugWebsocket $ when (not $ null messages) $ do
     liftEffect $ log "MESSAGES IN:"
@@ -63,8 +63,8 @@ mainLoop conf socket queueWS queueInput gameStep model = do
     log "INPUTS:"
     log $ show $ showUserInput <$> head inputs
   let
-    (Tuple newModel' wsOut) = gameStep conf deltaTime messages inputs model
-    newModel = newModel' { lastUpdateTime = currentTime }
+    (Tuple (Model newModel') wsOut) = gameStep conf deltaTime messages inputs model
+    newModel = Model newModel' { lastUpdateTime = currentTime }
   when conf.debugWebsocket $ when (not $ null wsOut) $ do
     liftEffect $ log "MESSAGES OUT:"
     liftEffect $ logShow wsOut
@@ -98,13 +98,13 @@ runGame :: forall ac gm ui.
   GameStepFunc ac gm ui -> 
   Model ac gm ui -> 
   Aff Unit
-runGame conf gameStep model = do --onDOMContentLoaded
+runGame conf gameStep (Model model) = do --onDOMContentLoaded
   queueUserInput :: Q.Queue (UserInput ui) <- Q.new
   liftEffect $ runUserInput queueUserInput conf.canvasElementId
   queueWS :: Q.Queue String <- Q.new
   socket <- runWS conf queueWS
   currentTime <- liftEffect now
   let
-    gameModel = model { lastUpdateTime = currentTime}
+    gameModel = Model model { lastUpdateTime = currentTime}
   mainLoop conf socket queueWS queueUserInput gameStep gameModel
   pure unit

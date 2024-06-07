@@ -7,7 +7,7 @@ import Prelude
 import Data.Traversable (for)
 import Effect (Effect)
 import Engine.Config (Config)
-import Engine.Model (Actor, Model, initialModelZeroTime)
+import Engine.Model (Actor(..), Model(..), initialModelZeroTime)
 import Engine.ResourceLoader (getHtmlElement)
 
 
@@ -19,7 +19,7 @@ mkActorsFromConfig conf mkActorData = do
   for conf.actors
     $ \a -> do
         mbElem <- getHtmlElement a.nameId
-        pure
+        pure $ Actor
           { nameId: a.nameId
           , x: a.x
           , y: a.y
@@ -36,6 +36,6 @@ initGame :: forall ac gm ui.
   (gm -> ac -> ac) ->
   Effect (Model ac gm ui)
 initGame conf initialGameState mkActorData = do
-  let m = initialModelZeroTime initialGameState :: Model ac gm ui
+  let (Model m) = initialModelZeroTime initialGameState :: Model ac gm ui
   actors :: Array (Actor ac) <- mkActorsFromConfig conf mkActorData
-  pure m{ actors = actors }
+  pure $ Model m{ actors = actors }

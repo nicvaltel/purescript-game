@@ -8,7 +8,7 @@ import Data.Traversable (for)
 import Effect (Effect)
 import Effect.Console (log)
 import Engine.Config (Config)
-import Engine.Model (Model, showModel)
+import Engine.Model (Actor(..), Model(..))
 import Web.HTML (HTMLElement)
 
 type ActorObj
@@ -22,11 +22,11 @@ render :: forall ac gm ui.
   Config ac gm -> 
   Model ac gm ui -> 
   Effect Unit
-render conf m = do
-  when conf.debugModel $ log (showModel m)
+render conf model@(Model m) = do
+  when conf.debugModel $ log (show model)
   _ <-
     for m.actors
-      $ \actor -> do
+      $ \(Actor actor) -> do
           case actor.htmlElement of
             Nothing -> pure unit
             Just el ->

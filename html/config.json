@@ -5,9 +5,9 @@
   "websocketUrl": "ws://127.0.0.1:1234/ws",
   "canvasElementId": "canvas",
   "debugConfig": true,
-  "debugModel": false,
+  "debugModel": true,
   "debugWebsocket": false,
-  "debugUserInput": true,
+  "debugUserInput": false,
   "actors" : [
     {
       "nameId": "gun",

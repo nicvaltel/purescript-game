@@ -2,22 +2,21 @@ module Engine.Model
   ( Actor(..)
   , Model(..)
   , initialModelZeroTime
-  , showModel
   )
   where
 
 import Prelude
 
-import Data.Foldable (intercalate)
 import Data.DateTime.Instant (Instant, instant)
-import Data.Foldable (foldr)
-import Data.Maybe (Maybe(..))
+import Data.Foldable (foldr, intercalate)
+import Data.Foldable (intercalate)
+import Data.Maybe (Maybe(..), isJust)
 import Data.Time.Duration (Milliseconds(..))
 import Engine.UserInput (UserInput, emptyUserInput)
 import Partial.Unsafe (unsafePartial)
 import Web.HTML (HTMLElement)
 
-type Actor ac = {
+newtype Actor ac = Actor {
     nameId :: String
   , x :: Number
   , y :: Number
@@ -28,19 +27,21 @@ type Actor ac = {
   , data :: ac
 }
 
-showActor :: forall ac. Show ac => Actor ac -> String
-showActor actor = 
-  foldr (\str acc -> acc <> "\t" <> str <> "\n") "ACTOR:\n"
-    $ [ "nameId" <> show actor.nameId
-      , "x" <> show actor.x
-      , "y" <> show actor.y
-      , "z" <> show actor.z
-      , "visible" <> show actor.visible
-      , "angle" <> show actor.angle
-      , "data" <> show actor.data
-      ]
+instance showActor :: Show ac => Show (Actor ac) where
+  show (Actor actor) = "{" <> 
+    intercalate ", " 
+        [ "nameId: " <> show actor.nameId
+        , "x: " <> show actor.x
+        , "y: " <> show actor.y
+        , "z: " <> show actor.z
+        , "visible: " <> show actor.visible
+        , "angle: " <> show actor.angle
+        , "htmlElement: " <> if (isJust actor.htmlElement) then "Just HtmlElem" else "Nothing"
+        , "data: " <> show actor.data
+        ]
+    <> "}"
 
-type Model ac gm ui = -- Actor ac =>
+newtype Model ac gm ui = Model
     { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
@@ -50,32 +51,32 @@ type Model ac gm ui = -- Actor ac =>
     , prevUserInput :: UserInput ui
     }
 
+instance showModel :: (Show ac, Show gm) => Show (Model ac gm ui) where
+  show (Model m) =  
+    foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
+      $ [ "gameStepNumber " <> show m.gameStepNumber
+        , "screenWidth " <> show m.screenWidth
+        , "screenHeight " <> show m.screenHeight
+        , "lastUpdateTime " <> show m.lastUpdateTime
+        , "actors " <> (intercalate ", " $ map show m.actors)
+        , "gameState" <> show (m.gameState)
+        ]
 
-showModel :: forall ac gm ui. Show gm => Show ac => Model ac gm ui -> String
-showModel m =
-  foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
-    $ [ "gameStepNumber " <> show m.gameStepNumber
-      , "screenWidth " <> show m.screenWidth
-      , "screenHeight " <> show m.screenHeight
-      , "lastUpdateTime " <> show m.lastUpdateTime
-      , "actors " <> (intercalate ", " $ map showActor m.actors)
-      , "gameState" <> show (m.gameState)
-      ]
+-- initialModel :: forall ac gm ui. Instant -> gm -> Model ac gm ui
+-- initialModel currentTime gameState = 
+--   let (Model m) = initialModelZeroTime gameState
+--   in Model m{ lastUpdateTime = currentTime }
 
-initialModel :: forall ac gm ui. Instant -> gm -> Model ac gm ui
-initialModel currentTime gameState = (initialModelZeroTime gameState) { lastUpdateTime = currentTime }
-
-
--- TODO what is it???
+-- TODO setup Model with config
 initialModelZeroTime :: forall ac gm ui. gm -> Model ac gm ui
 initialModelZeroTime gameState =
   unsafePartial
     $ let
         Just time = instant (Milliseconds 0.0)
-      in
+      in Model
         { gameStepNumber: 0
-        , screenWidth: 150.0
-        , screenHeight: 100.0
+        , screenWidth: 0.0
+        , screenHeight: 0.0
         , lastUpdateTime: time
         , actors: [] :: Array (Actor ac)
         , gameState
