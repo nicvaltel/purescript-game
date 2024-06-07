@@ -21,13 +21,13 @@ run :: Effect Unit
 run =
   launchAff_
     $ do
-        eitherConf <- parseConfigFile configFilePath :: Aff ( Either String (Config Int String))
+        eitherConf <- parseConfigFile configFilePath :: Aff ( Either String (Config Json Json))
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
             model <- liftEffect $ initGame config initialGameState mkActorData
-            when config.debugConfig $ liftEffect $ logShow config
+            -- when config.debugConfig $ liftEffect $ logShow config
             let
-              rGame = runGame :: GameConfig -> GameStepFunc Int String ControlKey GameState ActorData -> GameModel -> Aff Unit
+              rGame = runGame :: GameConfig -> GameStepFunc Json Json ControlKey GameState ActorData -> GameModel -> Aff Unit
             rGame config gameStep model
 

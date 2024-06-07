@@ -83,5 +83,5 @@ instance decodeJsonActorState :: DecodeJson ActorData where
 
 
 
-mkActorData :: Int -> ActorData
+mkActorData :: Json -> ActorData
 mkActorData conf = undefined
