@@ -26,5 +26,5 @@ type ConfigState = {
 
 type GameModel = Model GameState ActorState ControlKey
 type GameActor = Actor ActorState
-type GameConfig = Config ConfigState ActorState
+type GameConfig = Config
 

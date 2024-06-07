@@ -34,15 +34,19 @@ newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
-type GameStepFunc ui gm ac cfg
-  = Config cfg ac -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
+type GameStepFunc ui gm ac
+  = Config -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
 
-mainLoop :: forall ui gm ac cfg. Show ui => Show gm => Show ac => 
-  Config cfg ac-> 
+-- type GameStepFunc ui gm ac cfg
+--   = Config cfg ac -> Time -> Array WS.WSMessage -> Array (UserInput ui) -> Model gm ac ui -> Tuple (Model gm ac ui) (Array String)
+
+
+mainLoop :: forall ui gm ac. Show ui => Show gm => Show ac => 
+  Config -> 
   WS.WSocket -> 
   Q.Queue String -> 
   Q.Queue (UserInput ui) -> 
-  GameStepFunc ui gm ac cfg -> 
+  GameStepFunc ui gm ac -> 
   Model gm ac ui-> 
   Aff Unit
 mainLoop conf socket queueWS queueInput gameStep model = do
@@ -72,7 +76,7 @@ mainLoop conf socket queueWS queueInput gameStep model = do
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs
 
-runWS :: forall cfg ac. Config cfg ac -> Q.Queue String -> Aff WS.WSocket
+runWS :: Config -> Q.Queue String -> Aff WS.WSocket
 runWS conf queue = do
   sock <- liftEffect $ WS.initWebSocket conf.websocketUrl
   liftEffect $ WS.onOpen sock
@@ -84,9 +88,9 @@ runWS conf queue = do
 
 
 
-runGame :: forall ui gm ac cfg. Control ui => Show gm => Show ac => 
-  Config cfg ac-> 
-  GameStepFunc ui gm ac cfg -> 
+runGame :: forall ui gm ac. Control ui => Show gm => Show ac => 
+  Config -> 
+  GameStepFunc ui gm ac -> 
   Model gm ac ui -> 
   Aff Unit
 runGame conf gameStep model = do --onDOMContentLoaded

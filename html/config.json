@@ -4,7 +4,7 @@
   "websocketUrlRunTestServer": "websocat -s 1234",
   "websocketUrl": "ws://127.0.0.1:1234/ws",
   "canvasElementId": "canvas",
-  "debugConfig": false,
+  "debugConfig": true,
   "debugModel": false,
   "debugWebsocket": false,
   "debugUserInput": true,

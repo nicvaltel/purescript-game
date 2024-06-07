@@ -16,7 +16,7 @@ type ActorObj
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
-render :: forall gm ac ui cfg. Show gm => Show ac => Config cfg ac -> Model gm ac ui -> Effect Unit
+render :: forall gm ac ui. Show gm => Show ac => Config -> Model gm ac ui -> Effect Unit
 render conf m = do
   when conf.debugModel $ log (showModel m)
   _ <-
