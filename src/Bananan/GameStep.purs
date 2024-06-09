@@ -6,8 +6,8 @@ module Bananan.GameStep
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), Ball, BallQueue, Dragon, Gun)
-import Bananan.Control (ControlKey)
-import Bananan.Control as C
+-- import Bananan.Control (ControlKey)
+-- import Bananan.Control as C
 import Bananan.GameModel (GameConfig, GameModel, GameActor)
 import Engine.Model (Actor(..), Model(..))
 import Engine.Types (Time)
@@ -24,14 +24,17 @@ moveBall dt ball ac@(Actor actor) =
           newY = actor.y + dt * vy
       in Actor actor { x = newX , y = newY}
 
-moveGun :: Time -> Maybe (UserInput ControlKey) -> Gun -> GameActor -> GameActor
-moveGun dt mbUserInput gun (Actor actor) = 
+moveGun :: Time -> UserInput -> Gun -> GameActor -> GameActor
+moveGun dt userInput gun (Actor actor) = 
   let 
-      newSpeed = case mbUserInput of
-                Nothing -> 0.0
-                Just userInput ->
-                  let leftPressed = C.Left `elem` userInput.keys
-                      rightPressed = C.Right `elem` userInput.keys
+      newSpeed = 
+              -- case mbUserInput of
+              --   Nothing -> 0.0
+              --   Just userInput ->
+                  -- let leftPressed = C.Left `elem` userInput.keys
+                  --     rightPressed = C.Right `elem` userInput.keys
+                  let leftPressed = "ArrowLeft" `elem` userInput.keys
+                      rightPressed = "ArrowRight" `elem` userInput.keys
                   in case Tuple leftPressed rightPressed of
                                   Tuple true false -> -gun.maxAngleSpeed
                                   Tuple false true -> gun.maxAngleSpeed
@@ -46,20 +49,16 @@ moveDragon dt dragon actor = actor
 moveBallQueue :: Time -> BallQueue -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
-moveActor :: Time -> Maybe (UserInput ControlKey) -> GameActor -> GameActor
-moveActor dt mbUserInput ac@(Actor actor) = case actor.data of
+moveActor :: Time -> UserInput -> GameActor -> GameActor
+moveActor dt userInput ac@(Actor actor) = case actor.data of
   ActorBall ball -> moveBall dt ball ac
-  ActorGun gun -> moveGun dt  mbUserInput gun ac
+  ActorGun gun -> moveGun dt  userInput gun ac
   ActorDragon dragon -> moveDragon dt dragon ac
   ActorBallQueue queue -> moveBallQueue dt queue ac
 
-gameStep :: GameConfig -> Time -> Array WS.WSMessage -> Array (UserInput ControlKey) -> GameModel -> Tuple GameModel (Array String)
-gameStep conf dt wsMessages userInputs (Model model) = 
-  let
-    newUserInput = case head userInputs of
-      Just input -> input
-      Nothing -> model.prevUserInput
-    newActors = map (moveActor dt (head userInputs)) model.actors
-    wsOut = wsMessages --[]
+gameStep :: GameConfig -> Time -> Array WS.WSMessage -> UserInput -> GameModel -> Tuple GameModel (Array String)
+gameStep conf dt wsMessages userInput (Model model) = 
+  let newActors = map (moveActor dt userInput) model.actors
+      wsOut = wsMessages --[]
   in
-    Tuple (Model model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, prevUserInput = newUserInput }) wsOut
+    Tuple (Model model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, prevUserInput = userInput }) wsOut

@@ -41,17 +41,17 @@ instance showActor :: Show ac => Show (Actor ac) where
         ]
     <> "}"
 
-newtype Model ac gm ui = Model
+newtype Model ac gm = Model
     { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
     , lastUpdateTime :: Instant
     , actors :: Array (Actor ac)
     , gameState :: gm
-    , prevUserInput :: UserInput ui
+    , prevUserInput :: UserInput
     }
 
-instance showModel :: (Show ac, Show gm) => Show (Model ac gm ui) where
+instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
   show (Model m) =  
     foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
       $ [ "gameStepNumber " <> show m.gameStepNumber
@@ -62,13 +62,13 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm ui) where
         , "gameState" <> show (m.gameState)
         ]
 
--- initialModel :: forall ac gm ui. Instant -> gm -> Model ac gm ui
+-- initialModel :: forall ac gm. Instant -> gm -> Model ac gm
 -- initialModel currentTime gameState = 
 --   let (Model m) = initialModelZeroTime gameState
 --   in Model m{ lastUpdateTime = currentTime }
 
 -- TODO setup Model with config
-initialModelZeroTime :: forall ac gm ui. gm -> Model ac gm ui
+initialModelZeroTime :: forall ac gm ui. gm -> Model ac gm
 initialModelZeroTime gameState =
   unsafePartial
     $ let

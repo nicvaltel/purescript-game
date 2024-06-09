@@ -30,12 +30,12 @@ mkActorsFromConfig conf mkActorData = do
           , data: mkActorData conf.state a.data
           }
 
-initGame :: forall ac gm ui. 
+initGame :: forall ac gm. 
   Config ac gm -> 
   gm -> 
   (gm -> ac -> ac) ->
-  Effect (Model ac gm ui)
+  Effect (Model ac gm)
 initGame conf initialGameState mkActorData = do
-  let (Model m) = initialModelZeroTime initialGameState :: Model ac gm ui
+  let (Model m) = initialModelZeroTime initialGameState :: Model ac gm
   actors :: Array (Actor ac) <- mkActorsFromConfig conf mkActorData
   pure $ Model m{ actors = actors }

@@ -9,6 +9,7 @@ import Concurrent.Queue as Q
 import Data.Array (head)
 import Data.DateTime.Instant (diff)
 import Data.Foldable (null)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
@@ -16,60 +17,63 @@ import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
+import Effect.Exception (throwException)
 import Effect.Now (now)
 import Engine.Config (Config)
 import Engine.Model (Model(..))
 import Engine.Render.Render (render)
+import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
-import Engine.UserInput (class Control, UserInput, runUserInput, showUserInput)
-import Engine.Utils.Utils (readAllQueue)
+import Engine.UserInput (UserInput(..), getUserInput)
+import Engine.Utils.Utils (error, readAllQueue, undefined)
 import Engine.WebSocket.WSSignalChan as WS
+import Unsafe.Coerce (unsafeCoerce)
+import Web.HTML (HTMLElement)
 
 newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
-type GameStepFunc ac gm ui = 
+type GameStepFunc ac gm = 
   Config ac gm -> 
   Time -> 
   Array WS.WSMessage -> 
-  Array (UserInput ui) -> 
-  Model ac gm ui -> 
-  Tuple (Model ac gm ui) (Array String)
+  UserInput -> 
+  Model ac gm -> 
+  Tuple (Model ac gm) (Array String) -- TODO cahnge Tuple to output type
 
-mainLoop :: forall ac gm ui. 
-  Show ui => 
+mainLoop :: forall ac gm. 
   Show gm => 
   Show ac => 
   Config ac gm -> 
   WS.WSocket -> 
   Q.Queue String -> 
-  Q.Queue (UserInput ui) -> 
-  GameStepFunc ac gm ui -> 
-  Model ac gm ui -> 
+  GameStepFunc ac gm -> 
+  HTMLElement ->
+  Model ac gm -> 
   Aff Unit
-mainLoop conf socket queueWS queueInput gameStep model@(Model m) = do
+mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
   -- _ <- forkAff $ liftEffect (render conf model) -- TODO make forkAff
   liftEffect (render conf model)
   currentTime <- liftEffect now
   let
     (Milliseconds deltaTime) = diff currentTime m.lastUpdateTime
   messages <- readAllQueue queueWS
-  when conf.debugWebsocket $ when (not $ null messages) $ do
-    liftEffect $ log "MESSAGES IN:"
-    liftEffect $ logShow messages
-  inputs <- readAllQueue queueInput
-  when conf.debugUserInput $ when (not $ null inputs) $ liftEffect do
+  when conf.debugWebsocket $ when (not $ null messages) $ liftEffect do
+    log "MESSAGES IN:"
+    logShow messages
+  userInput <- liftEffect $ getUserInput canvasElem
+  when conf.debugUserInput $ liftEffect do
     log "INPUTS:"
-    log $ show $ showUserInput <$> head inputs
+    log $ show $ show userInput
   let
-    (Tuple (Model newModel') wsOut) = gameStep conf deltaTime messages inputs model
+    (Tuple (Model newModel') wsOut) = gameStep conf deltaTime messages userInput model
     newModel = Model newModel' { lastUpdateTime = currentTime }
   when conf.debugWebsocket $ when (not $ null wsOut) $ do
     liftEffect $ log "MESSAGES OUT:"
     liftEffect $ logShow wsOut
   liftEffect $ sendWsOutMessages socket wsOut
-  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS queueInput gameStep newModel)
+  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS gameStep canvasElem newModel)
   pure unit
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
@@ -90,21 +94,21 @@ runWS conf queue = do
 
 
 
-runGame :: forall ac gm ui. 
-  Control ui => 
+runGame :: forall ac gm. 
   Show gm => 
   Show ac => 
   Config ac gm -> 
-  GameStepFunc ac gm ui -> 
-  Model ac gm ui -> 
+  GameStepFunc ac gm -> 
+  Model ac gm -> 
   Aff Unit
 runGame conf gameStep (Model model) = do --onDOMContentLoaded
-  queueUserInput :: Q.Queue (UserInput ui) <- Q.new
-  liftEffect $ runUserInput queueUserInput conf.canvasElementId
   queueWS :: Q.Queue String <- Q.new
   socket <- runWS conf queueWS
   currentTime <- liftEffect now
-  let
-    gameModel = Model model { lastUpdateTime = currentTime}
-  mainLoop conf socket queueWS queueUserInput gameStep gameModel
+  mbCanvasElem <- liftEffect $ getHtmlElement conf.canvasElementId
+  canvasElem <- case mbCanvasElem of
+          Just el -> pure el
+          Nothing -> error ("ERROR: Canvas not found: canvasElementId = " <> conf.canvasElementId)
+  let  gameModel = Model model { lastUpdateTime = currentTime}
+  mainLoop conf socket queueWS gameStep canvasElem gameModel
   pure unit

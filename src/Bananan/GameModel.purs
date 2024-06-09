@@ -10,7 +10,7 @@ module Bananan.GameModel
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData)
-import Bananan.Control (ControlKey)
+-- import Bananan.Control (ControlKey)
 import Engine.Config (Config)
 import Engine.Model (Model, Actor)
 
@@ -19,7 +19,7 @@ type GameState = {
 }
 
 
-type GameModel = Model ActorData GameState ControlKey
+type GameModel = Model ActorData GameState
 type GameConfig = Config ActorData GameState
 type GameActor = Actor ActorData
 

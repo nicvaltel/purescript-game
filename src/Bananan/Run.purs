@@ -3,7 +3,7 @@ module Bananan.Run(run) where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData)
-import Bananan.Control (ControlKey)
+-- import Bananan.Control (ControlKey)
 import Bananan.GameModel (GameConfig, GameModel, GameState, mkActorData)
 import Bananan.GameStep (gameStep)
 import Engine.Config (Config)
@@ -29,6 +29,6 @@ run =
             model <- liftEffect $ initGame config initialGameState mkActorData
             when config.debugConfig $ liftEffect $ logShow config
             let
-              rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState ControlKey -> GameModel -> Aff Unit
+              rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> GameModel -> Aff Unit
             rGame config gameStep model
 

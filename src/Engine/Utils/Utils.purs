@@ -1,13 +1,16 @@
 module Engine.Utils.Utils where
 
 import Prelude
-import Unsafe.Coerce (unsafeCoerce)
+
 import Concurrent.Queue as Q
-import Effect.Aff (Aff)
-import Data.Maybe (Maybe(..))
 import Data.Array ((:), reverse, head, filter)
 import Data.Either (Either(..), either)
-import Data.Enum(class Enum, enumFromTo)
+import Data.Enum (class Enum, enumFromTo)
+import Data.Maybe (Maybe(..))
+import Effect.Aff (Aff)
+import Effect.Exception (throw)
+import Effect.Unsafe (unsafePerformEffect)
+import Unsafe.Coerce (unsafeCoerce)
 
 undefined ∷ ∀ a. a
 undefined = unsafeCoerce unit
@@ -30,3 +33,6 @@ inverseMap forwardMap k =
   head
     $ filter (\a -> forwardMap a == k)
     $ enumFromTo (bottom :: a) (top :: a)
+
+error :: forall a. String -> a
+error = unsafePerformEffect <<< throw

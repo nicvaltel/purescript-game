@@ -41,12 +41,9 @@ export function _getMouseCoordinates() {
     return { x: mouseX, y: mouseY };
 }
 
-export function _getElementOffset(el) {
-  return function () {
-    const rect = el.getBoundingClientRect();
-    return {
-      x: rect.left + window.scrollX,
-      y: rect.top + window.scrollY
-    };
+
+export function _requestAnimationFrame(fn) {
+      return function() {
+        return window.requestAnimationFrame(fn);
+      };
   }
-}
