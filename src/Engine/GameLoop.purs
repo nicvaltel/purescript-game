@@ -14,7 +14,7 @@ import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, launchAff_, message)
+import Effect.Aff (Aff, forkAff, joinFiber, launchAff_, message)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Exception (throwException)
@@ -51,16 +51,16 @@ mainLoop :: forall ac gm.
   Model ac gm -> 
   Aff Unit
 mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
-  -- _ <- forkAff $ liftEffect (render conf model) -- TODO make forkAff
-  liftEffect (render conf model)
+  renderFiber <- forkAff $ liftEffect (render conf model) -- TODO make forkAff
+  -- liftEffect (render conf model)
   currentTime <- liftEffect now
   let
     (Milliseconds deltaTime) = diff currentTime m.lastUpdateTime
   messages <- readAllQueue queueWS
+  userInput <- liftEffect $ getUserInput canvasElem
   when conf.debugWebsocket $ when (not $ null messages) $ liftEffect do
     log "MESSAGES IN:"
     logShow messages
-  userInput <- liftEffect $ getUserInput canvasElem
   when conf.debugUserInput $ liftEffect do
     log "INPUTS:"
     log $ show $ show userInput
@@ -68,10 +68,11 @@ mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
     modelWithInputs = Model m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = []}
     (Model newModel') = gameStep conf deltaTime modelWithInputs
     newM@(Model newModel) = Model newModel' { lastUpdateTime = currentTime }
-  when conf.debugWebsocket $ when (not $ null newModel.wsOut) $ do
-    liftEffect $ log "MESSAGES OUT:"
-    liftEffect $ logShow newModel.wsOut
   liftEffect $ sendWsOutMessages socket newModel.wsOut
+  when conf.debugWebsocket $ when (not $ null newModel.wsOut) $ liftEffect do
+    log "MESSAGES OUT:"
+    logShow newModel.wsOut
+  joinFiber renderFiber
   _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS gameStep canvasElem newM)
   pure unit
 
