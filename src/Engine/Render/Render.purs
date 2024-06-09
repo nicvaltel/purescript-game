@@ -1,15 +1,9 @@
 module Engine.Render.Render (render) where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import Data.Number (floor)
-import Data.Traversable (for)
-import Effect (Effect)
-import Effect.Console (log)
+import Engine.Reexport
 import Engine.Config (Config)
 import Engine.Model (Actor(..), Model(..))
-import Web.HTML (HTMLElement)
+
 
 type ActorObj
   = { elem :: HTMLElement, css :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number }

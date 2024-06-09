@@ -1,10 +1,6 @@
 module Engine.Config where
 
-import Prelude
-import Data.Argonaut.Core (Json)
-import Data.Argonaut.Decode.Class (class DecodeJsonField, decodeJson)
-import Data.Either (Either)
-import Engine.Utils.Utils (mapLeft)
+import Engine.Reexport
 
 type Config ac gm
   = { frameRateNumber :: Number

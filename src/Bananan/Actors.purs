@@ -9,11 +9,6 @@ module Bananan.Actors
   where
 
 import Bananan.Reexport
-import Prelude
-
-
-import Engine.Config (Config)
-import Engine.Model (Actor)
 
 type Gun = {
     angleSpeed :: Number

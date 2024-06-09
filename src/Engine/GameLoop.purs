@@ -3,32 +3,15 @@ module Engine.GameLoop
   , runGame
   ) where
 
-import Prelude
-
+import Engine.Reexport
 import Concurrent.Queue as Q
-import Data.Array (head)
-import Data.DateTime.Instant (diff)
-import Data.Foldable (null)
-import Data.Maybe (Maybe(..), maybe)
-import Data.Time.Duration (Milliseconds(..))
-import Data.Traversable (traverse_)
-import Data.Tuple (Tuple(..))
-import Effect (Effect)
-import Effect.Aff (Aff, forkAff, joinFiber, launchAff_, message)
-import Effect.Class (liftEffect)
-import Effect.Console (log, logShow)
-import Effect.Exception (throwException)
-import Effect.Now (now)
 import Engine.Config (Config)
 import Engine.Model (Model(..))
 import Engine.Render.Render (render)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
-import Engine.UserInput (UserInput(..), getUserInput)
-import Engine.Utils.Utils (error, readAllQueue, undefined)
+import Engine.UserInput (getUserInput)
 import Engine.WebSocket.WSSignalChan as WS
-import Unsafe.Coerce (unsafeCoerce)
-import Web.HTML (HTMLElement)
 
 newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int

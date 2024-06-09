@@ -2,11 +2,10 @@ module Bananan.Control
   ( ControlKey(..)
   ) where
 
-import Prelude
+import Bananan.Reexport
 import Data.Bounded as B
 import Data.Enum as E
 import Data.Maybe (Maybe(..))
-import Bananan.Reexport
 
 data ControlKey
   = Space -- 0x5e

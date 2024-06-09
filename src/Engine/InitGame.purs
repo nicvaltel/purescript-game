@@ -3,7 +3,6 @@ module Engine.InitGame
   ) where
 
 import Prelude
-
 import Data.Traversable (for)
 import Effect (Effect)
 import Engine.Config (Config)

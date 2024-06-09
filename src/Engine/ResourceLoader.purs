@@ -5,28 +5,19 @@ module Engine.ResourceLoader
   )
   where
 
-import Prelude
-
+import Engine.Reexport
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
 import Affjax.Web (driver)
-import Data.Argonaut.Decode.Class (class DecodeJsonField)
 import Data.Argonaut.Parser (jsonParser)
-import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable, toMaybe)
-import Data.Traversable (traverse)
-import Data.Tuple (Tuple(..))
-import Effect (Effect)
-import Effect.Aff (Canceler, Aff, makeAff)
 import Effect.Exception (Error, error)
 import Engine.Config (Config, fromJson)
 import Engine.Types (FilePath)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
-import Web.HTML (HTMLElement)
 
 foreign import _getHtmlElenentById :: String -> Effect (Nullable HTMLElement)
 
