@@ -1,51 +1,42 @@
-module Bananan.Control where
---   ( ControlKey(..)
---   ) where
+module Bananan.Control
+  ( ControlKey(..)
+  ) where
 
--- import Prelude
--- import Data.Bounded as B
--- import Data.Enum as E
--- import Data.Maybe (Maybe(..))
--- import Engine.UserInput as UI
+import Prelude
+import Data.Bounded as B
+import Data.Enum as E
+import Data.Maybe (Maybe(..))
+import Bananan.Reexport
 
--- data ControlKey
---   = Space
---   | Left
---   | Up
---   | Right
---   | Down
+data ControlKey
+  = Space -- 0x5e
+  | ArrowLeft -- 0x61
+  | ArrowRight -- 0x63
 
--- instance showControlKey :: Show ControlKey where
---   show Space = "Space"
---   show Left = "Left"
---   show Up = "Up"
---   show Right = "Right"
---   show Down = "Down"
+instance showControlKey :: Show ControlKey where
+  show Space = " "
+  show ArrowLeft = "ArrowLeft"
+  show ArrowRight = "ArrowRight"
 
--- derive instance eqControlKey :: Eq ControlKey
+derive instance eqControlKey :: Eq ControlKey
 
--- derive instance ordControlKey :: Ord ControlKey
+derive instance ordControlKey :: Ord ControlKey
 
--- instance enumControlKey :: E.Enum ControlKey where
---   succ Space = Just Left
---   succ Left = Just Up
---   succ Up = Just Right
---   succ Right = Just Down
---   succ Down = Nothing
---   pred Space = Nothing
---   pred Left = Just Space
---   pred Up = Just Left
---   pred Right = Just Up
---   pred Down = Just Right
+instance readControlKey :: Read ControlKey where
+    read = inverseMap show
+    -- read " " = Just Space
+    -- read "ArrowLeft" = Just ArrowLeft
+    -- read "ArrowRight" = Just ArrowRight
+    -- read _ = Nothing
 
--- instance boundedControlKey :: B.Bounded ControlKey where
---   bottom = Space
---   top = Down
+instance enumControlKey :: E.Enum ControlKey where
+  succ Space = Just ArrowLeft
+  succ ArrowLeft = Just ArrowRight
+  succ ArrowRight = Nothing
+  pred Space = Nothing
+  pred ArrowLeft = Just Space
+  pred ArrowRight = Just ArrowLeft
 
--- instance controlControlKey :: UI.Control ControlKey where
---   controlKeyMap :: ControlKey -> Int
---   controlKeyMap Space = 32
---   controlKeyMap Left = 37
---   controlKeyMap Up = 38
---   controlKeyMap Right = 39
---   controlKeyMap Down = 40
+instance boundedControlKey :: B.Bounded ControlKey where
+  bottom = Space
+  top = ArrowRight

@@ -15,14 +15,15 @@ module Bananan.Reexport (
   module Data.Argonaut.Core,
   module Data.Argonaut.Decode.Error,
   module Data.Enum,
-  module Data.Ord
+  module Data.Ord,
+  module Data.String.Read
 ) where
 
 import Prelude
 
 import Data.Argonaut.Decode (class DecodeJson, decodeJson)
 import Data.Argonaut.Core (Json)
-import Data.Array (filter, head, (:), range, unsafeIndex, elem)
+import Data.Array (filter, head, (:), range, unsafeIndex, elem, mapMaybe)
 import Data.Either (Either(..), note)
 import Data.Int (round, toNumber)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -36,3 +37,4 @@ import Partial.Unsafe (unsafePartial)
 import Data.Argonaut.Decode.Error(JsonDecodeError(..))
 import Data.Enum(class Enum)
 import Data.Ord(clamp)
+import Data.String.Read (class Read, read)

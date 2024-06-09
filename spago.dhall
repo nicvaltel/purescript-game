@@ -53,7 +53,8 @@ to generate this file without the comments in this block.
     "debug",
     "nullable",
     "web-dom",
-    "web-html"
+    "web-html",
+    "read"
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
