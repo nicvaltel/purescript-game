@@ -47,6 +47,8 @@ newtype Model ac gm = Model
     , screenHeight :: Number
     , lastUpdateTime :: Instant
     , actors :: Array (Actor ac)
+    -- , recentlyAddedActors :: Array (Actor ac)
+    -- , recentlyDeletedActors :: Array (Actor ac)
     , gameState :: gm
     , userInput :: UserInput
     , prevUserInput :: UserInput

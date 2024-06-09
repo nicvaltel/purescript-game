@@ -5,7 +5,7 @@ module Bananan.GameStep
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), Ball, BallQueue, Dragon, Gun)
+import Bananan.Actors (ActorData(..), Ball, BallColor(..), BallQueueActor, Dragon, Gun)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameModel (GameConfig, GameModel, GameActor)
@@ -36,10 +36,31 @@ moveGun dt controlKeys gun (Actor actor) =
       newAngle = clamp gun.maxLeftAngle gun.maxRightAngle newAngle'
   in Actor actor{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
 
+fireBall :: GameModel -> GameModel
+fireBall (Model m) =
+  let ball = m.gameState.ballQueue{flying = Just {vx : 0.1, vy : -0.1}}
+      newQueueBall = { -- TODO make it random
+          color : Blue
+        , flying : Nothing
+        }
+      newBallActor = Actor 
+        {
+          nameId : "newBallActor"
+        , x : 500.0
+        , y : 500.0
+        , z : 1
+        , visible : true
+        , angle : 0.0
+        , htmlElement : Nothing
+        , data : ActorBall ball
+        }
+  in Model m{actors = newBallActor : m.actors, gameState = m.gameState{ballQueue = newQueueBall} }
+
+
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
 moveDragon dt dragon actor = actor
 
-moveBallQueue :: Time -> BallQueue -> GameActor -> GameActor
+moveBallQueue :: Time -> BallQueueActor -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
 moveActor :: Time -> UserInput -> Array ControlKey -> GameActor -> GameActor
@@ -54,6 +75,12 @@ gameStep conf dt (Model model) =
   let 
       controlKeys = mapMaybe read model.userInput.keys
       newActors = map (moveActor dt model.userInput controlKeys) model.actors
+
+      newBall = if C.Space `elem` controlKeys
+            then Just fireBall
+            else Nothing
+
       wsOut = model.wsIn --[]
+
   in
     Model model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, wsOut = wsOut }

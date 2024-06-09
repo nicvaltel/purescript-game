@@ -40,12 +40,17 @@
       "y": 0.0,
       "z": 10,
       "data": {
-        "type" : "ball_queue"
-      , "data": {"queue": []}
+        "type" : "ball_queue_actor"
+      , "data": {"animation": "ball_queue_actor.gif"}
       }
     }
     ],
   "state" : {
-    "score": 15
+      "score": 15
+    , "ballQueue": {
+        "color" : "Yellow"
+      , "flying" : null
+      }
   }
 }
+

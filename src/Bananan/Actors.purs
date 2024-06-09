@@ -2,7 +2,7 @@ module Bananan.Actors
   ( ActorData(..)
   , Ball(..)
   , BallColor(..)
-  , BallQueue(..)
+  , BallQueueActor(..)
   , Dragon(..)
   , Gun(..)
   )
@@ -11,7 +11,7 @@ module Bananan.Actors
 import Bananan.Reexport
 import Prelude
 
-import Data.Argonaut.Decode ((.:))
+
 import Engine.Config (Config)
 import Engine.Model (Actor)
 
@@ -53,8 +53,8 @@ type Dragon = {
 }
 
 
-type BallQueue = {
-  queue :: Array Ball
+type BallQueueActor = {
+  animation :: String
 }
 
 
@@ -63,7 +63,7 @@ data ActorData =
     ActorGun Gun
   | ActorBall Ball
   | ActorDragon Dragon
-  | ActorBallQueue BallQueue 
+  | ActorBallQueue BallQueueActor 
 
 instance showActorData :: Show ActorData where
   show (ActorBall ball)  = "ActorBall" <> show ball
@@ -71,7 +71,7 @@ instance showActorData :: Show ActorData where
   show (ActorDragon dragon) = "ActorDragon" <> show dragon
   show (ActorBallQueue ballQueue) = "ActorBallQueue" <> show ballQueue
 
-instance decodeJsonActorState :: DecodeJson ActorData where
+instance decodeJsonActorData :: DecodeJson ActorData where
   decodeJson json = do
     obj <- decodeJson json -- attempts to decode the JSON value as an object.
     actorType <- obj .: "type" -- extracts the "type" field from the JSON object.
@@ -79,6 +79,5 @@ instance decodeJsonActorState :: DecodeJson ActorData where
       "ball" -> ActorBall <$> (obj .: "data") -- This pattern matches the "type" field to determine which constructor to use (ActorBall or ActorGun).
       "gun"  -> ActorGun <$> (obj .: "data")
       "dragon"  -> ActorDragon <$> (obj .: "data")
-      "ball_queue"  -> ActorBallQueue <$> (obj .: "data")
+      "ball_queue_actor"  -> ActorBallQueue <$> (obj .: "data")
       _      -> Left $ TypeMismatch $ "Unknown actor type: " <> actorType
-

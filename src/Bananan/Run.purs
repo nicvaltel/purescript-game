@@ -2,8 +2,7 @@ module Bananan.Run(run) where
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData)
--- import Bananan.Control (ControlKey)
+import Bananan.Actors (ActorData, BallColor(..))
 import Bananan.GameModel (GameConfig, GameModel, GameState, mkActorData)
 import Bananan.GameStep (gameStep)
 import Engine.Config (Config)
@@ -15,7 +14,15 @@ configFilePath ∷ String
 configFilePath = "config.json"
 
 initialGameState :: GameState
-initialGameState = {score: 0}
+initialGameState = 
+  {
+    score: 0
+  , ballQueue : 
+      {
+        color : Red
+      , flying : Nothing
+      }   
+  }
 
 run :: Effect Unit
 run =

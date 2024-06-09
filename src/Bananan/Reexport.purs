@@ -17,7 +17,8 @@ module Bananan.Reexport (
   module Data.Enum,
   module Data.Ord,
   module Data.String.Read,
-  module Data.Foldable
+  module Data.Foldable,
+  module Data.Argonaut.Decode
 ) where
 
 import Prelude
@@ -40,3 +41,4 @@ import Data.Enum(class Enum)
 import Data.Ord(clamp)
 import Data.String.Read (class Read, read)
 import Data.Foldable (intercalate)
+import Data.Argonaut.Decode ((.:))

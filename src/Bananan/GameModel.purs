@@ -9,14 +9,14 @@ module Bananan.GameModel
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData)
--- import Bananan.Control (ControlKey)
+import Bananan.Actors (ActorData, Ball)
 import Engine.Config (Config)
 import Engine.Model (Model, Actor)
 
 type GameState = {
-  score :: Int
-}
+    score :: Int
+    , ballQueue :: Ball
+  }
 
 
 type GameModel = Model ActorData GameState
