@@ -16,7 +16,8 @@ module Bananan.Reexport (
   module Data.Argonaut.Decode.Error,
   module Data.Enum,
   module Data.Ord,
-  module Data.String.Read
+  module Data.String.Read,
+  module Data.Foldable
 ) where
 
 import Prelude
@@ -38,3 +39,4 @@ import Data.Argonaut.Decode.Error(JsonDecodeError(..))
 import Data.Enum(class Enum)
 import Data.Ord(clamp)
 import Data.String.Read (class Read, read)
+import Data.Foldable (intercalate)

@@ -14,7 +14,7 @@ import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
-import Effect.Aff (Aff, launchAff_)
+import Effect.Aff (Aff, launchAff_, message)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Effect.Exception (throwException)
@@ -37,10 +37,8 @@ foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationF
 type GameStepFunc ac gm = 
   Config ac gm -> 
   Time -> 
-  Array WS.WSMessage -> 
-  UserInput -> 
   Model ac gm -> 
-  Tuple (Model ac gm) (Array String) -- TODO cahnge Tuple to output type
+  Model ac gm
 
 mainLoop :: forall ac gm. 
   Show gm => 
@@ -67,13 +65,14 @@ mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
     log "INPUTS:"
     log $ show $ show userInput
   let
-    (Tuple (Model newModel') wsOut) = gameStep conf deltaTime messages userInput model
-    newModel = Model newModel' { lastUpdateTime = currentTime }
-  when conf.debugWebsocket $ when (not $ null wsOut) $ do
+    modelWithInputs = Model m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = []}
+    (Model newModel') = gameStep conf deltaTime modelWithInputs
+    newM@(Model newModel) = Model newModel' { lastUpdateTime = currentTime }
+  when conf.debugWebsocket $ when (not $ null newModel.wsOut) $ do
     liftEffect $ log "MESSAGES OUT:"
-    liftEffect $ logShow wsOut
-  liftEffect $ sendWsOutMessages socket wsOut
-  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS gameStep canvasElem newModel)
+    liftEffect $ logShow newModel.wsOut
+  liftEffect $ sendWsOutMessages socket newModel.wsOut
+  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS gameStep canvasElem newM)
   pure unit
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit

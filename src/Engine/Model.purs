@@ -9,12 +9,12 @@ import Prelude
 
 import Data.DateTime.Instant (Instant, instant)
 import Data.Foldable (foldr, intercalate)
-import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..), isJust)
 import Data.Time.Duration (Milliseconds(..))
 import Engine.UserInput (UserInput, emptyUserInput)
 import Partial.Unsafe (unsafePartial)
 import Web.HTML (HTMLElement)
+import Engine.WebSocket.WSSignalChan as WS
 
 newtype Actor ac = Actor {
     nameId :: String
@@ -48,7 +48,10 @@ newtype Model ac gm = Model
     , lastUpdateTime :: Instant
     , actors :: Array (Actor ac)
     , gameState :: gm
+    , userInput :: UserInput
     , prevUserInput :: UserInput
+    , wsIn :: Array WS.WSMessage 
+    , wsOut :: Array WS.WSMessage 
     }
 
 instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
@@ -60,6 +63,10 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "lastUpdateTime " <> show m.lastUpdateTime
         , "actors " <> (intercalate ", " $ map show m.actors)
         , "gameState" <> show (m.gameState)
+        , "currentUserInput" <> show (m.userInput)
+        , "prevUserInput" <> show (m.prevUserInput)
+        , "wsIn" <> show (m.wsIn)
+        , "wsOut" <> show (m.wsOut)
         ]
 
 -- initialModel :: forall ac gm. Instant -> gm -> Model ac gm
@@ -68,7 +75,7 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
 --   in Model m{ lastUpdateTime = currentTime }
 
 -- TODO setup Model with config
-initialModelZeroTime :: forall ac gm ui. gm -> Model ac gm
+initialModelZeroTime :: forall ac gm. gm -> Model ac gm
 initialModelZeroTime gameState =
   unsafePartial
     $ let
@@ -80,5 +87,8 @@ initialModelZeroTime gameState =
         , lastUpdateTime: time
         , actors: [] :: Array (Actor ac)
         , gameState
+        , userInput : emptyUserInput
         , prevUserInput : emptyUserInput
+        , wsIn : []
+        , wsOut: []
         }

@@ -12,7 +12,6 @@ import Bananan.GameModel (GameConfig, GameModel, GameActor)
 import Engine.Model (Actor(..), Model(..))
 import Engine.Types (Time)
 import Engine.UserInput (UserInput)
-import Engine.WebSocket.WSSignalChan as WS
 
 
 moveBall :: Time -> Ball -> GameActor -> GameActor
@@ -50,11 +49,11 @@ moveActor dt userInput controlKeys ac@(Actor actor) = case actor.data of
   ActorDragon dragon -> moveDragon dt dragon ac
   ActorBallQueue queue -> moveBallQueue dt queue ac
 
-gameStep :: GameConfig -> Time -> Array WS.WSMessage -> UserInput -> GameModel -> Tuple GameModel (Array String)
-gameStep conf dt wsMessages userInput (Model model) = 
+gameStep :: GameConfig -> Time -> GameModel -> GameModel
+gameStep conf dt (Model model) = 
   let 
-      controlKeys = mapMaybe read userInput.keys
-      newActors = map (moveActor dt userInput controlKeys) model.actors
-      wsOut = wsMessages --[]
+      controlKeys = mapMaybe read model.userInput.keys
+      newActors = map (moveActor dt model.userInput controlKeys) model.actors
+      wsOut = model.wsIn --[]
   in
-    Tuple (Model model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, prevUserInput = userInput }) wsOut
+    Model model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, wsOut = wsOut }
