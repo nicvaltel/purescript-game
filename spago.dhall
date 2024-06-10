@@ -46,7 +46,8 @@ to generate this file without the comments in this block.
     "web-html",
     "read",
     "newtype",
-    "record"
+    "record",
+    "strings"
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

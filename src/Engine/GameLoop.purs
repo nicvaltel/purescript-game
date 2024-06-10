@@ -7,6 +7,7 @@ import Engine.Reexport
 
 import Concurrent.Queue as Q
 import Data.Map as M
+import Data.Traversable (sequence)
 import Engine.Config (Config)
 import Engine.Model (Actor(..), Model(..))
 import Engine.Render.Render (render)
@@ -70,17 +71,17 @@ mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
 
 updateRecentlyAddedActors :: forall ac gm. HTMLElement -> Model ac gm -> Effect (Model ac gm)
 updateRecentlyAddedActors canvasElem (Model m) = do
-  newActorsArr :: Array (Actor ac) <- for m.recentlyAddedActors $ \actor@(Actor a) -> do
-    maybeElem <- getHtmlElement a.nameId
+  newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- for m.recentlyAddedActors $ \nameId -> do
+    maybeElem <- getHtmlElement nameId
     elem <- case maybeElem of
-      Just el -> pure el
-      Nothing -> createNewHtmlElem canvasElem actor
-    pure (Actor a{htmlElement = Just elem})
-  let newActors = foldr (\a acc -> M.insert (unwrap a).nameId a acc) m.actors newActorsArr
-  pure $ Model m{actors = newActors, recentlyAddedActors = []} -- TODO change from adding actors to modifying exsisted actors
+      Just el -> pure $ Just el
+      Nothing -> sequence (createNewHtmlElem canvasElem <$> M.lookup nameId m.actors) 
+    pure (Tuple nameId elem)
+  let newActors = foldr (\(Tuple nameId elem) acc -> M.update (\(Actor a) -> Just (Actor a{htmlElement = elem})) nameId acc) m.actors newActorsArr
+  pure $ Model m{actors = newActors, recentlyAddedActors = []}
 
 createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
-createNewHtmlElem canvasElem (Actor a)= _createImageElement {
+createNewHtmlElem canvasElem (Actor a) = _createImageElement {
   canvasElem : canvasElem, 
   x : a.x, 
   y : a.y, 
@@ -93,8 +94,8 @@ createNewHtmlElem canvasElem (Actor a)= _createImageElement {
 
 removeRecentlyDeletedActors :: forall ac gm.  Model ac gm -> Effect (Model ac gm)
 removeRecentlyDeletedActors (Model m) = do
-  _ <- for m.recentlyDeletedActors $ \(Actor a) -> do
-    _removeElementById a.nameId
+  _ <- for m.recentlyDeletedActors $ \nameId -> do
+    _removeElementById nameId
   pure $ Model m{recentlyDeletedActors = []}
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit

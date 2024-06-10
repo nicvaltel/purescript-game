@@ -58,7 +58,7 @@ fireBall (Model m) =
         }
   in Model m{
       actors = M.insert "newBallActor" newBallActor m.actors,
-      recentlyAddedActors = newBallActor : m.recentlyAddedActors, 
+      recentlyAddedActors = "newBallActor" : m.recentlyAddedActors, 
       gameState = m.gameState{ballQueue = newQueueBall} 
     }
 

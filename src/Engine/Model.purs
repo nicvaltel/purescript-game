@@ -7,9 +7,10 @@ module Engine.Model
 
 import Engine.Reexport
 
+import Data.Map as M
+import Data.String as S
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
-import Data.Map as M
 
 newtype Actor ac = Actor {
     nameId :: String
@@ -27,19 +28,13 @@ newtype Actor ac = Actor {
 derive instance newtypeActor :: Newtype (Actor ac) _
 
 instance showActor :: Show ac => Show (Actor ac) where
-  show (Actor actor) = "{" <> 
-    intercalate ", " 
-        [ "nameId: " <> show actor.nameId
-        , "x: " <> show actor.x
-        , "y: " <> show actor.y
-        , "z: " <> show actor.z
-        , "visible: " <> show actor.visible
-        , "angle: " <> show actor.angle
-        , "imageSource" <> actor.imageSource
-        , "htmlElement: " <> if (isJust actor.htmlElement) then "Just HtmlElem" else "Nothing"
-        , "data: " <> show actor.data
-        ]
-    <> "}"
+  show (Actor actor) = 
+    let str = show $ delete (Proxy :: Proxy "htmlElement") actor
+    in  (S.take (S.length str - 1) str) 
+        <> ", " <> "htmlElement: " 
+        <> (if (isJust actor.htmlElement) then "Just HtmlElem" else "Nothing") 
+        <> " }"
+
 
 newtype Model ac gm = Model
     { gameStepNumber :: Int
@@ -47,8 +42,8 @@ newtype Model ac gm = Model
     , screenHeight :: Number
     , lastUpdateTime :: Instant
     , actors :: Map NameId (Actor ac)
-    , recentlyAddedActors :: Array (Actor ac)
-    , recentlyDeletedActors :: Array (Actor ac)
+    , recentlyAddedActors :: Array NameId
+    , recentlyDeletedActors :: Array NameId
     , gameState :: gm
     , userInput :: UserInput
     , prevUserInput :: UserInput
@@ -74,11 +69,6 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "wsIn" <> show (m.wsIn)
         , "wsOut" <> show (m.wsOut)
         ]
-
--- initialModel :: forall ac gm. Instant -> gm -> Model ac gm
--- initialModel currentTime gameState = 
---   let (Model m) = initialModelZeroTime gameState
---   in Model m{ lastUpdateTime = currentTime }
 
 -- TODO setup Model with config
 initialModelZeroTime :: forall ac gm. gm -> Model ac gm
