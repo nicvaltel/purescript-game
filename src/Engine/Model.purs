@@ -19,7 +19,7 @@ newtype Actor ac = Actor {
   , z :: Int
   , visible :: Boolean
   , angle :: Number
-  , css :: String
+  , cssClass :: String
   , imageSource :: String
   , htmlElement :: Maybe HTMLElement 
   , data :: ac
@@ -48,7 +48,8 @@ newtype Model ac gm = Model
     , userInput :: UserInput
     , prevUserInput :: UserInput
     , wsIn :: Array WS.WSMessage 
-    , wsOut :: Array WS.WSMessage 
+    , wsOut :: Array WS.WSMessage
+    , seed :: Seed
     }
 
 derive instance newtypeModel :: Newtype (Model ac gm) _
@@ -89,4 +90,5 @@ initialModelZeroTime gameState =
         , prevUserInput : emptyUserInput
         , wsIn : []
         , wsOut: []
+        , seed: mkSeed 0
         }

@@ -47,7 +47,9 @@ to generate this file without the comments in this block.
     "read",
     "newtype",
     "record",
-    "strings"
+    "strings",
+    "lcg",
+    "st",
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

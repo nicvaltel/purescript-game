@@ -14,7 +14,7 @@
       "x": 300.0,
       "y": 600.0,
       "z": 1,
-      "css" : "gun",
+      "cssClass" : "gun",
       "imageSource": "../images/gun.png",
       "data": {
         "type": "gun",
@@ -31,7 +31,7 @@
       "x": 63.0,
       "y": 57.0,
       "z": 1,
-      "css" : "dragon",
+      "cssClass" : "dragon",
       "imageSource": "../images/gun.png",
       "data": {
         "type": "dragon",
@@ -45,7 +45,7 @@
       "x": 0.0,
       "y": 0.0,
       "z": 10,
-      "css" : "ball_queue",
+      "cssClass" : "ball_queue",
       "imageSource": "../images/gun.png",
       "data": {
         "type": "ball_queue_actor",

@@ -5,7 +5,7 @@ module Bananan.GameStep
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), Ball, BallColor(..), BallQueueActor, Dragon, Gun)
+import Bananan.Actors (ActorData(..), Ball, BallColor(..), BallQueueActor, Dragon, Gun, colorFromRandomInt, cssClassOfColor)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameModel (GameConfig, GameModel, GameActor)
@@ -13,6 +13,7 @@ import Data.Map as M
 import Engine.Model (Actor(..), Model(..))
 import Engine.Types (Time)
 import Engine.UserInput (UserInput, keyWasPressedOnce)
+
 
 moveBall :: Time -> Ball -> GameActor -> GameActor
 moveBall dt ball ac@(Actor actor) = 
@@ -38,9 +39,10 @@ moveGun dt controlKeys gun (Actor actor) =
 
 fireBall :: GameModel -> GameModel
 fireBall (Model m) =
-  let ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
-      newQueueBall = { -- TODO make it random
-          color : Blue
+  let randomPair = random m.seed :: RandomPair Int
+      ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
+      newQueueBall = {
+          color : colorFromRandomInt randomPair.newVal
         , flying : Nothing
         }
       newBallActor = Actor -- TODO it's just a mock
@@ -51,7 +53,7 @@ fireBall (Model m) =
         , z : 1
         , visible : true
         , angle : 0.0
-        , css : "ball"
+        , cssClass : cssClassOfColor ball.color
         , imageSource : "../images/ball.png"
         , htmlElement : Nothing
         , data : ActorBall ball
@@ -59,7 +61,8 @@ fireBall (Model m) =
   in Model m{
       actors = M.insert "newBallActor" newBallActor m.actors,
       recentlyAddedActors = "newBallActor" : m.recentlyAddedActors, 
-      gameState = m.gameState{ballQueue = newQueueBall} 
+      gameState = m.gameState{ballQueue = newQueueBall},
+      seed = randomPair.newSeed 
     }
 
 

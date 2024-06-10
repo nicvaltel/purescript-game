@@ -8,7 +8,7 @@ import Engine.Model (Actor(..), Model(..))
 
 
 type ActorObj
-  = { elem :: HTMLElement, css :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number }
+  = { elem :: HTMLElement, cssClass :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number }
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
@@ -33,7 +33,7 @@ render conf model@(Model m) = do
   where
     mkActorObj el actor = do
                   { elem: el
-                  , css: ""
+                  , cssClass: actor.cssClass
                   , baseX: 0.0
                   , baseY: 0.0
                   , x: floor $ actor.x

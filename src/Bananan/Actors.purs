@@ -5,10 +5,16 @@ module Bananan.Actors
   , BallQueueActor(..)
   , Dragon(..)
   , Gun(..)
+  , colorFromRandomInt
+  , cssClassOfColor
   )
   where
 
 import Bananan.Reexport
+import Prelude
+
+import Data.Generic.Rep (class Generic)
+import Data.String (toLower)
 
 type Gun = {
     angleSpeed :: Number
@@ -17,14 +23,25 @@ type Gun = {
   , maxRightAngle :: Number
 }
 
-data BallColor = Red | Green | Blue | Yellow
+data BallColor = Red | Green | Blue | Yellow | Purple
 
 instance showBallColor :: Show BallColor where
   show Red  = "Red"
   show Green = "Green"
   show Blue = "Blue"
   show Yellow = "Yellow"
+  show Purple = "Purple"
 
+colorFromRandomInt :: Int -> BallColor
+colorFromRandomInt n = case n `mod` 5 of
+  0 -> Red
+  1 -> Green
+  2 -> Blue
+  3 -> Yellow
+  _ -> Purple 
+
+cssClassOfColor :: BallColor -> String
+cssClassOfColor color = (toLower $ show color) <> "_ball"
 
 instance decodeJsonBallColor :: DecodeJson BallColor where
   decodeJson json = do

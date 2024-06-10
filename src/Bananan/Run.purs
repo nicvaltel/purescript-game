@@ -2,27 +2,30 @@ module Bananan.Run(run) where
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData, BallColor(..))
+import Bananan.Actors (ActorData, colorFromRandomInt)
 import Bananan.GameModel (GameConfig, GameModel, GameState, mkActorData)
 import Bananan.GameStep (gameStep)
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.InitGame (initGame)
+import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (parseConfigFile)
 
 configFilePath ∷ String
 configFilePath = "config.json"
 
-initialGameState :: GameState
-initialGameState = 
-  {
-    score: 0
-  , ballQueue : 
-      {
-        color : Red
-      , flying : Nothing
-      }   
-  }
+initialGameState :: Effect GameState
+initialGameState = do
+  n :: Int <- randomEff
+  pure
+    {
+      score: 0
+    , ballQueue : 
+        {
+          color : colorFromRandomInt n
+        , flying : Nothing
+        }   
+    }
 
 run :: Effect Unit
 run =
@@ -33,7 +36,8 @@ run =
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
-            model <- liftEffect $ initGame config initialGameState mkActorData
+            gameState <- liftEffect initialGameState
+            model <- liftEffect $ initGame config gameState mkActorData
             when config.debugConfig $ liftEffect $ logShow config
             let
               rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> GameModel -> Aff Unit

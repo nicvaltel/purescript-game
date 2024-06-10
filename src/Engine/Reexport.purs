@@ -32,7 +32,8 @@ module Engine.Reexport (
   module Engine.Types,
   module Debug,
   module Record,
-  module Type.Proxy
+  module Type.Proxy,
+  module Engine.Random.PseudoRandom
 ) where
 
 import Prelude
@@ -69,3 +70,4 @@ import Engine.Types
 import Debug(trace)
 import Record(delete)
 import Type.Proxy (Proxy(..))
+import Engine.Random.PseudoRandom (Seed(..),RandomPair (..), random, mkSeed, randomSeed)

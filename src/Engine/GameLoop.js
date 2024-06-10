@@ -44,9 +44,8 @@ export function _createImageElement(o) {
       newDiv.style.position = "absolute";
       newDiv.style.left = o.x + "px";
       newDiv.style.top = o.y + "px";
-      // newDiv.className = o.css;
-      newDiv.className = "ball";
-      newDiv.setAttribute('class','ball');
+      newDiv.className = o.cssClass;
+      // newDiv.setAttribute('class','ball');
       o.canvasElem.appendChild(newDiv);
       return newDiv;
     }

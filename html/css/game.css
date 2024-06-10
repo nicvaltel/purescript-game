@@ -33,16 +33,55 @@
     background: url(../images/gun.png);
 }
 
-.ball {
+.red_ball {
     position: absolute;
     scale: 100%;
-    width: 72px;
-    height: 73px;
+    width: 76px;
+    height: 76px;
     left: -512px;
-    transform-origin: top left; /* Scale from the top left corner */
-    background: url(../images/ball.png);
+    transform-origin: top left;
+    background: url(../images/EggRed.png);
 }
 
+.green_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+    background: url(../images/EggGreen.png);
+}
+
+.blue_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+    background: url(../images/EggBlue.png);
+}
+
+.yellow_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+    background: url(../images/EggYellow.png);
+}
+
+.purple_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+    background: url(../images/EggPurple.png);
+}
 
 #balls_queue {
     position: absolute;

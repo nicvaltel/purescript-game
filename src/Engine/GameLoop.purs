@@ -22,7 +22,7 @@ newtype RequestAnimationFrameId
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
 foreign import _removeElementById :: String -> Effect Unit
 foreign import _createImageElement :: 
-  {canvasElem :: HTMLElement, x :: Number, y :: Number, imageSource :: String, divId :: String, css :: String} 
+  {canvasElem :: HTMLElement, x :: Number, y :: Number, imageSource :: String, divId :: String, cssClass :: String} 
   -> Effect HTMLElement
 
 type GameStepFunc ac gm = 
@@ -42,9 +42,9 @@ mainLoop :: forall ac gm.
   Model ac gm -> 
   Aff Unit
 mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
-  renderFiber <- forkAff $ liftEffect (render conf model) -- TODO make forkAff
-  -- liftEffect (render conf model)
+  renderFiber <- forkAff $ liftEffect (render conf model)
   currentTime <- liftEffect now
+  seed <- liftEffect randomSeed
   let
     (Milliseconds deltaTime) = diff currentTime m.lastUpdateTime
   messages <- readAllQueue queueWS
@@ -56,7 +56,7 @@ mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
     log "INPUTS:"
     log $ show $ show userInput
   let
-    modelWithInputs = Model m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = []}
+    modelWithInputs = Model m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = [], seed = seed}
     newModel1 = gameStep conf deltaTime modelWithInputs
   newModel2 <- liftEffect $ updateRecentlyAddedActors canvasElem newModel1
   newModel3 <- liftEffect $ removeRecentlyDeletedActors newModel2
@@ -87,7 +87,7 @@ createNewHtmlElem canvasElem (Actor a) = _createImageElement {
   y : a.y, 
   imageSource : a.imageSource, 
   divId : a.nameId ,
-  css : a.css
+  cssClass : a.cssClass
   }
 
 
@@ -127,10 +127,11 @@ runGame conf gameStep (Model model) = do --onDOMContentLoaded
   queueWS :: Q.Queue String <- Q.new
   socket <- runWS conf queueWS
   currentTime <- liftEffect now
+  seed <- liftEffect randomSeed
   mbCanvasElem <- liftEffect $ getHtmlElement conf.canvasElementId
   canvasElem <- case mbCanvasElem of
           Just el -> pure el
           Nothing -> error ("ERROR: Canvas not found: canvasElementId = " <> conf.canvasElementId)
-  let  gameModel = Model model { lastUpdateTime = currentTime}
+  let  gameModel = Model model { lastUpdateTime = currentTime, seed = seed }
   mainLoop conf socket queueWS gameStep canvasElem gameModel
   pure unit

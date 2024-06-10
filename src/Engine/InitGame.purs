@@ -30,7 +30,7 @@ mkActorsFromConfig conf mkActorData = do
           , z: a.z
           , visible : true
           , angle : 0.0
-          , css : a.css
+          , cssClass : a.cssClass
           , imageSource : a.imageSource
           , htmlElement: mbElem
           , data: mkActorData conf.state a.data
