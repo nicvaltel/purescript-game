@@ -17,6 +17,8 @@ type Config ac gm
         , x :: Number
         , y :: Number
         , z :: Int
+        , css :: String
+        , imageSource :: String
         , data :: ac 
         }
     }

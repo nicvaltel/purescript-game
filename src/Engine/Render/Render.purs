@@ -1,6 +1,8 @@
 module Engine.Render.Render (render) where
 
 import Engine.Reexport
+import Prelude
+
 import Engine.Config (Config)
 import Engine.Model (Actor(..), Model(..))
 
@@ -21,11 +23,12 @@ render conf model@(Model m) = do
   _ <-
     for m.actors
       $ \(Actor actor) -> do
-          case actor.htmlElement of
-            Nothing -> pure unit
-            Just el ->
-              let actorObj = mkActorObj el actor
-              in _renderObject actorObj
+          when actor.visible $
+            case actor.htmlElement of
+              Nothing -> pure unit
+              Just el ->
+                let actorObj = mkActorObj el actor
+                in _renderObject actorObj
   pure unit
   where
     mkActorObj el actor = do

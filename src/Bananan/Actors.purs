@@ -43,6 +43,7 @@ type Ball = {
   ,flying :: Maybe {vx :: Number, vy :: Number}
 }
 
+
 type Dragon = {
   animation :: String
 }

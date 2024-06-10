@@ -6,8 +6,10 @@ module Engine.Model
   where
 
 import Engine.Reexport
+
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
+import Data.Map as M
 
 newtype Actor ac = Actor {
     nameId :: String
@@ -16,9 +18,13 @@ newtype Actor ac = Actor {
   , z :: Int
   , visible :: Boolean
   , angle :: Number
+  , css :: String
+  , imageSource :: String
   , htmlElement :: Maybe HTMLElement 
   , data :: ac
 }
+
+derive instance newtypeActor :: Newtype (Actor ac) _
 
 instance showActor :: Show ac => Show (Actor ac) where
   show (Actor actor) = "{" <> 
@@ -29,6 +35,7 @@ instance showActor :: Show ac => Show (Actor ac) where
         , "z: " <> show actor.z
         , "visible: " <> show actor.visible
         , "angle: " <> show actor.angle
+        , "imageSource" <> actor.imageSource
         , "htmlElement: " <> if (isJust actor.htmlElement) then "Just HtmlElem" else "Nothing"
         , "data: " <> show actor.data
         ]
@@ -39,15 +46,17 @@ newtype Model ac gm = Model
     , screenWidth :: Number
     , screenHeight :: Number
     , lastUpdateTime :: Instant
-    , actors :: Array (Actor ac)
-    -- , recentlyAddedActors :: Array (Actor ac)
-    -- , recentlyDeletedActors :: Array (Actor ac)
+    , actors :: Map NameId (Actor ac)
+    , recentlyAddedActors :: Array (Actor ac)
+    , recentlyDeletedActors :: Array (Actor ac)
     , gameState :: gm
     , userInput :: UserInput
     , prevUserInput :: UserInput
     , wsIn :: Array WS.WSMessage 
     , wsOut :: Array WS.WSMessage 
     }
+
+derive instance newtypeModel :: Newtype (Model ac gm) _
 
 instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
   show (Model m) =  
@@ -57,6 +66,8 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "screenHeight " <> show m.screenHeight
         , "lastUpdateTime " <> show m.lastUpdateTime
         , "actors " <> (intercalate ", " $ map show m.actors)
+        , "recentlyAddedActors" <> show (m.recentlyAddedActors)
+        , "recentlyDeletedActors" <> show (m.recentlyDeletedActors)
         , "gameState" <> show (m.gameState)
         , "currentUserInput" <> show (m.userInput)
         , "prevUserInput" <> show (m.prevUserInput)
@@ -80,7 +91,9 @@ initialModelZeroTime gameState =
         , screenWidth: 0.0
         , screenHeight: 0.0
         , lastUpdateTime: time
-        , actors: [] :: Array (Actor ac)
+        , actors: M.empty :: Map NameId (Actor ac)
+        , recentlyAddedActors : []
+        , recentlyDeletedActors : []
         , gameState
         , userInput : emptyUserInput
         , prevUserInput : emptyUserInput

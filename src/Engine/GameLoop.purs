@@ -4,9 +4,11 @@ module Engine.GameLoop
   ) where
 
 import Engine.Reexport
+
 import Concurrent.Queue as Q
+import Data.Map as M
 import Engine.Config (Config)
-import Engine.Model (Model(..))
+import Engine.Model (Actor(..), Model(..))
 import Engine.Render.Render (render)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
@@ -17,6 +19,11 @@ newtype RequestAnimationFrameId
   = RequestAnimationFrameId Int
 
 foreign import _requestAnimationFrame :: Effect Unit -> Effect RequestAnimationFrameId
+foreign import _removeElementById :: String -> Effect Unit
+foreign import _createImageElement :: 
+  {canvasElem :: HTMLElement, x :: Number, y :: Number, imageSource :: String, divId :: String, css :: String} 
+  -> Effect HTMLElement
+
 type GameStepFunc ac gm = 
   Config ac gm -> 
   Time -> 
@@ -49,15 +56,46 @@ mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
     log $ show $ show userInput
   let
     modelWithInputs = Model m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = []}
-    (Model newModel') = gameStep conf deltaTime modelWithInputs
-    newM@(Model newModel) = Model newModel' { lastUpdateTime = currentTime }
-  liftEffect $ sendWsOutMessages socket newModel.wsOut
-  when conf.debugWebsocket $ when (not $ null newModel.wsOut) $ liftEffect do
+    newModel1 = gameStep conf deltaTime modelWithInputs
+  newModel2 <- liftEffect $ updateRecentlyAddedActors canvasElem newModel1
+  newModel3 <- liftEffect $ removeRecentlyDeletedActors newModel2
+  let newModel = Model (unwrap newModel3) { lastUpdateTime = currentTime }
+  liftEffect $ sendWsOutMessages socket (unwrap newModel).wsOut
+  when conf.debugWebsocket $ when (not $ null (unwrap newModel).wsOut) $ liftEffect do
     log "MESSAGES OUT:"
-    logShow newModel.wsOut
+    logShow (unwrap newModel).wsOut
   joinFiber renderFiber
-  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS gameStep canvasElem newM)
+  _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ mainLoop conf socket queueWS gameStep canvasElem newModel)
   pure unit
+
+updateRecentlyAddedActors :: forall ac gm. HTMLElement -> Model ac gm -> Effect (Model ac gm)
+updateRecentlyAddedActors canvasElem (Model m) = do
+  newActorsArr :: Array (Actor ac) <- for m.recentlyAddedActors $ \actor@(Actor a) -> do
+    maybeElem <- getHtmlElement a.nameId
+    elem <- case maybeElem of
+      Just el -> pure el
+      Nothing -> createNewHtmlElem canvasElem actor
+    pure (Actor a{htmlElement = Just elem})
+  let newActors = foldr (\a acc -> M.insert (unwrap a).nameId a acc) m.actors newActorsArr
+  pure $ Model m{actors = newActors, recentlyAddedActors = []} -- TODO change from adding actors to modifying exsisted actors
+
+createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
+createNewHtmlElem canvasElem (Actor a)= _createImageElement {
+  canvasElem : canvasElem, 
+  x : a.x, 
+  y : a.y, 
+  imageSource : a.imageSource, 
+  divId : a.nameId ,
+  css : a.css
+  }
+
+
+
+removeRecentlyDeletedActors :: forall ac gm.  Model ac gm -> Effect (Model ac gm)
+removeRecentlyDeletedActors (Model m) = do
+  _ <- for m.recentlyDeletedActors $ \(Actor a) -> do
+    _removeElementById a.nameId
+  pure $ Model m{recentlyDeletedActors = []}
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs

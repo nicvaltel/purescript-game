@@ -19,7 +19,7 @@
     height: 277px;
     left: -512px;
     transform: rotate(45deg);
-    transform-origin: bottom center; /* Scale from the top left corner */
+    transform-origin: bottom center; /* Scale from the bottom center */
     background: url(../images/gun.png);
 }
 
@@ -32,6 +32,17 @@
     transform-origin: top left; /* Scale from the top left corner */
     background: url(../images/gun.png);
 }
+
+.ball {
+    position: absolute;
+    scale: 100%;
+    width: 72px;
+    height: 73px;
+    left: -512px;
+    transform-origin: top left; /* Scale from the top left corner */
+    background: url(../images/ball.png);
+}
+
 
 #balls_queue {
     position: absolute;

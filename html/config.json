@@ -5,22 +5,24 @@
   "websocketUrl": "ws://127.0.0.1:1234/ws",
   "canvasElementId": "canvas",
   "debugConfig": true,
-  "debugModel": true,
+  "debugModel": false,
   "debugWebsocket": false,
   "debugUserInput": false,
-  "actors" : [
+  "actors": [
     {
       "nameId": "gun",
       "x": 300.0,
       "y": 600.0,
       "z": 1,
+      "css" : "gun",
+      "imageSource": "../images/gun.png",
       "data": {
-          "type" : "gun"
-        , "data": { 
-            "angleSpeed" : 0.0
-          , "maxAngleSpeed" : 0.2
-          , "maxLeftAngle" : -45.0
-          , "maxRightAngle" : 45.0 
+        "type": "gun",
+        "data": {
+          "angleSpeed": 0.0,
+          "maxAngleSpeed": 0.2,
+          "maxLeftAngle": -45.0,
+          "maxRightAngle": 45.0
         }
       }
     },
@@ -29,9 +31,13 @@
       "x": 63.0,
       "y": 57.0,
       "z": 1,
+      "css" : "dragon",
+      "imageSource": "../images/gun.png",
       "data": {
-        "type" : "dragon"
-      , "data": {"animation": "gragon.gif"}
+        "type": "dragon",
+        "data": {
+          "animation": "gragon.gif"
+        }
       }
     },
     {
@@ -39,18 +45,21 @@
       "x": 0.0,
       "y": 0.0,
       "z": 10,
+      "css" : "ball_queue",
+      "imageSource": "../images/gun.png",
       "data": {
-        "type" : "ball_queue_actor"
-      , "data": {"animation": "ball_queue_actor.gif"}
+        "type": "ball_queue_actor",
+        "data": {
+          "animation": "ball_queue_actor.gif"
+        }
       }
     }
-    ],
-  "state" : {
-      "score": 15
-    , "ballQueue": {
-        "color" : "Yellow"
-      , "flying" : null
-      }
+  ],
+  "state": {
+    "score": 15,
+    "ballQueue": {
+      "color": "Yellow",
+      "flying": null
+    }
   }
 }
-

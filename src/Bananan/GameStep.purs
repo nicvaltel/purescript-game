@@ -9,10 +9,10 @@ import Bananan.Actors (ActorData(..), Ball, BallColor(..), BallQueueActor, Drago
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameModel (GameConfig, GameModel, GameActor)
+import Data.Map as M
 import Engine.Model (Actor(..), Model(..))
 import Engine.Types (Time)
-import Engine.UserInput (UserInput)
-
+import Engine.UserInput (UserInput, keyWasPressedOnce)
 
 moveBall :: Time -> Ball -> GameActor -> GameActor
 moveBall dt ball ac@(Actor actor) = 
@@ -38,23 +38,29 @@ moveGun dt controlKeys gun (Actor actor) =
 
 fireBall :: GameModel -> GameModel
 fireBall (Model m) =
-  let ball = m.gameState.ballQueue{flying = Just {vx : 0.1, vy : -0.1}}
+  let ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
       newQueueBall = { -- TODO make it random
           color : Blue
         , flying : Nothing
         }
-      newBallActor = Actor 
+      newBallActor = Actor -- TODO it's just a mock
         {
           nameId : "newBallActor"
-        , x : 500.0
-        , y : 500.0
+        , x : 300.0
+        , y : 300.0
         , z : 1
         , visible : true
         , angle : 0.0
+        , css : "ball"
+        , imageSource : "../images/ball.png"
         , htmlElement : Nothing
         , data : ActorBall ball
         }
-  in Model m{actors = newBallActor : m.actors, gameState = m.gameState{ballQueue = newQueueBall} }
+  in Model m{
+      actors = M.insert "newBallActor" newBallActor m.actors,
+      recentlyAddedActors = newBallActor : m.recentlyAddedActors, 
+      gameState = m.gameState{ballQueue = newQueueBall} 
+    }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
@@ -71,16 +77,17 @@ moveActor dt userInput controlKeys ac@(Actor actor) = case actor.data of
   ActorBallQueue queue -> moveBallQueue dt queue ac
 
 gameStep :: GameConfig -> Time -> GameModel -> GameModel
-gameStep conf dt (Model model) = 
+gameStep conf dt model@(Model m) = 
   let 
-      controlKeys = mapMaybe read model.userInput.keys
-      newActors = map (moveActor dt model.userInput controlKeys) model.actors
-
-      newBall = if C.Space `elem` controlKeys
-            then Just fireBall
-            else Nothing
-
-      wsOut = model.wsIn --[]
+      controlKeys = mapMaybe read m.userInput.keys :: Array ControlKey
+      prevControlKeys = mapMaybe read m.prevUserInput.keys :: Array ControlKey
+      updatedActors = map (moveActor dt m.userInput controlKeys) m.actors
+      model1 = Model m {actors = updatedActors}
+      (Model m2) = if keyWasPressedOnce controlKeys prevControlKeys  C.Space
+            then fireBall model1
+            else model1
+      mNew = m2
+      wsOut = m.wsIn --[]
 
   in
-    Model model { actors = newActors, gameStepNumber = model.gameStepNumber + 1, wsOut = wsOut }
+    Model  mNew { gameStepNumber = mNew.gameStepNumber + 1, wsOut = wsOut }

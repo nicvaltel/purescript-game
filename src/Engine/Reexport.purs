@@ -26,7 +26,13 @@ module Engine.Reexport (
   module Data.DateTime.Instant,
   module Data.Time.Duration,
   module Effect.Exception,
-  module Unsafe.Coerce
+  module Unsafe.Coerce,
+  module Data.Newtype,
+  module Data.Map,
+  module Engine.Types,
+  module Debug,
+  module Record,
+  module Type.Proxy
 ) where
 
 import Prelude
@@ -57,3 +63,9 @@ import Data.DateTime.Instant (Instant, instant, diff)
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Exception (throwException)
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Newtype (class Newtype, wrap, unwrap)
+import Data.Map (Map)
+import Engine.Types
+import Debug(trace)
+import Record(delete)
+import Type.Proxy (Proxy(..))

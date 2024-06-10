@@ -2,10 +2,13 @@ module Engine.UserInput
   ( UserInput(..)
   , emptyUserInput
   , getUserInput
+  , keyWasPressedOnce
   )
   where
 
 import Prelude
+
+import Data.Array (elem)
 import Effect (Effect)
 import Engine.Types (MouseCoodr)
 import Web.HTML (HTMLElement)
@@ -47,3 +50,7 @@ getUserInput canvasElem = do
     , mouseRelativePos : { x: mousePos.x - canvasPos.x, y: mousePos.y - canvasPos.y }
     , mouseBtns : mouseBtns
     }
+
+
+keyWasPressedOnce :: forall a. Eq a => Array a -> Array a -> a -> Boolean
+keyWasPressedOnce userInputKeys userInputPrevKeys key = key `elem` userInputKeys && (not $ key `elem` userInputPrevKeys) 
