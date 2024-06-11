@@ -3,14 +3,13 @@ module Bananan.Run(run) where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData, colorFromRandomInt)
-import Bananan.GameModel (GameConfig, GameModel, GameState, mkActorData)
+import Bananan.GameModel (GameConfig, GameState, mkActorData)
 import Bananan.GameStep (gameStep)
 import Control.Monad.State (runStateT)
-import Control.Monad.Trans.Class (lift)
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.InitGame (initGame)
-import Engine.Model (AppModAff, AppModEffect, initialModelZeroTime)
+import Engine.Model (AppModAff, initialModelZeroTime)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (parseConfigFile)
 

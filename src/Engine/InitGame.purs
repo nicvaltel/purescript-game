@@ -7,7 +7,7 @@ import Prelude
 import Data.Map (Map)
 import Effect.Class (liftEffect)
 import Engine.Config (Config)
-import Engine.Model (Actor, AppModAff, Model, NameId, initialModelZeroTime, mkActorsFromConfig, modmodAff_, putModelAff)
+import Engine.Model (Actor, AppModAff, Model, NameId, initialModelZeroTime, mkActorsFromConfig, modmodAff, putModelAff)
 
 initGame :: forall ac gm. 
   Config ac gm -> 
@@ -17,4 +17,4 @@ initGame :: forall ac gm.
 initGame conf initialGameState mkActorData = do
   putModelAff (initialModelZeroTime initialGameState :: Model ac gm)
   actors :: Map NameId (Actor ac) <- liftEffect $ mkActorsFromConfig conf mkActorData
-  modmodAff_ (\m -> m{ actors = actors } )
+  modmodAff (\m -> m{ actors = actors } )

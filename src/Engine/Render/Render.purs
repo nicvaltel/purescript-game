@@ -1,10 +1,8 @@
 module Engine.Render.Render (render) where
 
 import Engine.Reexport
-import Prelude
-
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model(..), getModelRec)
+import Engine.Model (Actor(..), Model, getModelRec)
 
 
 type ActorObj

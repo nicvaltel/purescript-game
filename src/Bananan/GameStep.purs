@@ -10,7 +10,7 @@ import Bananan.Control as C
 import Bananan.GameModel (AppGame, GameActor, GameState)
 import Data.Map as M
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getModelRec, mkNewNameId, modmod_)
+import Engine.Model (Actor(..), getModelRec, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (UserInput, keyWasPressedOnce)
 
@@ -60,7 +60,7 @@ fireBall = do
         , htmlElement : Nothing
         , data : ActorBall ball
         }
-  modmod_ $ \mr -> mr{
+  modmod $ \mr -> mr{
       actors = M.insert nameId newBallActor m.actors,
       recentlyAddedActors = nameId : m.recentlyAddedActors, 
       gameState = m.gameState{ballQueue = newQueueBall},
@@ -90,8 +90,8 @@ gameStep conf dt = do
   let controlKeys = mapMaybe read m.userInput.keys :: Array ControlKey
       prevControlKeys = mapMaybe read m.prevUserInput.keys :: Array ControlKey
       updatedActors = map (moveActor dt m.userInput controlKeys) m.actors
-  modmod_ $ \mr -> m {actors = updatedActors}
+  modmod $ \mr -> m {actors = updatedActors}
   when (keyWasPressedOnce controlKeys prevControlKeys C.Space) fireBall
   let wsOut = m.wsIn --[]
 
-  modmod_ $ \mr ->  mr { gameStepNumber = mr.gameStepNumber + 1, wsOut = wsOut }
+  modmod $ \mr ->  mr { gameStepNumber = mr.gameStepNumber + 1, wsOut = wsOut }

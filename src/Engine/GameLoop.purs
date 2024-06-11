@@ -11,7 +11,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.Map as M
 import Data.Traversable (sequence)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, getModelRec, getNameId, modmodAff_, modmodEffect_)
+import Engine.Model (Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, getModelRec, getNameId, modmodAff, modmodEffect)
 import Engine.Render.Render (render)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
@@ -58,11 +58,11 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     log "INPUTS:"
     log $ show $ show userInput
 
-  modmodAff_ $ \m -> m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = [], seed = seed}
+  modmodAff $ \m -> m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = [], seed = seed}
   appModToAppModAff $ gameStep conf deltaTime 
   appModEffectToAppModAff $ updateRecentlyAddedActors canvasElem
   appModEffectToAppModAff $ removeRecentlyDeletedActors
-  modmodAff_ $ \m -> m { lastUpdateTime = currentTime }
+  modmodAff $ \m -> m { lastUpdateTime = currentTime }
 
   modelSendOut <- get
   liftEffect $ sendWsOutMessages socket (getModelRec modelSendOut).wsOut
@@ -86,7 +86,7 @@ updateRecentlyAddedActors canvasElem = do
       Nothing -> sequence (createNewHtmlElem canvasElem <$> M.lookup nameId m.actors) 
     pure (Tuple nameId elem)
   let newActors = foldr (\(Tuple nameId elem) acc -> M.update (\(Actor a) -> Just (Actor a{htmlElement = elem})) nameId acc) m.actors newActorsArr
-  modmodEffect_ $ \mr -> mr{actors = newActors, recentlyAddedActors = []}
+  modmodEffect $ \mr -> mr{actors = newActors, recentlyAddedActors = []}
   pure unit
 
 createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
@@ -104,7 +104,7 @@ removeRecentlyDeletedActors = do
   m <- getModelRec <$> get
   _ <- liftEffect $ for m.recentlyDeletedActors $ \nameId -> do
     _removeElementById (getNameId nameId)
-  modmodEffect_ $ \mr -> mr{recentlyDeletedActors = []}
+  modmodEffect $ \mr -> mr{recentlyDeletedActors = []}
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs
@@ -139,5 +139,5 @@ runGame conf gameStep = do --onDOMContentLoaded
   canvasElem <- case mbCanvasElem of
           Just el -> pure el
           Nothing -> error ("ERROR: Canvas not found: canvasElementId = " <> conf.canvasElementId)
-  modmodAff_ $ \m -> m { lastUpdateTime = currentTime, seed = seed }
+  modmodAff $ \m -> m { lastUpdateTime = currentTime, seed = seed }
   mainLoop conf socket queueWS gameStep canvasElem

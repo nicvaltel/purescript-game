@@ -8,8 +8,7 @@ module Bananan.GameModel
   )
   where
 
-import Bananan.Reexport
-
+-- import Bananan.Reexport
 import Bananan.Actors (ActorData, Ball)
 import Engine.Config (Config)
 import Engine.Model (Actor, Model, AppMod)
@@ -26,4 +25,4 @@ type GameActor = Actor ActorData
 type AppGame a = AppMod ActorData GameState a
 
 mkActorData :: GameState -> ActorData -> ActorData
-mkActorData gm actorData = actorData
+mkActorData _ actorData = actorData

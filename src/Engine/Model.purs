@@ -15,10 +15,7 @@ module Engine.Model
   , mkNewNameId
   , modmod
   , modmodAff
-  , modmodAff_
   , modmodEffect
-  , modmodEffect_
-  , modmod_
   , putModel
   , putModelAff
   , putModelEffect
@@ -126,23 +123,14 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
 getModelRec :: forall ac gm. Model ac gm -> ModelRec ac gm
 getModelRec (Model m) = m
 
-modmod :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm (Model ac gm)
-modmod f = modify (\(Model m) -> Model (f m))
+modmod :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm Unit
+modmod f = modify_ (\(Model m) -> Model (f m))
 
-modmod_ :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm Unit
-modmod_ f = modify_ (\(Model m) -> Model (f m))
+modmodEffect :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm Unit
+modmodEffect f = modify_ (\(Model m) -> Model (f m))
 
-modmodEffect :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm (Model ac gm)
-modmodEffect f = modify (\(Model m) -> Model (f m))
-
-modmodEffect_ :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm Unit
-modmodEffect_ f = modify_ (\(Model m) -> Model (f m))
-
-modmodAff :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm (Model ac gm)
-modmodAff f = modify (\(Model m) -> Model (f m))
-
-modmodAff_ :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm Unit
-modmodAff_ f = modify_ (\(Model m) -> Model (f m))
+modmodAff :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm Unit
+modmodAff f = modify_ (\(Model m) -> Model (f m))
 
 
 putModel :: forall ac gm. Model ac gm -> AppMod ac gm Unit
@@ -180,7 +168,7 @@ initialModelZeroTime gameState =
 mkNewNameId :: forall ac gm. AppMod ac gm NameId
 mkNewNameId = do
   m <- getModelRec <$> get
-  modmod_ $ \mr -> mr{lastActorId = mr.lastActorId + 1}
+  modmod $ \mr -> mr{lastActorId = mr.lastActorId + 1}
   pure (NameId ("ac_" <> show m.lastActorId))
 
 mkActorsFromConfig :: forall ac gm. 
