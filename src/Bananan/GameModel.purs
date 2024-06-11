@@ -14,10 +14,9 @@ import Engine.Config (Config)
 import Engine.Model (Model, Actor)
 
 type GameState = {
-    score :: Int
+      score :: Int
     , ballQueue :: Ball
   }
-
 
 type GameModel = Model ActorData GameState
 type GameConfig = Config ActorData GameState

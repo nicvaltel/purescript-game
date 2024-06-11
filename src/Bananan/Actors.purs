@@ -12,8 +12,6 @@ module Bananan.Actors
 
 import Bananan.Reexport
 import Prelude
-
-import Data.Generic.Rep (class Generic)
 import Data.String (toLower)
 
 type Gun = {
@@ -65,12 +63,9 @@ type Dragon = {
   animation :: String
 }
 
-
 type BallQueueActor = {
   animation :: String
 }
-
-
 
 data ActorData = 
     ActorGun Gun

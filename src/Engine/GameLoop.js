@@ -35,17 +35,13 @@ export function _createImageElement(o) {
     return function(){
       var newDiv = document.createElement("div");
       newDiv.id = o.divId;
-
-      // Optionally set other attributes or styles
-      // newDiv.className = "my-class";
-      // newDiv.style.backgroundColor = "red";
-
-      newDiv.style.backgroundImage = "url('" + o.imageSource + "')"; 
+      // newDiv.style.backgroundImage = "url('" + o.imageSource + "')"; 
       newDiv.style.position = "absolute";
       newDiv.style.left = o.x + "px";
       newDiv.style.top = o.y + "px";
       newDiv.className = o.cssClass;
       // newDiv.setAttribute('class','ball');
+      // newDiv.style.backgroundColor = "red";
       o.canvasElem.appendChild(newDiv);
       return newDiv;
     }

@@ -10,7 +10,7 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameModel (GameConfig, GameModel, GameActor)
 import Data.Map as M
-import Engine.Model (Actor(..), Model(..))
+import Engine.Model (Actor(..), Model(..), mkNewNameId)
 import Engine.Types (Time)
 import Engine.UserInput (UserInput, keyWasPressedOnce)
 
@@ -38,16 +38,17 @@ moveGun dt controlKeys gun (Actor actor) =
   in Actor actor{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
 
 fireBall :: GameModel -> GameModel
-fireBall (Model m) =
+fireBall model@(Model m) =
   let randomPair = random m.seed :: RandomPair Int
       ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
       newQueueBall = {
           color : colorFromRandomInt randomPair.newVal
         , flying : Nothing
         }
+      Tuple (Model newM) nameId = mkNewNameId model
       newBallActor = Actor -- TODO it's just a mock
         {
-          nameId : "newBallActor"
+          nameId : nameId
         , x : 300.0
         , y : 300.0
         , z : 1
@@ -58,9 +59,9 @@ fireBall (Model m) =
         , htmlElement : Nothing
         , data : ActorBall ball
         }
-  in Model m{
-      actors = M.insert "newBallActor" newBallActor m.actors,
-      recentlyAddedActors = "newBallActor" : m.recentlyAddedActors, 
+  in Model newM{
+      actors = M.insert nameId newBallActor m.actors,
+      recentlyAddedActors = nameId : m.recentlyAddedActors, 
       gameState = m.gameState{ballQueue = newQueueBall},
       seed = randomPair.newSeed 
     }

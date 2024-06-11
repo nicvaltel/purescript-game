@@ -1,19 +1,41 @@
 module Engine.Model
   ( Actor(..)
   , Model(..)
+  , NameId
+  , getNameId
   , initialModelZeroTime
+  , mkActorsFromConfig
+  , mkNewNameId
   )
   where
 
 import Engine.Reexport
 
+import Engine.Config (Config)
 import Data.Map as M
 import Data.String as S
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
+import Engine.ResourceLoader (getHtmlElement)
+
+
+
+newtype NameId = NameId String
+
+instance showNameId :: Show NameId where
+  show (NameId nameId) = nameId
+
+derive instance eqNameId :: Eq NameId
+derive instance ordNameId :: Ord NameId
+
+getNameId :: NameId -> String
+getNameId (NameId nameId) = nameId
+
+-- mkNewNameId :: 
+
 
 newtype Actor ac = Actor {
-    nameId :: String
+    nameId :: NameId
   , x :: Number
   , y :: Number
   , z :: Int
@@ -42,6 +64,7 @@ newtype Model ac gm = Model
     , screenHeight :: Number
     , lastUpdateTime :: Instant
     , actors :: Map NameId (Actor ac)
+    , lastActorId :: Int
     , recentlyAddedActors :: Array NameId
     , recentlyDeletedActors :: Array NameId
     , gameState :: gm
@@ -62,8 +85,8 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "screenHeight " <> show m.screenHeight
         , "lastUpdateTime " <> show m.lastUpdateTime
         , "actors " <> (intercalate ", " $ map show m.actors)
-        , "recentlyAddedActors" <> show (m.recentlyAddedActors)
-        , "recentlyDeletedActors" <> show (m.recentlyDeletedActors)
+        , "recentlyAddedActors" <> show (map getNameId m.recentlyAddedActors)
+        , "recentlyDeletedActors" <> show (map getNameId m.recentlyDeletedActors)
         , "gameState" <> show (m.gameState)
         , "currentUserInput" <> show (m.userInput)
         , "prevUserInput" <> show (m.prevUserInput)
@@ -83,6 +106,7 @@ initialModelZeroTime gameState =
         , screenHeight: 0.0
         , lastUpdateTime: time
         , actors: M.empty :: Map NameId (Actor ac)
+        , lastActorId: 0
         , recentlyAddedActors : []
         , recentlyDeletedActors : []
         , gameState
@@ -92,3 +116,34 @@ initialModelZeroTime gameState =
         , wsOut: []
         , seed: mkSeed 0
         }
+
+
+mkNewNameId :: forall ac gm. Model ac gm -> Tuple (Model ac gm) NameId
+mkNewNameId (Model m) = 
+  Tuple
+    (Model m{lastActorId = m.lastActorId + 1})
+    (NameId ("ac_" <> show m.lastActorId))
+
+
+
+mkActorsFromConfig :: forall ac gm. 
+  Config ac gm -> 
+  (gm -> ac -> ac) ->
+  Effect (Map NameId (Actor ac))
+mkActorsFromConfig conf mkActorData = do
+  actorsArr <- for conf.actors
+    $ \a -> do
+        mbElem <- getHtmlElement a.nameId
+        pure $ Tuple (NameId a.nameId) (Actor
+          { nameId: (NameId a.nameId)
+          , x: a.x
+          , y: a.y
+          , z: a.z
+          , visible : true
+          , angle : 0.0
+          , cssClass : a.cssClass
+          , imageSource : a.imageSource
+          , htmlElement: mbElem
+          , data: mkActorData conf.state a.data
+          })
+  pure $ M.fromFoldable actorsArr

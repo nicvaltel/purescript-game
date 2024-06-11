@@ -9,7 +9,7 @@ import Concurrent.Queue as Q
 import Data.Map as M
 import Data.Traversable (sequence)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model(..))
+import Engine.Model (Actor(..), Model(..), NameId, getNameId)
 import Engine.Render.Render (render)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
@@ -72,7 +72,7 @@ mainLoop conf socket queueWS gameStep canvasElem model@(Model m) = do
 updateRecentlyAddedActors :: forall ac gm. HTMLElement -> Model ac gm -> Effect (Model ac gm)
 updateRecentlyAddedActors canvasElem (Model m) = do
   newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- for m.recentlyAddedActors $ \nameId -> do
-    maybeElem <- getHtmlElement nameId
+    maybeElem <- getHtmlElement (getNameId nameId)
     elem <- case maybeElem of
       Just el -> pure $ Just el
       Nothing -> sequence (createNewHtmlElem canvasElem <$> M.lookup nameId m.actors) 
@@ -86,7 +86,7 @@ createNewHtmlElem canvasElem (Actor a) = _createImageElement {
   x : a.x, 
   y : a.y, 
   imageSource : a.imageSource, 
-  divId : a.nameId ,
+  divId : getNameId a.nameId ,
   cssClass : a.cssClass
   }
 
@@ -95,7 +95,7 @@ createNewHtmlElem canvasElem (Actor a) = _createImageElement {
 removeRecentlyDeletedActors :: forall ac gm.  Model ac gm -> Effect (Model ac gm)
 removeRecentlyDeletedActors (Model m) = do
   _ <- for m.recentlyDeletedActors $ \nameId -> do
-    _removeElementById nameId
+    _removeElementById (getNameId nameId)
   pure $ Model m{recentlyDeletedActors = []}
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
