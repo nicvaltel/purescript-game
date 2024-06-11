@@ -5,9 +5,12 @@ import Bananan.Reexport
 import Bananan.Actors (ActorData, colorFromRandomInt)
 import Bananan.GameModel (GameConfig, GameModel, GameState, mkActorData)
 import Bananan.GameStep (gameStep)
+import Control.Monad.State (runStateT)
+import Control.Monad.Trans.Class (lift)
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.InitGame (initGame)
+import Engine.Model (AppModAff, AppModEffect, initialModelZeroTime)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (parseConfigFile)
 
@@ -37,9 +40,13 @@ run =
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
             gameState <- liftEffect initialGameState
-            model <- liftEffect $ initGame config gameState mkActorData
-            when config.debugConfig $ liftEffect $ logShow config
-            let
-              rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> GameModel -> Aff Unit
-            rGame config gameStep model
+            _ <- runStateT (runAppModEff config gameState) (initialModelZeroTime gameState)
+            pure unit
 
+
+runAppModEff :: GameConfig -> GameState -> AppModAff ActorData GameState Unit
+runAppModEff config gameState = do
+  initGame config gameState mkActorData -- TODO pass initGame thrue runStateT
+  when config.debugConfig $ liftEffect $ logShow config
+  let rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
+  rGame config gameStep

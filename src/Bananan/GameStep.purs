@@ -4,13 +4,13 @@ module Bananan.GameStep
   where
 
 import Bananan.Reexport
-
-import Bananan.Actors (ActorData(..), Ball, BallColor(..), BallQueueActor, Dragon, Gun, colorFromRandomInt, cssClassOfColor)
+import Bananan.Actors (ActorData(..), Ball, BallQueueActor, Dragon, Gun, colorFromRandomInt, cssClassOfColor)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
-import Bananan.GameModel (GameConfig, GameModel, GameActor)
+import Bananan.GameModel (AppGame, GameActor, GameState)
 import Data.Map as M
-import Engine.Model (Actor(..), Model(..), mkNewNameId)
+import Engine.GameLoop (GameStepFunc)
+import Engine.Model (Actor(..), getModelRec, mkNewNameId, modmod_)
 import Engine.Types (Time)
 import Engine.UserInput (UserInput, keyWasPressedOnce)
 
@@ -37,16 +37,17 @@ moveGun dt controlKeys gun (Actor actor) =
       newAngle = clamp gun.maxLeftAngle gun.maxRightAngle newAngle'
   in Actor actor{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
 
-fireBall :: GameModel -> GameModel
-fireBall model@(Model m) =
-  let randomPair = random m.seed :: RandomPair Int
-      ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
-      newQueueBall = {
+fireBall :: AppGame Unit
+fireBall = do
+  m <- getModelRec <$> get
+  nameId <- mkNewNameId
+  let randomPair = random m.seed :: RandomPair Int -- TODO make random via modify Model
+  let ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
+  let newQueueBall = {
           color : colorFromRandomInt randomPair.newVal
         , flying : Nothing
         }
-      Tuple (Model newM) nameId = mkNewNameId model
-      newBallActor = Actor -- TODO it's just a mock
+  let newBallActor = Actor -- TODO it's just a mock
         {
           nameId : nameId
         , x : 300.0
@@ -59,7 +60,7 @@ fireBall model@(Model m) =
         , htmlElement : Nothing
         , data : ActorBall ball
         }
-  in Model newM{
+  modmod_ $ \mr -> mr{
       actors = M.insert nameId newBallActor m.actors,
       recentlyAddedActors = nameId : m.recentlyAddedActors, 
       gameState = m.gameState{ballQueue = newQueueBall},
@@ -80,18 +81,17 @@ moveActor dt userInput controlKeys ac@(Actor actor) = case actor.data of
   ActorDragon dragon -> moveDragon dt dragon ac
   ActorBallQueue queue -> moveBallQueue dt queue ac
 
-gameStep :: GameConfig -> Time -> GameModel -> GameModel
-gameStep conf dt model@(Model m) = 
-  let 
-      controlKeys = mapMaybe read m.userInput.keys :: Array ControlKey
+
+
+-- gameStep :: GameConfig -> Time -> AppMod GameConfig GameState Unit
+gameStep :: GameStepFunc ActorData GameState
+gameStep conf dt = do
+  m <- getModelRec <$> get
+  let controlKeys = mapMaybe read m.userInput.keys :: Array ControlKey
       prevControlKeys = mapMaybe read m.prevUserInput.keys :: Array ControlKey
       updatedActors = map (moveActor dt m.userInput controlKeys) m.actors
-      model1 = Model m {actors = updatedActors}
-      (Model m2) = if keyWasPressedOnce controlKeys prevControlKeys  C.Space
-            then fireBall model1
-            else model1
-      mNew = m2
-      wsOut = m.wsIn --[]
+  modmod_ $ \mr -> m {actors = updatedActors}
+  when (keyWasPressedOnce controlKeys prevControlKeys C.Space) fireBall
+  let wsOut = m.wsIn --[]
 
-  in
-    Model  mNew { gameStepNumber = mNew.gameStepNumber + 1, wsOut = wsOut }
+  modmod_ $ \mr ->  mr { gameStepNumber = mr.gameStepNumber + 1, wsOut = wsOut }

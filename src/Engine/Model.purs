@@ -1,24 +1,57 @@
 module Engine.Model
   ( Actor(..)
-  , Model(..)
+  , AppMod
+  , AppModAff
+  , AppModEffect
+  , Model
+  , ModelRec
   , NameId
+  , appModEffectToAppModAff
+  , appModToAppModAff
+  , getModelRec
   , getNameId
   , initialModelZeroTime
   , mkActorsFromConfig
   , mkNewNameId
+  , modmod
+  , modmodAff
+  , modmodAff_
+  , modmodEffect
+  , modmodEffect_
+  , modmod_
+  , putModel
+  , putModelAff
+  , putModelEffect
   )
   where
 
 import Engine.Reexport
 
+import Control.Monad.State (runStateT)
 import Data.Map as M
-import Data.String as S
 import Engine.Config (Config)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
 import Record as R
 
+type AppMod ac gm x = State (Model ac gm) x
+type AppModEffect ac gm x = StateT (Model ac gm) Effect x
+type AppModAff ac gm x = StateT (Model ac gm) Aff x
+
+appModToAppModAff :: forall ac gm x. AppMod ac gm x -> AppModAff ac gm x
+appModToAppModAff appMod = do
+  m <- get
+  let (Tuple result newState) = runState appMod m
+  put newState
+  pure result
+
+appModEffectToAppModAff :: forall ac gm x. AppModEffect ac gm x -> AppModAff ac gm x
+appModEffectToAppModAff appModEffect = do
+  m <- get
+  (Tuple result newState) <- liftEffect $ runStateT appModEffect m
+  put newState
+  pure result
 
 
 newtype NameId = NameId String
@@ -31,9 +64,6 @@ derive instance ordNameId :: Ord NameId
 
 getNameId :: NameId -> String
 getNameId (NameId nameId) = nameId
-
--- mkNewNameId :: 
-
 
 newtype Actor ac = Actor {
     nameId :: NameId
@@ -55,7 +85,7 @@ instance showActor :: Show ac => Show (Actor ac) where
     R.modify (Proxy :: Proxy "htmlElement") (\el -> if isJust el then "Just HtmlElem" else "Nothing" ) actor
 
 
-newtype Model ac gm = Model
+type ModelRec ac gm =
     { gameStepNumber :: Int
     , screenWidth :: Number
     , screenHeight :: Number
@@ -72,7 +102,9 @@ newtype Model ac gm = Model
     , seed :: Seed
     }
 
-derive instance newtypeModel :: Newtype (Model ac gm) _
+newtype Model ac gm = Model (ModelRec ac gm)
+
+-- derive instance newtypeModel :: Newtype (Model ac gm) _
 
 instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
   show (Model m) =  
@@ -90,6 +122,37 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "wsIn" <> show (m.wsIn)
         , "wsOut" <> show (m.wsOut)
         ]
+
+getModelRec :: forall ac gm. Model ac gm -> ModelRec ac gm
+getModelRec (Model m) = m
+
+modmod :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm (Model ac gm)
+modmod f = modify (\(Model m) -> Model (f m))
+
+modmod_ :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm Unit
+modmod_ f = modify_ (\(Model m) -> Model (f m))
+
+modmodEffect :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm (Model ac gm)
+modmodEffect f = modify (\(Model m) -> Model (f m))
+
+modmodEffect_ :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm Unit
+modmodEffect_ f = modify_ (\(Model m) -> Model (f m))
+
+modmodAff :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm (Model ac gm)
+modmodAff f = modify (\(Model m) -> Model (f m))
+
+modmodAff_ :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm Unit
+modmodAff_ f = modify_ (\(Model m) -> Model (f m))
+
+
+putModel :: forall ac gm. Model ac gm -> AppMod ac gm Unit
+putModel model = modify_ (\_ -> model)
+
+putModelEffect :: forall ac gm. Model ac gm -> AppModEffect ac gm Unit
+putModelEffect model = modify_ (\_ -> model)
+
+putModelAff :: forall ac gm. Model ac gm -> AppModAff ac gm Unit
+putModelAff model = modify_ (\_ -> model)
 
 -- TODO setup Model with config
 initialModelZeroTime :: forall ac gm. gm -> Model ac gm
@@ -114,14 +177,11 @@ initialModelZeroTime gameState =
         , seed: mkSeed 0
         }
 
-
-mkNewNameId :: forall ac gm. Model ac gm -> Tuple (Model ac gm) NameId
-mkNewNameId (Model m) = 
-  Tuple
-    (Model m{lastActorId = m.lastActorId + 1})
-    (NameId ("ac_" <> show m.lastActorId))
-
-
+mkNewNameId :: forall ac gm. AppMod ac gm NameId
+mkNewNameId = do
+  m <- getModelRec <$> get
+  modmod_ $ \mr -> mr{lastActorId = mr.lastActorId + 1}
+  pure (NameId ("ac_" <> show m.lastActorId))
 
 mkActorsFromConfig :: forall ac gm. 
   Config ac gm -> 

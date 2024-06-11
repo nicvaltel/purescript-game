@@ -4,7 +4,7 @@ import Engine.Reexport
 import Prelude
 
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model(..))
+import Engine.Model (Actor(..), Model(..), getModelRec)
 
 
 type ActorObj
@@ -18,7 +18,8 @@ render :: forall ac gm.
   Config ac gm -> 
   Model ac gm -> 
   Effect Unit
-render conf model@(Model m) = do
+render conf model = do
+  let m = getModelRec model
   when conf.debugModel $ log (show model)
   _ <-
     for m.actors
