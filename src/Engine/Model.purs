@@ -11,12 +11,13 @@ module Engine.Model
 
 import Engine.Reexport
 
-import Engine.Config (Config)
 import Data.Map as M
 import Data.String as S
+import Engine.Config (Config)
+import Engine.ResourceLoader (getHtmlElement)
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
-import Engine.ResourceLoader (getHtmlElement)
+import Record as R
 
 
 
@@ -50,12 +51,8 @@ newtype Actor ac = Actor {
 derive instance newtypeActor :: Newtype (Actor ac) _
 
 instance showActor :: Show ac => Show (Actor ac) where
-  show (Actor actor) = 
-    let str = show $ delete (Proxy :: Proxy "htmlElement") actor
-    in  (S.take (S.length str - 1) str) 
-        <> ", " <> "htmlElement: " 
-        <> (if (isJust actor.htmlElement) then "Just HtmlElem" else "Nothing") 
-        <> " }"
+  show (Actor actor) = show $ 
+    R.modify (Proxy :: Proxy "htmlElement") (\el -> if isJust el then "Just HtmlElem" else "Nothing" ) actor
 
 
 newtype Model ac gm = Model

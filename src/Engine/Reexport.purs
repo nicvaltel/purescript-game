@@ -31,7 +31,6 @@ module Engine.Reexport (
   module Data.Map,
   module Engine.Types,
   module Debug,
-  module Record,
   module Type.Proxy,
   module Engine.Random.PseudoRandom
 ) where
@@ -68,6 +67,5 @@ import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.Map (Map)
 import Engine.Types
 import Debug(trace)
-import Record(delete)
 import Type.Proxy (Proxy(..))
 import Engine.Random.PseudoRandom (Seed(..),RandomPair (..), random, mkSeed, randomSeed)

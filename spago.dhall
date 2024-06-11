@@ -50,6 +50,7 @@ to generate this file without the comments in this block.
     "strings",
     "lcg",
     "st",
+    "transformers",
      ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
