@@ -47,7 +47,8 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   renderFiber <- lift $ forkAff $ liftEffect (render conf model)
   currentTime <- liftEffect now
   seed <- liftEffect randomSeed
-  let (Milliseconds deltaTime) = diff currentTime (getModelRec model).lastUpdateTime
+  let (Milliseconds deltaTime') = diff currentTime (getModelRec model).lastUpdateTime
+  let deltaTime = if deltaTime' < conf.maxDeltaTime then deltaTime' else conf.maxDeltaTime
   messages <- lift $ readAllQueue queueWS
   userInput <- liftEffect $ getUserInput canvasElem
 

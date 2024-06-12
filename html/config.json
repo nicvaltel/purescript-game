@@ -8,6 +8,7 @@
   "debugModel": true,
   "debugWebsocket": false,
   "debugUserInput": false,
+  "maxDeltaTime" : 100.0,
   "actors": [
     {
       "nameId": "gun",
@@ -28,7 +29,7 @@
     },
     {
       "nameId": "dragon",
-      "x": 63.0,
+      "x": -500.0,
       "y": 57.0,
       "z": 1,
       "cssClass" : "dragon",
@@ -42,7 +43,7 @@
     },
     {
       "nameId": "ball_queue",
-      "x": 0.0,
+      "x": -500.0,
       "y": 0.0,
       "z": 10,
       "cssClass" : "ball_queue",
@@ -63,6 +64,6 @@
     },
     "canvasWidth" : 0.0,
     "gunNameId" : "gun",
-    "ballSpeed" : 0.2
+    "ballSpeed" : 0.8
   }
 }

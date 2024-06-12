@@ -10,6 +10,7 @@ type Config ac gm
     , debugModel :: Boolean
     , debugWebsocket :: Boolean
     , debugUserInput :: Boolean
+    , maxDeltaTime :: Number -- in millisesconds
     , state :: gm
     , actors :: Array 
         { 
