@@ -3,7 +3,7 @@ module Bananan.Run(run) where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData, colorFromRandomInt)
-import Bananan.GameModel (GameConfig, GameState, mkActorData)
+import Bananan.GameModel (GameState, GameConfig, mkActorData)
 import Bananan.GameStep (gameStep)
 import Control.Monad.State (runStateT)
 import Engine.Config (Config)
@@ -12,13 +12,19 @@ import Engine.InitGame (initGame)
 import Engine.Model (AppModAff, initialModelZeroTime)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (parseConfigFile)
+import Engine.Utils.Html (getElementById)
+import Web.DOM.Element (getBoundingClientRect)
 
 configFilePath ∷ String
 configFilePath = "config.json"
 
-initialGameState :: Effect GameState
-initialGameState = do
+initialGameState :: GameConfig -> Effect GameState
+initialGameState conf = do
   n :: Int <- randomEff
+  mbCanvas <- getElementById conf.canvasElementId
+  rect <- case mbCanvas of
+    Just canvas -> getBoundingClientRect canvas
+    Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
   pure
     {
       score: 0
@@ -26,7 +32,10 @@ initialGameState = do
         {
           color : colorFromRandomInt n
         , flying : Nothing
-        }   
+        } 
+    , canvasWidth : rect.width
+    , gunNameId : conf.state.gunNameId -- mkUniqueNameId "gun"
+    , ballSpeed : conf.state.ballSpeed
     }
 
 run :: Effect Unit
@@ -38,7 +47,7 @@ run =
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
           Right config -> do
-            gameState <- liftEffect initialGameState
+            gameState <- liftEffect $ initialGameState config
             _ <- runStateT (runAppModEff config gameState) (initialModelZeroTime gameState)
             pure unit
 

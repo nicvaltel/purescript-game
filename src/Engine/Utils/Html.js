@@ -5,7 +5,7 @@
 // }
 
 
-export function _getElementById(id) {
+export function _getNodeElementById(id) {
   return function (node) {
     return function () {
       return node.getElementById(id);

@@ -11,8 +11,8 @@
   "actors": [
     {
       "nameId": "gun",
-      "x": 300.0,
-      "y": 600.0,
+      "x": 287.5,
+      "y": 810.0,
       "z": 1,
       "cssClass" : "gun",
       "imageSource": "../images/gun.png",
@@ -21,8 +21,8 @@
         "data": {
           "angleSpeed": 0.0,
           "maxAngleSpeed": 0.2,
-          "maxLeftAngle": -45.0,
-          "maxRightAngle": 45.0
+          "maxLeftAngle": -80.0,
+          "maxRightAngle": 80.0
         }
       }
     },
@@ -60,6 +60,9 @@
     "ballQueue": {
       "color": "Yellow",
       "flying": null
-    }
+    },
+    "canvasWidth" : 0.0,
+    "gunNameId" : "gun",
+    "ballSpeed" : 0.2
   }
 }

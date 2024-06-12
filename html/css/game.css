@@ -14,9 +14,9 @@
 
 #gun {
     position: absolute;
-    scale: 25%;
-    width: 93px;
-    height: 277px;
+    scale: 100%;
+    width: 25px;
+    height: 74px;
     left: -512px;
     transform: rotate(45deg);
     transform-origin: bottom center; /* Scale from the bottom center */

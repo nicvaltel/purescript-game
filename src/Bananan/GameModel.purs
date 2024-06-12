@@ -9,13 +9,17 @@ module Bananan.GameModel
   where
 
 -- import Bananan.Reexport
+
 import Bananan.Actors (ActorData, Ball)
 import Engine.Config (Config)
-import Engine.Model (Actor, Model, AppMod)
+import Engine.Model (Actor, AppMod, Model, NameId)
 
 type GameState = {
       score :: Int
     , ballQueue :: Ball
+    , canvasWidth :: Number
+    , gunNameId :: NameId
+    , ballSpeed :: Number
   }
 
 type GameModel = Model ActorData GameState

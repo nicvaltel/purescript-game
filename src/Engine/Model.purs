@@ -14,6 +14,7 @@ module Engine.Model
   , initialModelZeroTime
   , mkActorsFromConfig
   , mkNewNameId
+  , mkUniqueNameId
   , modmod
   , modmodAff
   , modmodEffect
@@ -64,10 +65,21 @@ derive instance ordNameId :: Ord NameId
 getNameId :: NameId -> String
 getNameId (NameId nameId) = nameId
 
+instance decodeJsonNameId :: DecodeJson NameId where
+  decodeJson json = do
+    string <- decodeJson json
+    note (TypeMismatch "NameId") (nameIdFromString string)
+    where
+      nameIdFromString :: String -> Maybe NameId
+      nameIdFromString str = Just (NameId str)
+
+
 newtype Actor ac = Actor {
     nameId :: NameId
   , x :: Number
   , y :: Number
+  , width :: Number
+  , height :: Number
   , z :: Int
   , visible :: Boolean
   , angle :: Number
@@ -180,6 +192,9 @@ mkNewNameId = do
   modmod $ \mr -> mr{lastActorId = mr.lastActorId + 1}
   pure (NameId ("ac_" <> show m.lastActorId))
 
+mkUniqueNameId :: String -> NameId
+mkUniqueNameId nameId = NameId nameId
+
 mkActorsFromConfig :: forall ac gm. 
   Config ac gm -> 
   (gm -> ac -> ac) ->
@@ -193,6 +208,8 @@ mkActorsFromConfig conf mkActorData = do
           , x: a.x
           , y: a.y
           , z: a.z
+          , width : 0.0
+          , height : 0.0
           , visible : true
           , angle : 0.0
           , cssClass : a.cssClass

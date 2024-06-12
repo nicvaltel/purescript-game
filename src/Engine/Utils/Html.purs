@@ -1,6 +1,7 @@
 module Engine.Utils.Html
   ( getElementById
   , getElementCoordinatesById
+  , getNodeElementById
   )
   where
 
@@ -14,17 +15,21 @@ import Web.DOM.Element (Element, getBoundingClientRect)
 import Web.HTML (HTMLDocument, window)
 import Web.HTML.Window (document)
 
-foreign import _getElementById :: String -> HTMLDocument -> Effect (Nullable Element)
+foreign import _getNodeElementById :: String -> HTMLDocument -> Effect (Nullable Element)
 foreign import data NonElementParentNode :: Type
 
-getElementById :: String -> HTMLDocument -> Effect (Maybe Element)
-getElementById eid = map toMaybe <<< _getElementById eid
+getNodeElementById :: String -> HTMLDocument -> Effect (Maybe Element)
+getNodeElementById eid = map toMaybe <<< _getNodeElementById eid
+
+getElementById :: String -> Effect (Maybe Element)
+getElementById eid = do
+  win <- window
+  doc <- document win
+  getNodeElementById eid doc
 
 getElementCoordinatesById :: String -> Effect (Maybe { x :: Int, y :: Int })
 getElementCoordinatesById elementId = do
-  win <- window
-  doc <- document win
-  maybeElem <- getElementById elementId doc
+  maybeElem <- getElementById elementId
   case maybeElem of
     Nothing -> pure Nothing
     Just elem -> do
