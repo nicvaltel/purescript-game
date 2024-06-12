@@ -10,6 +10,7 @@ module Engine.Model
   , appModToAppModAff
   , getModelRec
   , getNameId
+  , getRandom
   , initialModelZeroTime
   , mkActorsFromConfig
   , mkNewNameId
@@ -27,6 +28,7 @@ import Engine.Reexport
 import Control.Monad.State (runStateT)
 import Data.Map as M
 import Engine.Config (Config)
+import Engine.Random.PseudoRandom (class Random)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
@@ -141,6 +143,13 @@ putModelEffect model = modify_ (\_ -> model)
 
 putModelAff :: forall ac gm. Model ac gm -> AppModAff ac gm Unit
 putModelAff model = modify_ (\_ -> model)
+
+getRandom :: forall ac gm x. Random x => AppMod ac gm x
+getRandom = do
+  (Model mr) <- get
+  let randomPair = random mr.seed :: RandomPair x
+  modify_ (\(Model m) -> Model m{seed = randomPair.newSeed})
+  pure randomPair.newVal
 
 -- TODO setup Model with config
 initialModelZeroTime :: forall ac gm. gm -> Model ac gm

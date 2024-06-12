@@ -4,13 +4,14 @@ module Bananan.GameStep
   where
 
 import Bananan.Reexport
+
 import Bananan.Actors (ActorData(..), Ball, BallQueueActor, Dragon, Gun, colorFromRandomInt, cssClassOfColor)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameModel (AppGame, GameActor, GameState)
 import Data.Map as M
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getModelRec, mkNewNameId, modmod)
+import Engine.Model (Actor(..), getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (UserInput, keyWasPressedOnce)
 
@@ -41,10 +42,10 @@ fireBall :: AppGame Unit
 fireBall = do
   m <- getModelRec <$> get
   nameId <- mkNewNameId
-  let randomPair = random m.seed :: RandomPair Int -- TODO make random via modify Model
+  randN :: Int <- getRandom
   let ball = m.gameState.ballQueue{flying = Just {vx : 0.05, vy : -0.05}}
   let newQueueBall = {
-          color : colorFromRandomInt randomPair.newVal
+          color : colorFromRandomInt randN
         , flying : Nothing
         }
   let newBallActor = Actor -- TODO it's just a mock
@@ -56,15 +57,14 @@ fireBall = do
         , visible : true
         , angle : 0.0
         , cssClass : cssClassOfColor ball.color
-        , imageSource : "../images/ball.png"
+        , imageSource : ""
         , htmlElement : Nothing
         , data : ActorBall ball
         }
   modmod $ \mr -> mr{
       actors = M.insert nameId newBallActor m.actors,
       recentlyAddedActors = nameId : m.recentlyAddedActors, 
-      gameState = m.gameState{ballQueue = newQueueBall},
-      seed = randomPair.newSeed 
+      gameState = m.gameState{ballQueue = newQueueBall}
     }
 
 
