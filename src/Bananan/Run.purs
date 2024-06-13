@@ -3,7 +3,7 @@ module Bananan.Run(run) where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData, colorFromRandomInt)
-import Bananan.GameModel (GameState, GameConfig, mkActorData)
+import Bananan.GameModel (GameConfig, GameState(..), GameStateRec, mkActorData)
 import Bananan.GameStep (gameStep)
 import Control.Monad.State (runStateT)
 import Engine.Config (Config)
@@ -25,7 +25,8 @@ initialGameState conf = do
   rect <- case mbCanvas of
     Just canvas -> getBoundingClientRect canvas
     Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
-  pure
+  let (GameState confState) = conf.state
+  pure $ GameState
     {
       score: 0
     , ballQueue : 
@@ -34,8 +35,8 @@ initialGameState conf = do
         , flying : Nothing
         } 
     , canvasWidth : rect.width
-    , gunNameId : conf.state.gunNameId -- mkUniqueNameId "gun"
-    , ballSpeed : conf.state.ballSpeed
+    , gunNameId : confState.gunNameId -- mkUniqueNameId "gun"
+    , ballSpeed : confState.ballSpeed
     }
 
 run :: Effect Unit

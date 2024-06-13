@@ -9,9 +9,9 @@ import Concurrent.Queue as Q
 import Control.Monad.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Map as M
-import Data.Traversable (sequence)
+import Data.Traversable (for_, sequence)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, getModelRec, getNameId, modmodAff, modmodEffect)
+import Engine.Model (class ActorContainer, Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, appModToAppModEffect, getAllActors, getModelRec, getNameId, lookupActor, modmodAff, modmodEffect, updateActor)
 import Engine.Render.Render (render)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
@@ -36,6 +36,7 @@ type GameStepFunc ac gm =
 mainLoop :: forall ac gm. 
   Show gm => 
   Show ac => 
+  ActorContainer ac gm =>
   Config ac gm -> 
   WS.WSocket -> 
   Q.Queue String -> 
@@ -77,20 +78,23 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ evalStateT (mainLoop conf socket queueWS gameStep canvasElem) newModel)
   pure unit
 
-updateRecentlyAddedActors :: forall ac gm. HTMLElement -> AppModEffect ac gm Unit
+updateRecentlyAddedActors :: forall ac gm. ActorContainer ac gm => HTMLElement -> AppModEffect ac gm Unit
 updateRecentlyAddedActors canvasElem = do
-  m <- getModelRec <$> get
+  model <- get
+  let m = getModelRec model
   newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \nameId -> do
     maybeElem <- getHtmlElement (getNameId nameId)
     elem <- case maybeElem of
       Just el -> pure $ Just el
-      Nothing -> sequence (createNewHtmlElem canvasElem <$> M.lookup nameId m.act.actors) 
+      Nothing -> sequence (createNewHtmlElem canvasElem <$> lookupActor nameId model) 
     pure (Tuple nameId elem)
-  let newActors = 
-        foldr (\(Tuple nameId elem) acc -> M.update (\(Actor a) -> Just (Actor a{htmlElement = elem})) nameId acc) 
-          m.act.actors 
-          newActorsArr
-  modmodEffect $ \mr -> mr{act{actors = newActors, recentlyAddedActors = []}}
+  appModToAppModEffect $ for_ newActorsArr $ \(Tuple nameId elem) -> updateActor nameId (\(Actor a) -> Actor a{htmlElement = elem})
+
+  -- let newActors = 
+        -- foldr (\(Tuple nameId elem) acc -> updateActor nameId (\(Actor a) -> (Actor a{htmlElement = elem})) nameId acc) 
+          -- model
+          -- newActorsArr
+  modmodEffect $ \mr -> mr{act{recentlyAddedActors = []}}
   pure unit
 
 createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
@@ -131,6 +135,7 @@ runWS conf queue = do
 runGame :: forall ac gm. 
   Show gm => 
   Show ac => 
+  ActorContainer ac gm =>
   Config ac gm -> 
   GameStepFunc ac gm -> 
   AppModAff ac gm Unit

@@ -57,13 +57,16 @@
     }
   ],
   "state": {
-    "score": 15,
-    "ballQueue": {
-      "color": "Yellow",
-      "flying": null
-    },
-    "canvasWidth" : 0.0,
-    "gunNameId" : "gun",
-    "ballSpeed" : 0.8
+    "type": "gameState",
+    "data": {
+        "score": 15,
+        "ballQueue": {
+          "color": "Yellow",
+          "flying": null
+        },
+        "canvasWidth" : 0.0,
+        "gunNameId" : "gun",
+        "ballSpeed" : 0.8
+      }
   }
 }

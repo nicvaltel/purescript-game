@@ -8,10 +8,14 @@ module Engine.Model
   , NameId
   , appModEffectToAppModAff
   , appModToAppModAff
+  , appModToAppModEffect
+  , class ActorContainer
+  , getAllActors
   , getModelRec
   , getNameId
   , getRandom
   , initialModelZeroTime
+  , lookupActor
   , mkActorsFromConfig
   , mkNewNameId
   , mkUniqueNameId
@@ -21,12 +25,14 @@ module Engine.Model
   , putModel
   , putModelAff
   , putModelEffect
+  , updateActor
   )
   where
 
 import Engine.Reexport
 
 import Control.Monad.State (runStateT)
+import Data.List (List)
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.Random.PseudoRandom (class Random)
@@ -41,6 +47,13 @@ type AppModAff ac gm x = StateT (Model ac gm) Aff x
 
 appModToAppModAff :: forall ac gm x. AppMod ac gm x -> AppModAff ac gm x
 appModToAppModAff appMod = do
+  m <- get
+  let (Tuple result newState) = runState appMod m
+  put newState
+  pure result
+
+appModToAppModEffect :: forall ac gm x. AppMod ac gm x -> AppModEffect ac gm x
+appModToAppModEffect appMod = do
   m <- get
   let (Tuple result newState) = runState appMod m
   put newState
@@ -232,3 +245,9 @@ mkActorsFromConfig conf mkActorData = do
           , data: mkActorData conf.state a.data
           })
   pure $ M.fromFoldable actorsArr
+
+
+class ActorContainer ac gm where
+  getAllActors :: Model ac gm -> List (Actor ac)
+  updateActor :: NameId -> (Actor ac -> Actor ac) -> AppMod ac gm Unit
+  lookupActor :: NameId -> Model ac gm -> Maybe (Actor ac)

@@ -1,8 +1,10 @@
 module Engine.Render.Render (render) where
 
 import Engine.Reexport
+
+import Data.Foldable (for_)
 import Engine.Config (Config)
-import Engine.Model (Actor(..), Model, getModelRec)
+import Engine.Model (class ActorContainer, Actor(..), Model, getAllActors, getModelRec)
 
 
 type ActorObj
@@ -13,21 +15,20 @@ foreign import _renderObject :: ActorObj -> Effect Unit
 render :: forall ac gm. 
   Show gm => 
   Show ac => 
+  ActorContainer ac gm =>
   Config ac gm -> 
   Model ac gm -> 
   Effect Unit
 render conf model = do
-  let m = getModelRec model
   when conf.debugModel $ log (show model)
-  _ <-
-    for m.act.actors
-      $ \(Actor actor) -> do
-          when actor.visible $
-            case actor.htmlElement of
-              Nothing -> pure unit
-              Just el ->
-                let actorObj = mkActorObj el actor
-                in _renderObject actorObj
+  for_ (getAllActors model)
+    $ \(Actor actor) -> do
+        when actor.visible $
+          case actor.htmlElement of
+            Nothing -> pure unit
+            Just el ->
+              let actorObj = mkActorObj el actor
+              in _renderObject actorObj
   pure unit
   where
     mkActorObj el actor = do
