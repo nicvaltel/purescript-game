@@ -97,20 +97,27 @@ instance showActor :: Show ac => Show (Actor ac) where
 
 
 type ModelRec ac gm =
-    { gameStepNumber :: Int
-    , screenWidth :: Number
-    , screenHeight :: Number
-    , lastUpdateTime :: Instant
-    , actors :: Map NameId (Actor ac)
-    , lastActorId :: Int
+    { 
+    game :: gm
+    , act :: {
+      actors :: Map NameId (Actor ac)
     , recentlyAddedActors :: Array NameId
     , recentlyDeletedActors :: Array NameId
-    , gameState :: gm
-    , userInput :: UserInput
+    }
+    , io :: {
+      userInput :: UserInput
     , prevUserInput :: UserInput
     , wsIn :: Array WS.WSMessage 
     , wsOut :: Array WS.WSMessage
-    , seed :: Seed
+    }
+    , sys :: {
+        gameStepNumber :: Int
+      , screenWidth :: Number
+      , screenHeight :: Number
+      , lastUpdateTime :: Instant
+      , lastActorId :: Int
+      , seed :: Seed
+      }
     }
 
 newtype Model ac gm = Model (ModelRec ac gm)
@@ -120,18 +127,18 @@ newtype Model ac gm = Model (ModelRec ac gm)
 instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
   show (Model m) =  
     foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
-      $ [ "gameStepNumber " <> show m.gameStepNumber
-        , "screenWidth " <> show m.screenWidth
-        , "screenHeight " <> show m.screenHeight
-        , "lastUpdateTime " <> show m.lastUpdateTime
-        , "actors " <> (intercalate ", " $ map show m.actors)
-        , "recentlyAddedActors" <> show (map getNameId m.recentlyAddedActors)
-        , "recentlyDeletedActors" <> show (map getNameId m.recentlyDeletedActors)
-        , "gameState" <> show (m.gameState)
-        , "currentUserInput" <> show (m.userInput)
-        , "prevUserInput" <> show (m.prevUserInput)
-        , "wsIn" <> show (m.wsIn)
-        , "wsOut" <> show (m.wsOut)
+      $ [ "gameStepNumber " <> show m.sys.gameStepNumber
+        , "screenWidth " <> show m.sys.screenWidth
+        , "screenHeight " <> show m.sys.screenHeight
+        , "lastUpdateTime " <> show m.sys.lastUpdateTime
+        , "actors " <> (intercalate ", " $ map show m.act.actors)
+        , "recentlyAddedActors" <> show (map getNameId m.act.recentlyAddedActors)
+        , "recentlyDeletedActors" <> show (map getNameId m.act.recentlyDeletedActors)
+        , "gameState" <> show (m.game)
+        , "currentUserInput" <> show (m.io.userInput)
+        , "prevUserInput" <> show (m.io.prevUserInput)
+        , "wsIn" <> show (m.io.wsIn)
+        , "wsOut" <> show (m.io.wsOut)
         ]
 
 getModelRec :: forall ac gm. Model ac gm -> ModelRec ac gm
@@ -159,8 +166,8 @@ putModelAff model = modify_ (\_ -> model)
 getRandom :: forall ac gm x. Random x => AppMod ac gm x
 getRandom = do
   (Model mr) <- get
-  let randomPair = random mr.seed :: RandomPair x
-  modify_ (\(Model m) -> Model m{seed = randomPair.newSeed})
+  let randomPair = random mr.sys.seed :: RandomPair x
+  modify_ (\(Model m) -> Model m{sys{seed = randomPair.newSeed}})
   pure randomPair.newVal
 
 -- TODO setup Model with config
@@ -170,27 +177,34 @@ initialModelZeroTime gameState =
     $ let
         Just time = instant (Milliseconds 0.0)
       in Model
-        { gameStepNumber: 0
-        , screenWidth: 0.0
-        , screenHeight: 0.0
-        , lastUpdateTime: time
-        , actors: M.empty :: Map NameId (Actor ac)
-        , lastActorId: 0
+        { 
+          game : gameState
+        , act : {
+          actors : M.empty :: Map NameId (Actor ac)
         , recentlyAddedActors : []
         , recentlyDeletedActors : []
-        , gameState
-        , userInput : emptyUserInput
+        }
+        , io : {
+          userInput : emptyUserInput
         , prevUserInput : emptyUserInput
         , wsIn : []
-        , wsOut: []
-        , seed: mkSeed 0
+        , wsOut : []
+        }
+        , sys : {
+            gameStepNumber : 0
+          , screenWidth : 0.0 -- TODO setup this
+          , screenHeight : 0.0
+          , lastUpdateTime : time 
+          , lastActorId : 0
+          , seed : mkSeed 0
+          }
         }
 
 mkNewNameId :: forall ac gm. AppMod ac gm NameId
 mkNewNameId = do
   m <- getModelRec <$> get
-  modmod $ \mr -> mr{lastActorId = mr.lastActorId + 1}
-  pure (NameId ("ac_" <> show m.lastActorId))
+  modmod $ \mr -> mr{sys{lastActorId = mr.sys.lastActorId + 1}}
+  pure (NameId ("ac_" <> show m.sys.lastActorId))
 
 mkUniqueNameId :: String -> NameId
 mkUniqueNameId nameId = NameId nameId

@@ -20,7 +20,7 @@ render conf model = do
   let m = getModelRec model
   when conf.debugModel $ log (show model)
   _ <-
-    for m.actors
+    for m.act.actors
       $ \(Actor actor) -> do
           when actor.visible $
             case actor.htmlElement of

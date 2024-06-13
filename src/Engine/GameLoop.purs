@@ -47,7 +47,7 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   renderFiber <- lift $ forkAff $ liftEffect (render conf model)
   currentTime <- liftEffect now
   seed <- liftEffect randomSeed
-  let (Milliseconds deltaTime') = diff currentTime (getModelRec model).lastUpdateTime
+  let (Milliseconds deltaTime') = diff currentTime (getModelRec model).sys.lastUpdateTime
   let deltaTime = if deltaTime' < conf.maxDeltaTime then deltaTime' else conf.maxDeltaTime
   messages <- lift $ readAllQueue queueWS
   userInput <- liftEffect $ getUserInput canvasElem
@@ -59,18 +59,18 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     log "INPUTS:"
     log $ show $ show userInput
 
-  modmodAff $ \m -> m {userInput = userInput, prevUserInput = m.userInput, wsIn = messages, wsOut = [], seed = seed}
+  modmodAff $ \m -> m {io{userInput = userInput, prevUserInput = m.io.userInput, wsIn = messages, wsOut = []}, sys{seed = seed}}
   appModToAppModAff $ gameStep conf deltaTime 
   appModEffectToAppModAff $ updateRecentlyAddedActors canvasElem
   appModEffectToAppModAff $ removeRecentlyDeletedActors
-  modmodAff $ \m -> m { lastUpdateTime = currentTime }
+  modmodAff $ \m -> m { sys{ lastUpdateTime = currentTime }}
 
   modelSendOut <- get
-  liftEffect $ sendWsOutMessages socket (getModelRec modelSendOut).wsOut
+  liftEffect $ sendWsOutMessages socket (getModelRec modelSendOut).io.wsOut
 
-  when conf.debugWebsocket $ when (not $ null (getModelRec modelSendOut).wsOut) $ liftEffect do
+  when conf.debugWebsocket $ when (not $ null (getModelRec modelSendOut).io.wsOut) $ liftEffect do
     log "MESSAGES OUT:"
-    logShow (getModelRec modelSendOut).wsOut
+    logShow (getModelRec modelSendOut).io.wsOut
 
   lift $ joinFiber renderFiber
   newModel <- get
@@ -80,14 +80,17 @@ mainLoop conf socket queueWS gameStep canvasElem = do
 updateRecentlyAddedActors :: forall ac gm. HTMLElement -> AppModEffect ac gm Unit
 updateRecentlyAddedActors canvasElem = do
   m <- getModelRec <$> get
-  newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.recentlyAddedActors $ \nameId -> do
+  newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \nameId -> do
     maybeElem <- getHtmlElement (getNameId nameId)
     elem <- case maybeElem of
       Just el -> pure $ Just el
-      Nothing -> sequence (createNewHtmlElem canvasElem <$> M.lookup nameId m.actors) 
+      Nothing -> sequence (createNewHtmlElem canvasElem <$> M.lookup nameId m.act.actors) 
     pure (Tuple nameId elem)
-  let newActors = foldr (\(Tuple nameId elem) acc -> M.update (\(Actor a) -> Just (Actor a{htmlElement = elem})) nameId acc) m.actors newActorsArr
-  modmodEffect $ \mr -> mr{actors = newActors, recentlyAddedActors = []}
+  let newActors = 
+        foldr (\(Tuple nameId elem) acc -> M.update (\(Actor a) -> Just (Actor a{htmlElement = elem})) nameId acc) 
+          m.act.actors 
+          newActorsArr
+  modmodEffect $ \mr -> mr{act{actors = newActors, recentlyAddedActors = []}}
   pure unit
 
 createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
@@ -103,9 +106,9 @@ createNewHtmlElem canvasElem (Actor a) = _createImageElement {
 removeRecentlyDeletedActors :: forall ac gm.  AppModEffect ac gm Unit
 removeRecentlyDeletedActors = do
   m <- getModelRec <$> get
-  _ <- liftEffect $ for m.recentlyDeletedActors $ \nameId -> do
+  _ <- liftEffect $ for m.act.recentlyDeletedActors $ \nameId -> do
     _removeElementById (getNameId nameId)
-  modmodEffect $ \mr -> mr{recentlyDeletedActors = []}
+  modmodEffect $ \mr -> mr{act{recentlyDeletedActors = []}}
 
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs
@@ -140,5 +143,5 @@ runGame conf gameStep = do --onDOMContentLoaded
   canvasElem <- case mbCanvasElem of
           Just el -> pure el
           Nothing -> error ("ERROR: Canvas not found: canvasElementId = " <> conf.canvasElementId)
-  modmodAff $ \m -> m { lastUpdateTime = currentTime, seed = seed }
+  modmodAff $ \m -> m { sys { lastUpdateTime = currentTime, seed = seed }}
   mainLoop conf socket queueWS gameStep canvasElem

@@ -99,16 +99,16 @@ moveGun dt controlKeys gun (Actor actor) =
 fireBall :: AppGame Unit
 fireBall = do
   m <- getModelRec <$> get
-  let gun = case M.lookup m.gameState.gunNameId m.actors of
+  let gun = case M.lookup m.game.gunNameId m.act.actors of
         Just (Actor actor)  -> actor
         Nothing -> error "There is no Gun actor in Model"
   let gunAngle = gun.angle
   let phi = pi * (90.0 - gunAngle)/180.0 
   let cosPhi = cos phi
   let sinPhi = sin phi
-  let vx = cosPhi * m.gameState.ballSpeed
-  let vy = - sinPhi * m.gameState.ballSpeed
-  let ball = m.gameState.ballQueue{flying = Just {vx : vx, vy : vy}}
+  let vx = cosPhi * m.game.ballSpeed
+  let vy = - sinPhi * m.game.ballSpeed
+  let ball = m.game.ballQueue{flying = Just {vx : vx, vy : vy}}
 
   let gunBottomX = gun.x + 25.0/2.0
   let gunBottomY = gun.y + 74.0
@@ -139,10 +139,12 @@ fireBall = do
         , data : ActorBall ball
         }
   modmod $ \mr -> mr{
-      actors = M.insert nameId newBallActor m.actors,
-      recentlyAddedActors = nameId : m.recentlyAddedActors, 
-      gameState = m.gameState{ballQueue = newQueueBall}
-    }
+          act {
+              actors = M.insert nameId newBallActor mr.act.actors,
+              recentlyAddedActors = nameId : mr.act.recentlyAddedActors 
+              },
+          game{ballQueue = newQueueBall}
+        }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
@@ -163,14 +165,14 @@ moveActor dt width balls userInput controlKeys ac@(Actor actor) = case actor.dat
 gameStep :: GameStepFunc ActorData GameState
 gameStep conf dt = do
   m <- getModelRec <$> get
-  let controlKeys = mapMaybe read m.userInput.keys :: Array ControlKey
-      prevControlKeys = mapMaybe read m.prevUserInput.keys :: Array ControlKey
-      balls = flip List.filter (M.values m.actors) $ \(Actor a) -> case a.data of 
+  let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
+      prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
+      balls = flip List.filter (M.values m.act.actors) $ \(Actor a) -> case a.data of 
                   ActorBall b | isNothing b.flying -> true
                   _ -> false
-      updatedActors = map (moveActor dt m.gameState.canvasWidth balls m.userInput controlKeys) m.actors
-  modmod $ \mr -> mr {actors = updatedActors}
+      updatedActors = map (moveActor dt m.game.canvasWidth balls m.io.userInput controlKeys) m.act.actors
+  modmod $ \mr -> mr { act { actors = updatedActors }}
   when (keyWasPressedOnce controlKeys prevControlKeys C.Space) fireBall
-  let wsOut = m.wsIn --[]
+  let wsOut = m.io.wsIn --[]
 
-  modmod $ \mr ->  mr { gameStepNumber = mr.gameStepNumber + 1, wsOut = wsOut }
+  modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }
