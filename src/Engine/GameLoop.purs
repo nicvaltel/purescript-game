@@ -83,15 +83,15 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     updateRecentlyAddedActors canvasElem = do
       model <- get
       let m = getModelRec model
-      newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \nameId -> do
+      newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \(Tuple nameId actorTypeStr) -> do
         maybeElem <- getHtmlElement (getNameId nameId)
         elem <- case maybeElem of
           Just el -> pure $ Just el
-          Nothing -> sequence (createNewHtmlElem canvasElem <$> (lookupActor nameId model :: Maybe (Actor ac))) 
+          Nothing -> sequence (createNewHtmlElem canvasElem <$> (lookupActor nameId (Just actorTypeStr) model :: Maybe (Actor ac))) 
         pure (Tuple nameId elem)
       appModToAppModEffect $ for_ newActorsArr $ \(Tuple nameId elem) -> 
-        let update = updateActor :: NameId -> (Actor ac -> Actor ac) -> AppMod gm Unit
-        in update nameId (\(Actor a) -> Actor a{htmlElement = elem})
+        let update = updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod gm Unit
+        in update nameId Nothing (\(Actor a) -> Actor a{htmlElement = elem})
       modmodEffect $ \mr -> mr{act{recentlyAddedActors = []}}
       pure unit
 

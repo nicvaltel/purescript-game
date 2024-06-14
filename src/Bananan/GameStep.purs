@@ -5,7 +5,7 @@ module Bananan.GameStep
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, Gun, colorFromRandomInt, cssClassOfColor)
+import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec)
@@ -17,7 +17,7 @@ import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
 import Engine.Model (Actor(..), getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
-import Engine.UserInput (UserInput, keyWasPressedOnce)
+import Engine.UserInput (keyWasPressedOnce)
 
 type BoxWidth = Number
 type Diameter = Number
@@ -83,27 +83,27 @@ moveBall dt width balls actor@(Actor a) =
         in actor2
   _ -> actor
 
-moveGun :: Time -> Array ControlKey -> Gun -> GameActor -> GameActor
-moveGun dt controlKeys gun (Actor actor) = 
-  let newSpeed = 
-        let leftPressed = C.ArrowLeft `elem` controlKeys
-            rightPressed = C.ArrowRight `elem` controlKeys
-        in case Tuple leftPressed rightPressed of
-            Tuple true false -> -gun.maxAngleSpeed
-            Tuple false true -> gun.maxAngleSpeed
-            _ -> 0.0
-      newAngle' = actor.angle + newSpeed * dt
-      newAngle = clamp gun.maxLeftAngle gun.maxRightAngle newAngle'
-  in Actor actor{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
+moveGun :: Time -> Array ControlKey -> GameActor -> GameActor
+moveGun dt controlKeys actor@(Actor a) =
+  case a.data of
+    ActorGun gun ->
+      let newSpeed = 
+            let leftPressed = C.ArrowLeft `elem` controlKeys
+                rightPressed = C.ArrowRight `elem` controlKeys
+            in case Tuple leftPressed rightPressed of
+                Tuple true false -> -gun.maxAngleSpeed
+                Tuple false true -> gun.maxAngleSpeed
+                _ -> 0.0
+          newAngle' = a.angle + newSpeed * dt
+          newAngle = clamp gun.maxLeftAngle gun.maxRightAngle newAngle'
+      in Actor a{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
+    _ -> actor
 
 fireBall :: AppGame Unit
 fireBall = do
   model <- get
-  let m = getModelRec model
   let game = getGameRec model
-  let gun = case M.lookup game.gunNameId game.actors of
-        Just (Actor actor)  -> actor
-        Nothing -> error "There is no Gun actor in Model"
+  let (Actor gun) = game.actors.gun 
   let gunAngle = gun.angle
   let phi = pi * (90.0 - gunAngle)/180.0 
   let cosPhi = cos phi
@@ -142,10 +142,10 @@ fireBall = do
         }
   modmod $ \mr -> mr{
           act {
-              recentlyAddedActors = nameId : mr.act.recentlyAddedActors 
+              recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors 
               },
           game = GameState game{
-            actors = M.insert nameId newBallActor game.actors,
+            actors{balls = M.insert nameId newBallActor game.actors.balls},
             ballQueue = newQueueBall            
             }
         }
@@ -157,14 +157,6 @@ moveDragon dt dragon actor = actor
 moveBallQueue :: Time -> BallQueueActor -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
-moveActor :: Time -> BoxWidth -> List GameActor -> UserInput -> Array ControlKey -> GameActor -> GameActor
-moveActor dt width balls userInput controlKeys ac@(Actor actor) = case actor.data of
-  ActorBall ball -> moveBall dt width balls ac
-  ActorGun gun -> moveGun dt controlKeys gun ac
-  ActorDragon dragon -> moveDragon dt dragon ac
-  ActorBallQueue queue -> moveBallQueue dt queue ac
-
-
 -- gameStep :: GameConfig -> Time -> AppMod GameConfig GameState Unit
 gameStep :: GameStepFunc ActorData GameState
 gameStep conf dt = do
@@ -173,11 +165,12 @@ gameStep conf dt = do
   let game = getGameRec model
   let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
-      balls = flip List.filter (M.values game.actors) $ \(Actor a) -> case a.data of 
+      balls = flip List.filter (M.values game.actors.balls) $ \(Actor a) -> case a.data of 
                   ActorBall b | isNothing b.flying -> true
                   _ -> false
-      updatedActors = map (moveActor dt game.canvasWidth balls m.io.userInput controlKeys) game.actors
-  modmod $ \mr -> mr { game = GameState game { actors = updatedActors }}
+      updatedBalls = map (moveBall dt game.canvasWidth balls) game.actors.balls
+      updatedGun = moveGun dt controlKeys game.actors.gun
+  modmod $ \mr -> mr { game = GameState game { actors { balls = updatedBalls , gun = updatedGun }}}
   when (keyWasPressedOnce controlKeys prevControlKeys C.Space) fireBall
   let wsOut = m.io.wsIn --[]
 

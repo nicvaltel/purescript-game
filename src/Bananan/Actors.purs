@@ -5,8 +5,11 @@ module Bananan.Actors
   , BallQueueActor(..)
   , Dragon(..)
   , Gun(..)
+  , ballQueueActorMock
   , colorFromRandomInt
   , cssClassOfColor
+  , dragonMock
+  , gunMock
   )
   where
 
@@ -20,6 +23,15 @@ type Gun = {
   , maxLeftAngle :: Number
   , maxRightAngle :: Number
 }
+
+gunMock :: Gun 
+gunMock = 
+  {
+    angleSpeed : 0.0
+  , maxAngleSpeed : 0.0
+  , maxLeftAngle : 0.0
+  , maxRightAngle : 0.0
+  }
 
 data BallColor = Red | Green | Blue | Yellow | Purple
 
@@ -63,9 +75,14 @@ type Dragon = {
   animation :: String
 }
 
+dragonMock :: Dragon
+dragonMock = {animation : ""}
+
 type BallQueueActor = {
   animation :: String
 }
+
+ballQueueActorMock = {animation : ""}
 
 data ActorData = 
     ActorGun Gun

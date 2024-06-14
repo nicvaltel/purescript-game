@@ -6,9 +6,11 @@ module Engine.Model
   , Model
   , ModelRec
   , NameId
+  , actorMock
   , appModEffectToAppModAff
   , appModToAppModAff
   , appModToAppModEffect
+  , checkActorNameId
   , class ActorContainer
   , getAllActors
   , getModelRec
@@ -30,7 +32,6 @@ module Engine.Model
   where
 
 import Engine.Reexport
-
 import Control.Monad.State (runStateT)
 import Data.List (List)
 import Data.Map as M
@@ -102,6 +103,25 @@ newtype Actor ac = Actor {
   , data :: ac
 }
 
+actorMock :: Actor Unit 
+actorMock = Actor
+        {   nameId: mkUniqueNameId "actor_mock",
+            x: 0.0,
+            y: 0.0,
+            z: 0,
+            width : 0.0,
+            height : 0.0,
+            visible : false,
+            angle : 0.0,
+            htmlElement : Nothing,
+            cssClass : "",
+            imageSource: "",
+            data: unit
+            }
+
+checkActorNameId :: forall ac. NameId -> Actor ac -> Boolean
+checkActorNameId nameId (Actor aRec) = nameId == aRec.nameId
+
 -- instance decodeJsonActor :: DecodeJsonField ac => DecodeJson (Actor ac) where
 --   decodeJson json = do
 --     obj <- decodeJson json -- attempts to decode the JSON value as an object.
@@ -122,7 +142,7 @@ type ModelRec gm =
     { 
     game :: gm
     , act :: {
-      recentlyAddedActors :: Array NameId
+      recentlyAddedActors :: Array (Tuple NameId String) -- String is a clue to ActorContainer functions, where to find this actor
     , recentlyDeletedActors :: Array NameId
     }
     , io :: {
@@ -152,9 +172,8 @@ instance showModel :: Show gm => Show (Model gm) where
         , "screenWidth " <> show m.sys.screenWidth
         , "screenHeight " <> show m.sys.screenHeight
         , "lastUpdateTime " <> show m.sys.lastUpdateTime
-        -- , "actors " <> (intercalate ", " $ map show m.act.actors)
-        , "recentlyAddedActors" <> show (map getNameId m.act.recentlyAddedActors)
-        , "recentlyDeletedActors" <> show (map getNameId m.act.recentlyDeletedActors)
+        , "recentlyAddedActors" <> show m.act.recentlyAddedActors
+        , "recentlyDeletedActors" <> show m.act.recentlyDeletedActors
         , "gameState" <> show (m.game)
         , "currentUserInput" <> show (m.io.userInput)
         , "prevUserInput" <> show (m.io.prevUserInput)
@@ -256,5 +275,5 @@ mkActorsFromConfig conf mkActorData = do
 
 class ActorContainer ac gm where
   getAllActors :: Model gm -> List (Actor ac)
-  updateActor :: NameId -> (Actor ac -> Actor ac) -> AppMod gm Unit
-  lookupActor :: NameId -> Model gm -> Maybe (Actor ac)
+  updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod gm Unit
+  lookupActor :: NameId -> Maybe String -> Model gm -> Maybe (Actor ac)

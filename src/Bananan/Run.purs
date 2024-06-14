@@ -2,20 +2,20 @@ module Bananan.Run(run) where
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), Gun, colorFromRandomInt)
-import Bananan.GameModel (GameConfig, GameState(..), GameStateRec, mkActorData)
+import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock)
+import Bananan.GameModel (GameConfig, GameState(..), mkActorData)
 import Bananan.GameStep (gameStep)
 import Control.Monad.State (runStateT)
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.InitGame (initGame)
-import Engine.Model (Actor(..), AppModAff, initialModelZeroTime, mkUniqueNameId)
+import Engine.Model (Actor(..), AppModAff, actorMock, initialModelZeroTime, mkUniqueNameId)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (getHtmlElement, parseConfigFile)
 import Engine.Utils.Html (getElementById)
 import Web.DOM.Element (getBoundingClientRect)
-import Web.HTML.HTMLCanvasElement (width)
+-- import Web.HTML.HTMLCanvasElement (width)
 
 configFilePath ∷ String
 configFilePath = "config.json"
@@ -64,10 +64,12 @@ initialGameState conf = do
     , canvasWidth : rect.width
     , gunNameId : confState.gunNameId -- mkUniqueNameId "gun"
     , ballSpeed : confState.ballSpeed
-    , actors : M.fromFoldable 
-      [
-        (Tuple nameGun gun)
-      ]
+    , actors : 
+          { balls : M.empty
+          , gun : gun
+          , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock}
+          , ballQueueActor : let (Actor a) = actorMock in Actor a{data = ActorBallQueue ballQueueActorMock}
+          } 
     }
 
 run :: Effect Unit
