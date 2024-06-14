@@ -14,9 +14,9 @@ initGame :: forall ac gm.
   Config ac gm -> 
   gm -> 
   (gm -> ac -> ac) ->
-  AppModAff gm Unit
+  AppModAff ac gm Unit
 initGame conf initialGameState mkActorData = do
-  putModelAff (initialModelZeroTime initialGameState :: Model gm)
+  putModelAff (initialModelZeroTime initialGameState :: Model ac gm)
   -- TODO mkActorsFromConfig
   -- actors :: Map NameId (Actor ac) <- liftEffect $ mkActorsFromConfig conf mkActorData
   -- modmodAff (\m -> m{act{ actors = actors } } )

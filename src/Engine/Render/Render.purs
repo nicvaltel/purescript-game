@@ -18,7 +18,7 @@ render :: forall ac gm.
   Show ac => 
   ActorContainer ac gm =>
   Config ac gm -> 
-  Model gm -> 
+  Model ac gm -> 
   Effect Unit
 render conf model = do
   when conf.debugModel $ log (show model)

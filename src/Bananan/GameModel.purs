@@ -67,11 +67,11 @@ instance showGameState :: Show GameState where
 getGameRec :: GameModel -> GameStateRec
 getGameRec m = let (GameState r) = (getModelRec m).game in r
 
-type GameModel = Model GameState
+type GameModel = Model ActorData GameState
 type GameConfig = Config ActorData GameState
 type GameActor = Actor ActorData
 
-type AppGame a = AppMod GameState a
+type AppGame a = AppMod ActorData GameState a
 
 mkActorData :: GameState -> ActorData -> ActorData
 mkActorData _ actorData = actorData

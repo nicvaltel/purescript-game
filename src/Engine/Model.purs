@@ -42,25 +42,25 @@ import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
 import Record as R
 
-type AppMod gm x = State (Model gm) x
-type AppModEffect gm x = StateT (Model gm) Effect x
-type AppModAff gm x = StateT (Model gm) Aff x
+type AppMod ac gm x = State (Model ac gm) x
+type AppModEffect ac gm x = StateT (Model ac gm) Effect x
+type AppModAff ac gm x = StateT (Model ac gm) Aff x
 
-appModToAppModAff :: forall gm x. AppMod gm x -> AppModAff gm x
+appModToAppModAff :: forall ac gm x. AppMod ac gm x -> AppModAff ac gm x
 appModToAppModAff appMod = do
   m <- get
   let (Tuple result newState) = runState appMod m
   put newState
   pure result
 
-appModToAppModEffect :: forall gm x. AppMod gm x -> AppModEffect gm x
+appModToAppModEffect :: forall ac gm x. AppMod ac gm x -> AppModEffect ac gm x
 appModToAppModEffect appMod = do
   m <- get
   let (Tuple result newState) = runState appMod m
   put newState
   pure result
 
-appModEffectToAppModAff :: forall gm x. AppModEffect gm x -> AppModAff gm x
+appModEffectToAppModAff :: forall ac gm x. AppModEffect ac gm x -> AppModAff ac gm x
 appModEffectToAppModAff appModEffect = do
   m <- get
   (Tuple result newState) <- liftEffect $ runStateT appModEffect m
@@ -138,7 +138,7 @@ instance showActor :: Show ac => Show (Actor ac) where
     R.modify (Proxy :: Proxy "htmlElement") (\el -> if isJust el then "Just HtmlElem" else "Nothing" ) actor
 
 
-type ModelRec gm =
+type ModelRec ac gm =
     { 
     game :: gm
     , act :: {
@@ -159,13 +159,14 @@ type ModelRec gm =
       , lastActorId :: Int
       , seed :: Seed
       }
+    , actorNothing :: Maybe (Actor ac) --need for Model contain ac type
     }
 
-newtype Model gm = Model (ModelRec gm)
+newtype Model ac gm = Model (ModelRec ac gm)
 
--- derive instance newtypeModel :: Newtype (Model gm) _
+-- derive instance newtypeModel :: Newtype (Model ac gm) _
 
-instance showModel :: Show gm => Show (Model gm) where
+instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
   show (Model m) =  
     foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
       $ [ "gameStepNumber " <> show m.sys.gameStepNumber
@@ -181,29 +182,29 @@ instance showModel :: Show gm => Show (Model gm) where
         , "wsOut" <> show (m.io.wsOut)
         ]
 
-getModelRec :: forall gm. Model gm -> ModelRec gm
+getModelRec :: forall ac gm. Model ac gm -> ModelRec ac gm
 getModelRec (Model m) = m
 
-modmod :: forall gm. (ModelRec gm -> ModelRec gm) -> AppMod gm Unit
+modmod :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm Unit
 modmod f = modify_ (\(Model m) -> Model (f m))
 
-modmodEffect :: forall gm. (ModelRec gm -> ModelRec gm) -> AppModEffect gm Unit
+modmodEffect :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm Unit
 modmodEffect f = modify_ (\(Model m) -> Model (f m))
 
-modmodAff :: forall gm. (ModelRec gm -> ModelRec gm) -> AppModAff gm Unit
+modmodAff :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm Unit
 modmodAff f = modify_ (\(Model m) -> Model (f m))
 
 
-putModel :: forall gm. Model gm -> AppMod gm Unit
+putModel :: forall ac gm. Model ac gm -> AppMod ac gm Unit
 putModel model = modify_ (\_ -> model)
 
-putModelEffect :: forall gm. Model gm -> AppModEffect gm Unit
+putModelEffect :: forall ac gm. Model ac gm -> AppModEffect ac gm Unit
 putModelEffect model = modify_ (\_ -> model)
 
-putModelAff :: forall gm. Model gm -> AppModAff gm Unit
+putModelAff :: forall ac gm. Model ac gm -> AppModAff ac gm Unit
 putModelAff model = modify_ (\_ -> model)
 
-getRandom :: forall gm x. Random x => AppMod gm x
+getRandom :: forall ac gm x. Random x => AppMod ac gm x
 getRandom = do
   (Model mr) <- get
   let randomPair = random mr.sys.seed :: RandomPair x
@@ -211,7 +212,7 @@ getRandom = do
   pure randomPair.newVal
 
 -- TODO setup Model with config
-initialModelZeroTime :: forall gm. gm -> Model gm
+initialModelZeroTime :: forall ac gm. gm -> Model ac gm
 initialModelZeroTime gameState =
   unsafePartial
     $ let
@@ -237,9 +238,10 @@ initialModelZeroTime gameState =
           , lastActorId : 0
           , seed : mkSeed 0
           }
+        , actorNothing : Nothing
         }
 
-mkNewNameId :: forall gm. AppMod gm NameId
+mkNewNameId :: forall ac gm. AppMod ac gm NameId
 mkNewNameId = do
   m <- getModelRec <$> get
   modmod $ \mr -> mr{sys{lastActorId = mr.sys.lastActorId + 1}}
@@ -274,6 +276,6 @@ mkActorsFromConfig conf mkActorData = do
 
 
 class ActorContainer ac gm where
-  getAllActors :: Model gm -> List (Actor ac)
-  updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod gm Unit
-  lookupActor :: NameId -> Maybe String -> Model gm -> Maybe (Actor ac)
+  getAllActors :: Model ac gm -> List (Actor ac)
+  updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod ac gm Unit
+  lookupActor :: NameId -> Maybe String -> Model ac gm -> Maybe (Actor ac)

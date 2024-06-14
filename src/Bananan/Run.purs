@@ -86,9 +86,9 @@ run =
             pure unit
 
 
-runAppModEff :: GameConfig -> GameState -> AppModAff GameState Unit
+runAppModEff :: GameConfig -> GameState -> AppModAff ActorData GameState Unit
 runAppModEff config gameState = do
   initGame config gameState mkActorData -- TODO pass initGame thrue runStateT
   when config.debugConfig $ liftEffect $ logShow config
-  let rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> AppModAff GameState Unit
+  let rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
   rGame config gameStep

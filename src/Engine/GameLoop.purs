@@ -30,7 +30,7 @@ foreign import _createImageElement ::
 type GameStepFunc ac gm = 
   Config ac gm -> 
   Time -> 
-  AppMod gm Unit
+  AppMod ac gm Unit
 
 
 mainLoop :: forall ac gm. 
@@ -42,7 +42,7 @@ mainLoop :: forall ac gm.
   Q.Queue String -> 
   GameStepFunc ac gm -> 
   HTMLElement ->
-  AppModAff gm Unit
+  AppModAff ac gm Unit
 mainLoop conf socket queueWS gameStep canvasElem = do
   model <- get
   renderFiber <- lift $ forkAff $ liftEffect (render conf model)
@@ -79,7 +79,7 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   pure unit
 
   where
-    updateRecentlyAddedActors :: HTMLElement -> AppModEffect gm Unit
+    updateRecentlyAddedActors :: HTMLElement -> AppModEffect ac gm Unit
     updateRecentlyAddedActors canvasElem = do
       model <- get
       let m = getModelRec model
@@ -90,7 +90,7 @@ mainLoop conf socket queueWS gameStep canvasElem = do
           Nothing -> sequence (createNewHtmlElem canvasElem <$> (lookupActor nameId (Just actorTypeStr) model :: Maybe (Actor ac))) 
         pure (Tuple nameId elem)
       appModToAppModEffect $ for_ newActorsArr $ \(Tuple nameId elem) -> 
-        let update = updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod gm Unit
+        let update = updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod ac gm Unit
         in update nameId Nothing (\(Actor a) -> Actor a{htmlElement = elem})
       modmodEffect $ \mr -> mr{act{recentlyAddedActors = []}}
       pure unit
@@ -105,7 +105,7 @@ createNewHtmlElem canvasElem (Actor a) = _createImageElement {
   cssClass : a.cssClass
   }
 
-removeRecentlyDeletedActors :: forall gm.  AppModEffect gm Unit
+removeRecentlyDeletedActors :: forall ac gm.  AppModEffect ac gm Unit
 removeRecentlyDeletedActors = do
   m <- getModelRec <$> get
   _ <- liftEffect $ for m.act.recentlyDeletedActors $ \nameId -> do
@@ -136,7 +136,7 @@ runGame :: forall ac gm.
   ActorContainer ac gm =>
   Config ac gm -> 
   GameStepFunc ac gm -> 
-  AppModAff gm Unit
+  AppModAff ac gm Unit
 runGame conf gameStep = do --onDOMContentLoaded
   queueWS :: Q.Queue String <- lift Q.new
   socket <- lift $ runWS conf queueWS
