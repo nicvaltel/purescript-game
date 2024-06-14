@@ -3,8 +3,9 @@ module Engine.Render.Render (render) where
 import Engine.Reexport
 
 import Data.Foldable (for_)
+import Data.List (List)
 import Engine.Config (Config)
-import Engine.Model (class ActorContainer, Actor(..), Model, getAllActors, getModelRec)
+import Engine.Model (class ActorContainer, Actor(..), Model, getAllActors)
 
 
 type ActorObj
@@ -17,11 +18,11 @@ render :: forall ac gm.
   Show ac => 
   ActorContainer ac gm =>
   Config ac gm -> 
-  Model ac gm -> 
+  Model gm -> 
   Effect Unit
 render conf model = do
   when conf.debugModel $ log (show model)
-  for_ (getAllActors model)
+  for_ (getAllActors model :: List (Actor ac))
     $ \(Actor actor) -> do
         when actor.visible $
           case actor.htmlElement of

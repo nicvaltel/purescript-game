@@ -10,3 +10,4 @@ import Effect (Effect)
 main :: Effect Unit
 main = do
     Bananan.run
+    pure unit

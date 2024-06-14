@@ -101,7 +101,7 @@ fireBall = do
   model <- get
   let m = getModelRec model
   let game = getGameRec model
-  let gun = case M.lookup game.gunNameId m.act.actors of
+  let gun = case M.lookup game.gunNameId game.actors of
         Just (Actor actor)  -> actor
         Nothing -> error "There is no Gun actor in Model"
   let gunAngle = gun.angle
@@ -142,10 +142,12 @@ fireBall = do
         }
   modmod $ \mr -> mr{
           act {
-              actors = M.insert nameId newBallActor mr.act.actors,
               recentlyAddedActors = nameId : mr.act.recentlyAddedActors 
               },
-          game = GameState game{ballQueue = newQueueBall}
+          game = GameState game{
+            actors = M.insert nameId newBallActor game.actors,
+            ballQueue = newQueueBall            
+            }
         }
 
 
@@ -171,11 +173,11 @@ gameStep conf dt = do
   let game = getGameRec model
   let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
-      balls = flip List.filter (M.values m.act.actors) $ \(Actor a) -> case a.data of 
+      balls = flip List.filter (M.values game.actors) $ \(Actor a) -> case a.data of 
                   ActorBall b | isNothing b.flying -> true
                   _ -> false
-      updatedActors = map (moveActor dt game.canvasWidth balls m.io.userInput controlKeys) m.act.actors
-  modmod $ \mr -> mr { act { actors = updatedActors }}
+      updatedActors = map (moveActor dt game.canvasWidth balls m.io.userInput controlKeys) game.actors
+  modmod $ \mr -> mr { game = GameState game { actors = updatedActors }}
   when (keyWasPressedOnce controlKeys prevControlKeys C.Space) fireBall
   let wsOut = m.io.wsIn --[]
 

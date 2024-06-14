@@ -30,7 +30,7 @@ foreign import _createImageElement ::
 type GameStepFunc ac gm = 
   Config ac gm -> 
   Time -> 
-  AppMod ac gm Unit
+  AppMod gm Unit
 
 
 mainLoop :: forall ac gm. 
@@ -42,7 +42,7 @@ mainLoop :: forall ac gm.
   Q.Queue String -> 
   GameStepFunc ac gm -> 
   HTMLElement ->
-  AppModAff ac gm Unit
+  AppModAff gm Unit
 mainLoop conf socket queueWS gameStep canvasElem = do
   model <- get
   renderFiber <- lift $ forkAff $ liftEffect (render conf model)
@@ -61,7 +61,7 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     log $ show $ show userInput
 
   modmodAff $ \m -> m {io{userInput = userInput, prevUserInput = m.io.userInput, wsIn = messages, wsOut = []}, sys{seed = seed}}
-  appModToAppModAff $ gameStep conf deltaTime 
+  appModToAppModAff $ gameStep conf deltaTime
   appModEffectToAppModAff $ updateRecentlyAddedActors canvasElem
   appModEffectToAppModAff $ removeRecentlyDeletedActors
   modmodAff $ \m -> m { sys{ lastUpdateTime = currentTime }}
@@ -78,24 +78,22 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ evalStateT (mainLoop conf socket queueWS gameStep canvasElem) newModel)
   pure unit
 
-updateRecentlyAddedActors :: forall ac gm. ActorContainer ac gm => HTMLElement -> AppModEffect ac gm Unit
-updateRecentlyAddedActors canvasElem = do
-  model <- get
-  let m = getModelRec model
-  newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \nameId -> do
-    maybeElem <- getHtmlElement (getNameId nameId)
-    elem <- case maybeElem of
-      Just el -> pure $ Just el
-      Nothing -> sequence (createNewHtmlElem canvasElem <$> lookupActor nameId model) 
-    pure (Tuple nameId elem)
-  appModToAppModEffect $ for_ newActorsArr $ \(Tuple nameId elem) -> updateActor nameId (\(Actor a) -> Actor a{htmlElement = elem})
-
-  -- let newActors = 
-        -- foldr (\(Tuple nameId elem) acc -> updateActor nameId (\(Actor a) -> (Actor a{htmlElement = elem})) nameId acc) 
-          -- model
-          -- newActorsArr
-  modmodEffect $ \mr -> mr{act{recentlyAddedActors = []}}
-  pure unit
+  where
+    updateRecentlyAddedActors :: HTMLElement -> AppModEffect gm Unit
+    updateRecentlyAddedActors canvasElem = do
+      model <- get
+      let m = getModelRec model
+      newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \nameId -> do
+        maybeElem <- getHtmlElement (getNameId nameId)
+        elem <- case maybeElem of
+          Just el -> pure $ Just el
+          Nothing -> sequence (createNewHtmlElem canvasElem <$> (lookupActor nameId model :: Maybe (Actor ac))) 
+        pure (Tuple nameId elem)
+      appModToAppModEffect $ for_ newActorsArr $ \(Tuple nameId elem) -> 
+        let update = updateActor :: NameId -> (Actor ac -> Actor ac) -> AppMod gm Unit
+        in update nameId (\(Actor a) -> Actor a{htmlElement = elem})
+      modmodEffect $ \mr -> mr{act{recentlyAddedActors = []}}
+      pure unit
 
 createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
 createNewHtmlElem canvasElem (Actor a) = _createImageElement {
@@ -107,7 +105,7 @@ createNewHtmlElem canvasElem (Actor a) = _createImageElement {
   cssClass : a.cssClass
   }
 
-removeRecentlyDeletedActors :: forall ac gm.  AppModEffect ac gm Unit
+removeRecentlyDeletedActors :: forall gm.  AppModEffect gm Unit
 removeRecentlyDeletedActors = do
   m <- getModelRec <$> get
   _ <- liftEffect $ for m.act.recentlyDeletedActors $ \nameId -> do
@@ -138,7 +136,7 @@ runGame :: forall ac gm.
   ActorContainer ac gm =>
   Config ac gm -> 
   GameStepFunc ac gm -> 
-  AppModAff ac gm Unit
+  AppModAff gm Unit
 runGame conf gameStep = do --onDOMContentLoaded
   queueWS :: Q.Queue String <- lift Q.new
   socket <- lift $ runWS conf queueWS

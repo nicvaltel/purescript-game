@@ -41,25 +41,25 @@ import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
 import Record as R
 
-type AppMod ac gm x = State (Model ac gm) x
-type AppModEffect ac gm x = StateT (Model ac gm) Effect x
-type AppModAff ac gm x = StateT (Model ac gm) Aff x
+type AppMod gm x = State (Model gm) x
+type AppModEffect gm x = StateT (Model gm) Effect x
+type AppModAff gm x = StateT (Model gm) Aff x
 
-appModToAppModAff :: forall ac gm x. AppMod ac gm x -> AppModAff ac gm x
+appModToAppModAff :: forall gm x. AppMod gm x -> AppModAff gm x
 appModToAppModAff appMod = do
   m <- get
   let (Tuple result newState) = runState appMod m
   put newState
   pure result
 
-appModToAppModEffect :: forall ac gm x. AppMod ac gm x -> AppModEffect ac gm x
+appModToAppModEffect :: forall gm x. AppMod gm x -> AppModEffect gm x
 appModToAppModEffect appMod = do
   m <- get
   let (Tuple result newState) = runState appMod m
   put newState
   pure result
 
-appModEffectToAppModAff :: forall ac gm x. AppModEffect ac gm x -> AppModAff ac gm x
+appModEffectToAppModAff :: forall gm x. AppModEffect gm x -> AppModAff gm x
 appModEffectToAppModAff appModEffect = do
   m <- get
   (Tuple result newState) <- liftEffect $ runStateT appModEffect m
@@ -102,6 +102,15 @@ newtype Actor ac = Actor {
   , data :: ac
 }
 
+-- instance decodeJsonActor :: DecodeJsonField ac => DecodeJson (Actor ac) where
+--   decodeJson json = do
+--     obj <- decodeJson json -- attempts to decode the JSON value as an object.
+--     t <- obj .: "type" -- extracts the "type" field from the JSON object.
+--     case t of
+--       "actor" -> Actor <$> (obj .: "data") -- This pattern matches the "type" field to determine which constructor to use (ActorBall or ActorGun).
+--       -- "gameState" -> undefined
+--       _      -> Left $ TypeMismatch $ "Unknown Actor type: " <> t
+
 derive instance newtypeActor :: Newtype (Actor ac) _
 
 instance showActor :: Show ac => Show (Actor ac) where
@@ -109,12 +118,11 @@ instance showActor :: Show ac => Show (Actor ac) where
     R.modify (Proxy :: Proxy "htmlElement") (\el -> if isJust el then "Just HtmlElem" else "Nothing" ) actor
 
 
-type ModelRec ac gm =
+type ModelRec gm =
     { 
     game :: gm
     , act :: {
-      actors :: Map NameId (Actor ac)
-    , recentlyAddedActors :: Array NameId
+      recentlyAddedActors :: Array NameId
     , recentlyDeletedActors :: Array NameId
     }
     , io :: {
@@ -133,18 +141,18 @@ type ModelRec ac gm =
       }
     }
 
-newtype Model ac gm = Model (ModelRec ac gm)
+newtype Model gm = Model (ModelRec gm)
 
--- derive instance newtypeModel :: Newtype (Model ac gm) _
+-- derive instance newtypeModel :: Newtype (Model gm) _
 
-instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
+instance showModel :: Show gm => Show (Model gm) where
   show (Model m) =  
     foldr (\str acc -> acc <> "\t" <> str <> "\n") "MODEL:\n"
       $ [ "gameStepNumber " <> show m.sys.gameStepNumber
         , "screenWidth " <> show m.sys.screenWidth
         , "screenHeight " <> show m.sys.screenHeight
         , "lastUpdateTime " <> show m.sys.lastUpdateTime
-        , "actors " <> (intercalate ", " $ map show m.act.actors)
+        -- , "actors " <> (intercalate ", " $ map show m.act.actors)
         , "recentlyAddedActors" <> show (map getNameId m.act.recentlyAddedActors)
         , "recentlyDeletedActors" <> show (map getNameId m.act.recentlyDeletedActors)
         , "gameState" <> show (m.game)
@@ -154,29 +162,29 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "wsOut" <> show (m.io.wsOut)
         ]
 
-getModelRec :: forall ac gm. Model ac gm -> ModelRec ac gm
+getModelRec :: forall gm. Model gm -> ModelRec gm
 getModelRec (Model m) = m
 
-modmod :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppMod ac gm Unit
+modmod :: forall gm. (ModelRec gm -> ModelRec gm) -> AppMod gm Unit
 modmod f = modify_ (\(Model m) -> Model (f m))
 
-modmodEffect :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModEffect ac gm Unit
+modmodEffect :: forall gm. (ModelRec gm -> ModelRec gm) -> AppModEffect gm Unit
 modmodEffect f = modify_ (\(Model m) -> Model (f m))
 
-modmodAff :: forall ac gm. (ModelRec ac gm -> ModelRec ac gm) -> AppModAff ac gm Unit
+modmodAff :: forall gm. (ModelRec gm -> ModelRec gm) -> AppModAff gm Unit
 modmodAff f = modify_ (\(Model m) -> Model (f m))
 
 
-putModel :: forall ac gm. Model ac gm -> AppMod ac gm Unit
+putModel :: forall gm. Model gm -> AppMod gm Unit
 putModel model = modify_ (\_ -> model)
 
-putModelEffect :: forall ac gm. Model ac gm -> AppModEffect ac gm Unit
+putModelEffect :: forall gm. Model gm -> AppModEffect gm Unit
 putModelEffect model = modify_ (\_ -> model)
 
-putModelAff :: forall ac gm. Model ac gm -> AppModAff ac gm Unit
+putModelAff :: forall gm. Model gm -> AppModAff gm Unit
 putModelAff model = modify_ (\_ -> model)
 
-getRandom :: forall ac gm x. Random x => AppMod ac gm x
+getRandom :: forall gm x. Random x => AppMod gm x
 getRandom = do
   (Model mr) <- get
   let randomPair = random mr.sys.seed :: RandomPair x
@@ -184,7 +192,7 @@ getRandom = do
   pure randomPair.newVal
 
 -- TODO setup Model with config
-initialModelZeroTime :: forall ac gm. gm -> Model ac gm
+initialModelZeroTime :: forall gm. gm -> Model gm
 initialModelZeroTime gameState =
   unsafePartial
     $ let
@@ -193,8 +201,7 @@ initialModelZeroTime gameState =
         { 
           game : gameState
         , act : {
-          actors : M.empty :: Map NameId (Actor ac)
-        , recentlyAddedActors : []
+          recentlyAddedActors : []
         , recentlyDeletedActors : []
         }
         , io : {
@@ -213,7 +220,7 @@ initialModelZeroTime gameState =
           }
         }
 
-mkNewNameId :: forall ac gm. AppMod ac gm NameId
+mkNewNameId :: forall gm. AppMod gm NameId
 mkNewNameId = do
   m <- getModelRec <$> get
   modmod $ \mr -> mr{sys{lastActorId = mr.sys.lastActorId + 1}}
@@ -248,6 +255,6 @@ mkActorsFromConfig conf mkActorData = do
 
 
 class ActorContainer ac gm where
-  getAllActors :: Model ac gm -> List (Actor ac)
-  updateActor :: NameId -> (Actor ac -> Actor ac) -> AppMod ac gm Unit
-  lookupActor :: NameId -> Model ac gm -> Maybe (Actor ac)
+  getAllActors :: Model gm -> List (Actor ac)
+  updateActor :: NameId -> (Actor ac -> Actor ac) -> AppMod gm Unit
+  lookupActor :: NameId -> Model gm -> Maybe (Actor ac)
