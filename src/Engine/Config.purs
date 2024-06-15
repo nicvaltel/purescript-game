@@ -11,17 +11,6 @@ type Config
     , debugWebsocket :: Boolean
     , debugUserInput :: Boolean
     , maxDeltaTime :: Number -- in millisesconds
-    -- , state :: gm
-    -- , actors :: Array 
-    --     { 
-    --       nameId :: String
-    --     , x :: Number
-    --     , y :: Number
-    --     , z :: Int
-    --     , cssClass :: String
-    --     , imageSource :: String
-    --     , data :: ac 
-    --     }
     }
 
 -- decodeJson :: DecodeJson a => Json -> Either JsonDecodeError a

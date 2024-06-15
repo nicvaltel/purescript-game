@@ -7,7 +7,6 @@ module Engine.ResourceLoader
   where
 
 import Engine.Reexport
-import Prelude
 
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
@@ -15,7 +14,6 @@ import Affjax.Web (driver)
 import Control.Bind (join)
 import Data.Argonaut.Parser (jsonParser)
 import Data.HTTP.Method (Method(..))
-import Data.Map (Map)
 import Data.Map as Map
 import Data.Nullable (Nullable, toMaybe)
 import Effect.Exception (Error, error)
@@ -26,7 +24,7 @@ import Graphics.Canvas (CanvasImageSource, tryLoadImage)
 foreign import _getHtmlElenentById :: String -> Effect (Nullable HTMLElement)
 
 fileLoader :: FilePath -> Aff (Maybe String)
-fileLoader resource = do
+fileLoader filePath = do
   res <- AX.request driver settings
   case res of
     Right response -> pure (Just response.body)
@@ -34,7 +32,7 @@ fileLoader resource = do
   where
   settings =
     ( AX.defaultRequest
-        { url = resource -- (show resource)
+        { url = filePath -- (show resource)
         , method = Left GET
         , responseFormat = ResponseFormat.string
         }
@@ -52,8 +50,8 @@ loadJson filePath = do
 parseConfigFile ::  
   FilePath -> 
   Aff (Either String Config)
-parseConfigFile configFilePath = do 
-  eitherJson <- loadJson configFilePath
+parseConfigFile filePath = do 
+  eitherJson <- loadJson filePath
   pure $ join (fromJson <$> eitherJson)
   -- join <$> ((map fromJson) <$> loadJson configFilePath) 
 

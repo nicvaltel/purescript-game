@@ -1,8 +1,8 @@
 module Bananan.GameConfig where
 
-import Prelude
+import Engine.Reexport
 
-import Bananan.Actors (Dragon, Gun, BallQueueActor)
+import Bananan.Actors (ActorData)
 
 type ActorCommonConfig = 
     ( nameId :: String
@@ -20,8 +20,14 @@ type GameConfig
     , ballSpeed :: Number
     , actors :: 
         {
-          gun :: {data :: Gun | ActorCommonConfig }
-        , dragon :: {data :: Dragon | ActorCommonConfig }
-        , ballQueueActor :: {data :: BallQueueActor | ActorCommonConfig }
+          gun :: {data :: ActorData | ActorCommonConfig }
+        , dragon :: {data :: ActorData | ActorCommonConfig }
+        , ballQueueActor :: {data :: ActorData | ActorCommonConfig }
         }
     }
+
+
+gameConfigFromJson ::  
+  Json -> 
+  Either String GameConfig
+gameConfigFromJson = mapLeft (\err -> "Cannot decode json config file: " <> show err) <<< decodeJson
