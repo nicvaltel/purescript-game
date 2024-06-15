@@ -251,7 +251,7 @@ mkUniqueNameId :: String -> NameId
 mkUniqueNameId nameId = NameId nameId
 
 -- mkActorsFromConfig :: forall ac gm. 
---   Config ac gm -> 
+--   Config -> 
 --   (gm -> ac -> ac) ->
 --   Effect (Map NameId (Actor ac))
 -- mkActorsFromConfig conf mkActorData = do

@@ -14,7 +14,6 @@ module Bananan.Actors
   where
 
 import Bananan.Reexport
-import Prelude
 import Data.String (toLower)
 
 type Gun = {

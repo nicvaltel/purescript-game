@@ -36,43 +36,46 @@ initialGameState conf gameConf = do
     Just canvas -> getBoundingClientRect canvas
     Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
   mbElem <- getHtmlElement "gun"
-  let nameGun = mkUniqueNameId "gun"
-  let gunData = {
-                angleSpeed: 0.0,
-                maxAngleSpeed: 0.2,
-                maxLeftAngle: -80.0,
-                maxRightAngle: 80.0
-              }
+
+  let gunConf = gameConf.actors.gun
+  let gunConfData = case gameConf.actors.gun.data of
+        ActorGun d -> d
+        _ -> error "gameConfig.actors.gun.data is not ActorGun"
   let gun = Actor
         {
-            nameId: nameGun,
-            x: 287.5,
-            y: 810.0,
-            z: 1,
-            width : 25.0,
-            height : 74.0,
+            nameId: mkUniqueNameId gunConf.nameId,
+            x: gunConf.x,
+            y: gunConf.y,
+            z: gunConf.z,
+            width : 0.0, -- it takes 25.0 from #gun in css
+            height : 0.0, -- it takes 74.0 from #gun in css
             visible : true,
             angle : 0.0,
             htmlElement : mbElem,
-            cssClass : "gun",
-            imageSource: "../images/gun.png",
-            data: ActorGun gunData
+            cssClass : gunConf.cssClass,
+            imageSource: gunConf.imageSource,
+            data: ActorGun 
+                { angleSpeed: gunConfData.angleSpeed
+                , maxAngleSpeed: gunConfData.maxAngleSpeed
+                , maxLeftAngle: gunConfData.maxLeftAngle
+                , maxRightAngle: gunConfData.maxRightAngle
+                }
             }
-  pure $ GameState -- TODO fill with config
+  
+  pure $ GameState 
     {
-      score: 0
+      score: gameConf.score
     , ballQueue : 
         {
           color : colorFromRandomInt n
         , flying : Nothing
         } 
     , canvasWidth : rect.width
-    , gunNameId : mkUniqueNameId "gun"
-    , ballSpeed : 0.8
+    , ballSpeed : gameConf.ballSpeed
     , actors : 
           { balls : M.empty
           , gun : gun
-          , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock}
+          , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock} -- TODO fill with config
           , ballQueueActor : let (Actor a) = actorMock in Actor a{data = ActorBallQueue ballQueueActorMock}
           } 
     }

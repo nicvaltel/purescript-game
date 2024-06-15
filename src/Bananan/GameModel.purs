@@ -11,18 +11,15 @@ module Bananan.GameModel
 
 import Bananan.Reexport hiding ((:))
 
-import Bananan.Actors (ActorData(..), Ball, BallColor(..), ballQueueActorMock, dragonMock, gunMock)
+import Bananan.Actors (ActorData, Ball)
 import Data.List ((:))
-import Data.List (List(..))
 import Data.Map as M
-import Engine.Config (Config)
-import Engine.Model (class ActorContainer, Actor(..), AppMod, Model, NameId, actorMock, checkActorNameId, getModelRec, lookupActor, mkUniqueNameId, modmod)
+import Engine.Model (class ActorContainer, Actor, AppMod, Model, NameId, checkActorNameId, getModelRec, modmod)
 
 type GameStateRec = {
       score :: Int
     , ballQueue :: Ball
     , canvasWidth :: Number
-    , gunNameId :: NameId
     , ballSpeed :: Number
     , actors :: 
         { balls :: M.Map NameId (Actor ActorData)
@@ -33,32 +30,6 @@ type GameStateRec = {
   }
 
 newtype GameState = GameState GameStateRec
-
-instance decodeJsonGameState :: DecodeJson GameState where
-  decodeJson json = do
-    obj <- decodeJson json -- attempts to decode the JSON value as an object.
-    gameStateType <- obj .: "type" -- extracts the "type" field from the JSON object.
-    case gameStateType of
-      -- "gameState" -> GameState <$> (obj .: "data") -- This pattern matches the "type" field to determine which constructor to use (ActorBall or ActorGun).
-      -- TODO fix it!
-      "gameState" -> Right $ GameState {
-      score: 0
-        , ballQueue : 
-            {
-              color : Red
-            , flying : Nothing
-            } 
-        , canvasWidth : 100.0
-        , gunNameId : mkUniqueNameId "gun"
-        , ballSpeed : 0.8
-        , actors : 
-          { balls : M.empty
-          , gun : let (Actor a) = actorMock in Actor a{data = ActorGun gunMock}
-          , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock}
-          , ballQueueActor : let (Actor a) = actorMock in Actor a{data = ActorBallQueue ballQueueActorMock}
-          }
-        }
-      _      -> Left $ TypeMismatch $ "Unknown GameState type: " <> gameStateType
 
 instance showGameState :: Show GameState where
   show (GameState g) = show g
