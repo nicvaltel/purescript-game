@@ -1,0 +1,72 @@
+{
+  "frameRateNumber": 10.0,
+  "websocketUrlBackup": "ws://95.140.155.123:1234/ws",
+  "websocketUrlRunTestServer": "websocat -s 1234",
+  "websocketUrl": "ws://127.0.0.1:1234/ws",
+  "canvasElementId": "canvas",
+  "debugConfig": true,
+  "debugModel": true,
+  "debugWebsocket": false,
+  "debugUserInput": false,
+  "maxDeltaTime" : 100.0,
+  "actors": [
+    {
+      "nameId": "gun",
+      "x": 287.5,
+      "y": 810.0,
+      "z": 1,
+      "cssClass" : "gun",
+      "imageSource": "../images/gun.png",
+      "data": {
+        "type": "gun",
+        "data": {
+          "angleSpeed": 0.0,
+          "maxAngleSpeed": 0.2,
+          "maxLeftAngle": -80.0,
+          "maxRightAngle": 80.0
+        }
+      }
+    },
+    {
+      "nameId": "dragon",
+      "x": -500.0,
+      "y": 57.0,
+      "z": 1,
+      "cssClass" : "dragon",
+      "imageSource": "../images/gun.png",
+      "data": {
+        "type": "dragon",
+        "data": {
+          "animation": "gragon.gif"
+        }
+      }
+    },
+    {
+      "nameId": "ball_queue",
+      "x": -500.0,
+      "y": 0.0,
+      "z": 10,
+      "cssClass" : "ball_queue",
+      "imageSource": "../images/gun.png",
+      "data": {
+        "type": "ball_queue_actor",
+        "data": {
+          "animation": "ball_queue_actor.gif"
+        }
+      }
+    }
+  ],
+  "state": {
+    "type": "gameState",
+    "data": {
+        "score": 15,
+        "ballQueue": {
+          "color": "Yellow",
+          "flying": null
+        },
+        "canvasWidth" : 0.0,
+        "gunNameId" : "gun",
+        "ballSpeed" : 0.8
+      }
+  }
+}

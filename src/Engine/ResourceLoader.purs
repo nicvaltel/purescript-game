@@ -1,14 +1,18 @@
 module Engine.ResourceLoader
   ( getHtmlElement
   , loadImages
+  , loadJson
   , parseConfigFile
   )
   where
 
 import Engine.Reexport
+import Prelude
+
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
 import Affjax.Web (driver)
+import Control.Bind (join)
 import Data.Argonaut.Parser (jsonParser)
 import Data.HTTP.Method (Method(..))
 import Data.Map (Map)
@@ -36,19 +40,22 @@ fileLoader resource = do
         }
     )
 
-parseConfigFile :: forall ac gm. 
-  DecodeJsonField ac => 
-  DecodeJsonField gm => 
+loadJson :: FilePath -> Aff (Either String Json)
+loadJson filePath = do
+  mbFile <- fileLoader filePath
+  case mbFile of
+    Nothing -> pure $ Left ("ERROR: File not found: " <> filePath)
+    Just file -> pure $ mapLeft 
+                          (\err -> "Invalid json structure in config file: \n" <> filePath <> "\n" <> err) 
+                          (jsonParser file)
+
+parseConfigFile ::  
   FilePath -> 
-  Aff (Either String (Config ac gm))
-parseConfigFile configFilePath = do
-  mbConf <- fileLoader configFilePath
-  case mbConf of
-    Nothing -> pure $ Left "Config file not found"
-    Just configString -> do
-      case jsonParser configString of
-        Left err -> pure $ Left $ "Invalid json structure in config file: \n" <> err
-        Right json -> pure $ fromJson json
+  Aff (Either String Config)
+parseConfigFile configFilePath = do 
+  eitherJson <- loadJson configFilePath
+  pure $ join (fromJson <$> eitherJson)
+  -- join <$> ((map fromJson) <$> loadJson configFilePath) 
 
 tryLoadImageAff :: FilePath -> Aff CanvasImageSource
 tryLoadImageAff path = makeAff wrappedFn

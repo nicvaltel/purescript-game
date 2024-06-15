@@ -17,7 +17,7 @@ render :: forall ac gm.
   Show gm => 
   Show ac => 
   ActorContainer ac gm =>
-  Config ac gm -> 
+  Config -> 
   Model ac gm -> 
   Effect Unit
 render conf model = do

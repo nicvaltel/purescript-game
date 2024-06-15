@@ -8,10 +8,10 @@ import Data.Map (Map)
 import Effect.Class (liftEffect)
 import Effect.Class.Console (log)
 import Engine.Config (Config)
-import Engine.Model (Actor, AppModAff, Model, NameId, initialModelZeroTime, mkActorsFromConfig, modmodAff, putModelAff)
+import Engine.Model (Actor, AppModAff, Model, NameId, initialModelZeroTime, modmodAff, putModelAff)
 
 initGame :: forall ac gm. 
-  Config ac gm -> 
+  Config -> 
   gm -> 
   (gm -> ac -> ac) ->
   AppModAff ac gm Unit

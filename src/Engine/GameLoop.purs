@@ -28,7 +28,7 @@ foreign import _createImageElement ::
   -> Effect HTMLElement
 
 type GameStepFunc ac gm = 
-  Config ac gm -> 
+  Config -> 
   Time -> 
   AppMod ac gm Unit
 
@@ -37,7 +37,7 @@ mainLoop :: forall ac gm.
   Show gm => 
   Show ac => 
   ActorContainer ac gm =>
-  Config ac gm -> 
+  Config -> 
   WS.WSocket -> 
   Q.Queue String -> 
   GameStepFunc ac gm -> 
@@ -115,8 +115,8 @@ removeRecentlyDeletedActors = do
 sendWsOutMessages :: WS.WSocket -> Array String -> Effect Unit
 sendWsOutMessages socket msgs = traverse_ (WS.sendMessage socket) msgs
 
-runWS :: forall ac gm.  
-  Config ac gm -> 
+runWS ::  
+  Config -> 
   Q.Queue String -> 
   Aff WS.WSocket
 runWS conf queue = do
@@ -134,7 +134,7 @@ runGame :: forall ac gm.
   Show gm => 
   Show ac => 
   ActorContainer ac gm =>
-  Config ac gm -> 
+  Config -> 
   GameStepFunc ac gm -> 
   AppModAff ac gm Unit
 runGame conf gameStep = do --onDOMContentLoaded

@@ -3,7 +3,7 @@ module Bananan.Run(run) where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock)
-import Bananan.GameModel (GameConfig, GameState(..), mkActorData)
+import Bananan.GameModel (GameState(..), mkActorData)
 import Bananan.GameStep (gameStep)
 import Control.Monad.State (runStateT)
 import Data.Map as M
@@ -22,14 +22,13 @@ configFilePath = "config.json"
 
 
 
-initialGameState :: GameConfig -> Effect GameState
+initialGameState :: Config -> Effect GameState
 initialGameState conf = do
   n :: Int <- randomEff
   mbCanvas <- getElementById conf.canvasElementId
   rect <- case mbCanvas of
     Just canvas -> getBoundingClientRect canvas
     Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
-  let (GameState confState) = conf.state
   mbElem <- getHtmlElement "gun"
   let nameGun = mkUniqueNameId "gun"
   let gunData = {
@@ -62,8 +61,8 @@ initialGameState conf = do
         , flying : Nothing
         } 
     , canvasWidth : rect.width
-    , gunNameId : confState.gunNameId -- mkUniqueNameId "gun"
-    , ballSpeed : confState.ballSpeed
+    , gunNameId : mkUniqueNameId "gun"
+    , ballSpeed : 0.8
     , actors : 
           { balls : M.empty
           , gun : gun
@@ -76,7 +75,7 @@ run :: Effect Unit
 run =
   launchAff_
     $ do
-        eitherConf <- parseConfigFile configFilePath :: Aff ( Either String (Config ActorData GameState))
+        eitherConf <- parseConfigFile configFilePath :: Aff ( Either String Config)
         liftEffect $ logShow eitherConf
         case eitherConf of
           Left err -> liftEffect $ log $ "Error in config file " <> configFilePath <> ":\n" <> err
@@ -86,9 +85,9 @@ run =
             pure unit
 
 
-runAppModEff :: GameConfig -> GameState -> AppModAff ActorData GameState Unit
+runAppModEff :: Config -> GameState -> AppModAff ActorData GameState Unit
 runAppModEff config gameState = do
   initGame config gameState mkActorData -- TODO pass initGame thrue runStateT
   when config.debugConfig $ liftEffect $ logShow config
-  let rGame = runGame :: GameConfig -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
+  let rGame = runGame :: Config -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
   rGame config gameStep

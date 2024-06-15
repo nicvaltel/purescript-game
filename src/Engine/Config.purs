@@ -2,7 +2,7 @@ module Engine.Config where
 
 import Engine.Reexport
 
-type Config ac gm
+type Config
   = { frameRateNumber :: Number
     , websocketUrl :: String
     , canvasElementId :: String
@@ -11,24 +11,22 @@ type Config ac gm
     , debugWebsocket :: Boolean
     , debugUserInput :: Boolean
     , maxDeltaTime :: Number -- in millisesconds
-    , state :: gm
-    , actors :: Array 
-        { 
-          nameId :: String
-        , x :: Number
-        , y :: Number
-        , z :: Int
-        , cssClass :: String
-        , imageSource :: String
-        , data :: ac 
-        }
+    -- , state :: gm
+    -- , actors :: Array 
+    --     { 
+    --       nameId :: String
+    --     , x :: Number
+    --     , y :: Number
+    --     , z :: Int
+    --     , cssClass :: String
+    --     , imageSource :: String
+    --     , data :: ac 
+    --     }
     }
 
 -- decodeJson :: DecodeJson a => Json -> Either JsonDecodeError a
 -- https://github.com/purescript-contrib/purescript-argonaut-codecs/blob/main/docs/README.md
-fromJson :: forall ac gm. 
-  DecodeJsonField ac => 
-  DecodeJsonField gm => 
+fromJson ::  
   Json -> 
-  Either String (Config ac gm)
+  Either String Config
 fromJson = mapLeft (\err -> "Cannot decode json config file: " <> show err) <<< decodeJson
