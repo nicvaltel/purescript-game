@@ -1,11 +1,14 @@
 {
   "score": 0,
   "ballSpeed": 0.8,
+  "ballDiameter" : 74.0,
   "actors": 
     { "gun" :
         { "nameId": "gun",
           "x": 287.5,
           "y": 810.0,
+          "width" : 25.0,
+          "height" : 74.0,
           "z": 1,
           "cssClass" : "gun",
           "imageSource": "../images/gun.png",
@@ -24,6 +27,8 @@
           "nameId": "dragon",
           "x": -500.0,
           "y": 57.0,
+          "width" : 0.0,
+          "height" : 0.0,
           "z": 1,
           "cssClass" : "dragon",
           "imageSource": "../images/gun.png",
@@ -40,6 +45,8 @@
           "x": -500.0,
           "y": 0.0,
           "z": 10,
+          "width" : 0.0,
+          "height" : 0.0,
           "cssClass" : "ball_queue_actor",
           "imageSource": "../images/gun.png",
           "data": {

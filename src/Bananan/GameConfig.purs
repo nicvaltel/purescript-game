@@ -8,6 +8,8 @@ type ActorCommonConfig =
     ( nameId :: String
     , x :: Number
     , y :: Number
+    , width :: Number
+    , height :: Number
     , z :: Int
     , cssClass :: String
     , imageSource :: String
@@ -18,6 +20,7 @@ type GameConfig
   = { 
       score :: Int
     , ballSpeed :: Number
+    , ballDiameter :: Number
     , actors :: 
         {
           gun :: {data :: ActorData | ActorCommonConfig }

@@ -43,18 +43,18 @@ initialGameState conf gameConf = do
         _ -> error "gameConfig.actors.gun.data is not ActorGun"
   let gun = Actor
         {
-            nameId: mkUniqueNameId gunConf.nameId,
-            x: gunConf.x,
-            y: gunConf.y,
-            z: gunConf.z,
-            width : 0.0, -- it takes 25.0 from #gun in css
-            height : 0.0, -- it takes 74.0 from #gun in css
-            visible : true,
-            angle : 0.0,
-            htmlElement : mbElem,
-            cssClass : gunConf.cssClass,
-            imageSource: gunConf.imageSource,
-            data: ActorGun 
+          nameId: mkUniqueNameId gunConf.nameId
+        ,  x: gunConf.x
+        ,  y: gunConf.y
+        ,  z: gunConf.z
+        ,  width : gunConf.width
+        ,  height : gunConf.height
+        ,  visible : true
+        ,  angle : 0.0
+        ,  htmlElement : mbElem
+        ,  cssClass : gunConf.cssClass
+        ,  imageSource: gunConf.imageSource
+        ,  data: ActorGun 
                 { angleSpeed: gunConfData.angleSpeed
                 , maxAngleSpeed: gunConfData.maxAngleSpeed
                 , maxLeftAngle: gunConfData.maxLeftAngle
@@ -103,7 +103,7 @@ runAppModEff :: Config -> GameConfig -> GameState -> AppModAff ActorData GameSta
 runAppModEff config gameConfig gameState = do
   initGame config gameState mkActorData -- TODO pass initGame thrue runStateT
   let rGame = runGame :: Config -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
-  rGame config gameStep
+  rGame config (gameStep gameConfig)
 
 parseGameConfigFile ::  
   FilePath -> 

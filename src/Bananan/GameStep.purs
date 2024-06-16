@@ -8,6 +8,7 @@ import Bananan.Reexport
 import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
+import Bananan.GameConfig (GameConfig)
 import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec)
 import Data.List (List)
 import Data.List as List
@@ -55,33 +56,33 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
 
-moveBall :: Time -> BoxWidth -> List GameActor -> GameActor -> GameActor
-moveBall dt width balls actor@(Actor a) =
+moveBall :: Time -> Number -> BoxWidth -> List GameActor -> GameActor -> GameActor
+moveBall dt ballDiameter width balls actor@(Actor a) =
   case a.data of
-  (ActorBall ball) ->
-    case ball.flying of
-      Nothing -> actor
-      Just {vx,vy} ->
-        let newVx
-              | a.x <= 0.0 = abs vx
-              | a.x + a.width >= width = -(abs vx)
-              | otherwise = vx
-            newX = a.x + dt * newVx
-            newY = let y' = a.y + dt * vy in if y' <= 0.0 then 0.0 else y' 
-            
-            -- check that ball reachs the top
-            newBall1 = if vx /= newVx then ball{flying = Just {vx : newVx, vy : vy}} else ball
-            newBall2 = if newY <= 0.0 then newBall1{flying = Nothing} else newBall1
-            
-            -- checks balls intersection
-            intersectsBallsList = ballsIntersection 73.0 actor balls --TODO update 73.0
-            actor2 = if null intersectsBallsList
-              then Actor a { x = newX , y = newY, data = ActorBall newBall2}
-              else
-                let actor1 = Actor a { x = newX , y = newY, data = ActorBall newBall2{flying = Nothing}}
-                 in correctBallPosition 73.0 actor1 intersectsBallsList
-        in actor2
-  _ -> actor
+    (ActorBall ball) ->
+      case ball.flying of
+        Nothing -> actor
+        Just {vx,vy} ->
+          let newVx
+                | a.x <= 0.0 = abs vx
+                | a.x + a.width >= width = -(abs vx)
+                | otherwise = vx
+              newX = a.x + dt * newVx
+              newY = let y' = a.y + dt * vy in if y' <= 0.0 then 0.0 else y' 
+              
+              -- check that ball reachs the top
+              newBall1 = if vx /= newVx then ball{flying = Just {vx : newVx, vy : vy}} else ball
+              newBall2 = if newY <= 0.0 then newBall1{flying = Nothing} else newBall1
+              
+              -- checks balls intersection
+              intersectsBallsList = ballsIntersection ballDiameter actor balls
+              actor2 = if null intersectsBallsList
+                then Actor a { x = newX , y = newY, data = ActorBall newBall2}
+                else
+                  let actor1 = Actor a { x = newX , y = newY, data = ActorBall newBall2{flying = Nothing}}
+                  in correctBallPosition ballDiameter actor1 intersectsBallsList
+          in actor2
+    _ -> actor
 
 moveGun :: Time -> Array ControlKey -> GameActor -> GameActor
 moveGun dt controlKeys actor@(Actor a) =
@@ -99,8 +100,8 @@ moveGun dt controlKeys actor@(Actor a) =
       in Actor a{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
     _ -> actor
 
-fireBall :: AppGame Unit
-fireBall = do
+fireBall :: Number -> AppGame Unit
+fireBall ballDiameter = do
   model <- get
   let game = getGameRec model
   let (Actor gun) = game.actors.gun 
@@ -112,10 +113,10 @@ fireBall = do
   let vy = - sinPhi * game.ballSpeed
   let ball = game.ballQueue{flying = Just {vx : vx, vy : vy}}
 
-  let gunBottomX = gun.x + 25.0/2.0
-  let gunBottomY = gun.y + 74.0
-  let gunLenX = 74.0 * cosPhi
-  let gunLenY = 74.0 * sinPhi
+  let gunBottomX = gun.x + gun.width/2.0
+  let gunBottomY = gun.y + gun.height
+  let gunLenX = gun.height * cosPhi
+  let gunLenY = gun.height * sinPhi
   let gunBarrelX = gunBottomX + gunLenX
   let gunBarrelY = gunBottomY - gunLenY
 
@@ -125,13 +126,13 @@ fireBall = do
           color : colorFromRandomInt randN
         , flying : Nothing
         }
-  let newBallActor = Actor -- TODO it's just a mock
+  let newBallActor = Actor
         {
           nameId : nameId
-        , x : gunBarrelX - (76.0/2.0) -- 320.0 - (76.0/2.0)
-        , y : gunBarrelY - (76.0/2.0) -- 800.0
-        , width : 76.0
-        , height : 76.0
+        , x : gunBarrelX - (ballDiameter/2.0)
+        , y : gunBarrelY - (ballDiameter/2.0)
+        , width : ballDiameter
+        , height : ballDiameter
         , z : 1
         , visible : true
         , angle : 0.0
@@ -158,8 +159,8 @@ moveBallQueue :: Time -> BallQueueActor -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
 -- gameStep :: GameConfig -> Time -> AppMod GameConfig GameState Unit
-gameStep :: GameStepFunc ActorData GameState
-gameStep conf dt = do
+gameStep :: GameConfig -> GameStepFunc ActorData GameState
+gameStep gameConf conf dt = do
   model <- get
   let m = getModelRec model
   let game = getGameRec model
@@ -168,10 +169,10 @@ gameStep conf dt = do
       balls = flip List.filter (M.values game.actors.balls) $ \(Actor a) -> case a.data of 
                   ActorBall b | isNothing b.flying -> true
                   _ -> false
-      updatedBalls = map (moveBall dt game.canvasWidth balls) game.actors.balls
+      updatedBalls = map (moveBall dt gameConf.ballDiameter game.canvasWidth balls) game.actors.balls
       updatedGun = moveGun dt controlKeys game.actors.gun
   modmod $ \mr -> mr { game = GameState game { actors { balls = updatedBalls , gun = updatedGun }}}
-  when (keyWasPressedOnce controlKeys prevControlKeys C.Space) fireBall
+  when (keyWasPressedOnce controlKeys prevControlKeys C.Space) (fireBall gameConf.ballDiameter)
   let wsOut = m.io.wsIn --[]
 
   modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }
