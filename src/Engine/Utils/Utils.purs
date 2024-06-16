@@ -38,5 +38,5 @@ error :: forall a. String -> a
 error = unsafePerformEffect <<< throw
 
 -- how to Trace :
--- lex newX = trace ("old X: " <> show x ) $ \_ -> x + 1
+-- let newX = trace ("old X: " <> show x ) $ \_ -> x + 1
 -- when (actor.nameId == "newBallActor") $ log (show $ delete (Proxy :: Proxy "elem") actorObj)

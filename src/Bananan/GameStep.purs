@@ -21,6 +21,7 @@ import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
 
 type BoxWidth = Number
+type BoxHeight = Number
 type Diameter = Number
 
 ballsIntersection :: forall ac. Diameter -> Actor ac -> List (Actor ac) -> List (Actor ac)
@@ -56,7 +57,7 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
 
-moveBall :: Time -> Number -> BoxWidth -> List GameActor -> GameActor -> GameActor
+moveBall :: Time -> Diameter -> BoxWidth -> List GameActor -> GameActor -> GameActor
 moveBall dt ballDiameter width balls actor@(Actor a) =
   case a.data of
     (ActorBall ball) ->
@@ -100,7 +101,7 @@ moveGun dt controlKeys actor@(Actor a) =
       in Actor a{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
     _ -> actor
 
-fireBall :: Number -> AppGame Unit
+fireBall :: Diameter -> AppGame Unit
 fireBall ballDiameter = do
   model <- get
   let game = getGameRec model
@@ -158,21 +159,31 @@ moveDragon dt dragon actor = actor
 moveBallQueue :: Time -> BallQueueActor -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
--- gameStep :: GameConfig -> Time -> AppMod GameConfig GameState Unit
+loseCondition :: Number -> Diameter -> BoxHeight -> List (Actor ActorData) -> Boolean
+loseCondition loseHeightLevel ballDiameter boxHeight  balls =
+  let yLevel = boxHeight - ballDiameter - loseHeightLevel
+  in any (\(Actor ball) -> ball.y > yLevel ) balls
+
+-- gameStep :: Config -> Time -> AppMod GameConfig GameState Unit
 gameStep :: GameConfig -> GameStepFunc ActorData GameState
 gameStep gameConf conf dt = do
   model <- get
   let m = getModelRec model
   let game = getGameRec model
-  let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
-      prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
-      balls = flip List.filter (M.values game.actors.balls) $ \(Actor a) -> case a.data of 
-                  ActorBall b | isNothing b.flying -> true
-                  _ -> false
-      updatedBalls = map (moveBall dt gameConf.ballDiameter game.canvasWidth balls) game.actors.balls
-      updatedGun = moveGun dt controlKeys game.actors.gun
-  modmod $ \mr -> mr { game = GameState game { actors { balls = updatedBalls , gun = updatedGun }}}
-  when (keyWasPressedOnce controlKeys prevControlKeys C.Space) (fireBall gameConf.ballDiameter)
-  let wsOut = m.io.wsIn --[]
 
-  modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }
+  if not game.gameIsRunning 
+    then pure unit
+    else do
+      let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
+          prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
+          staticBalls = flip List.filter (M.values game.actors.balls) $ \(Actor a) -> case a.data of 
+                      ActorBall b | isNothing b.flying -> true
+                      _ -> false
+          updatedBalls = map (moveBall dt gameConf.ballDiameter game.canvasWidth staticBalls) game.actors.balls
+          updatedGun = moveGun dt controlKeys game.actors.gun
+      let isRunning = not (loseCondition gameConf.loseHeightLevel gameConf.ballDiameter game.canvasHeight staticBalls)
+      modmod $ \mr -> mr { game = GameState game { actors { balls = updatedBalls , gun = updatedGun }, gameIsRunning = isRunning}}
+      when (keyWasPressedOnce controlKeys prevControlKeys C.Space) (fireBall gameConf.ballDiameter)
+      let wsOut = m.io.wsIn --[]
+
+      modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }

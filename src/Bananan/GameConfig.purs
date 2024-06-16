@@ -18,9 +18,9 @@ type ActorCommonConfig =
 
 type GameConfig
   = { 
-      score :: Int
-    , ballSpeed :: Number
+      ballSpeed :: Number
     , ballDiameter :: Number
+    , loseHeightLevel :: Number
     , actors :: 
         {
           gun :: {data :: ActorData | ActorCommonConfig }

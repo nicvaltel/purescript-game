@@ -20,7 +20,9 @@ type GameStateRec = {
       score :: Int
     , ballQueue :: Ball
     , canvasWidth :: Number
+    , canvasHeight :: Number
     , ballSpeed :: Number
+    , gameIsRunning :: Boolean
     , actors :: 
         { balls :: M.Map NameId (Actor ActorData)
         , gun :: Actor ActorData

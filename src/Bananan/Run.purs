@@ -64,14 +64,16 @@ initialGameState conf gameConf = do
   
   pure $ GameState 
     {
-      score: gameConf.score
+      score: 0
     , ballQueue : 
         {
           color : colorFromRandomInt n
         , flying : Nothing
         } 
     , canvasWidth : rect.width
+    , canvasHeight : rect.height
     , ballSpeed : gameConf.ballSpeed
+    , gameIsRunning : true
     , actors : 
           { balls : M.empty
           , gun : gun
