@@ -34,6 +34,8 @@ gunMock =
 
 data BallColor = Red | Green | Blue | Yellow | Purple
 
+derive instance eqBallColor :: Eq BallColor
+
 instance showBallColor :: Show BallColor where
   show Red  = "Red"
   show Green = "Green"

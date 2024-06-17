@@ -5,12 +5,13 @@ module Bananan.GameStep
   where
 
 import Bananan.Reexport
+import Prelude
 
 import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig)
-import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, modgs)
+import Bananan.GameModel (AppGame, GameState(..), GameActor, getGameRec, modgs)
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
@@ -56,6 +57,34 @@ addRandomBalls n ballDiameter width y = do
     modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
     modgs $ \gs -> gs{ actors{balls = M.insert nameId newBallActor gs.actors.balls}}
 
+
+findChainOfColor :: Diameter -> GameActor -> List GameActor -> List GameActor
+findChainOfColor d actorBall@(Actor ball) staticBalls =
+  case ball.data of
+    ActorBall ab ->
+      let balls = flip List.filter staticBalls $ \(Actor b) -> 
+            case b.data of
+              ActorBall aball -> ab.color == aball.color
+              _ -> false
+         
+       in findChain actorBall balls List.Nil
+    _ -> error $ "ERROR: findChainOfColor gets not a ball as agrument:" <> show actorBall
+
+  where
+    findChain :: GameActor -> List GameActor -> List GameActor -> List GameActor 
+    findChain currentBall balls ballsInChain =
+      let closeBalls = ballsIntersection (d * 1.05) currentBall balls
+       in if List.null closeBalls
+        then ballsInChain
+        else
+          let chain =
+                flip List.concatMap closeBalls $ \cb ->
+                  let newBallsInChain = List.Cons cb ballsInChain
+                      newBallsInChainNames = map (\(Actor b) -> b.nameId) newBallsInChain
+                      newBalls = List.filter (\(Actor b) -> b.nameId `List.notElem` newBallsInChainNames  ) balls
+                  in findChain cb newBalls newBallsInChain
+              nubChain = List.nubByEq (\(Actor x) (Actor y) -> x.nameId == y.nameId) chain -- TODO How to get rid of nub?
+           in List.Cons currentBall nubChain
 
 ballsIntersection :: forall ac. Diameter -> Actor ac -> List (Actor ac) -> List (Actor ac)
 ballsIntersection d (Actor ball) = List.filter predicate
@@ -110,12 +139,15 @@ moveBall dt ballDiameter width balls actor@(Actor a) =
               
               -- checks balls intersection
               intersectsBallsList = ballsIntersection ballDiameter actor balls
-              actor2 = if null intersectsBallsList
+              actorResult = if null intersectsBallsList
                 then Actor a { x = newX , y = newY, data = ActorBall newBall2}
                 else
                   let actor1 = Actor a { x = newX , y = newY, data = ActorBall newBall2{flying = Nothing}}
-                  in correctBallPosition ballDiameter actor1 intersectsBallsList
-          in actor2
+                      actor2 = correctBallPosition ballDiameter actor1 intersectsBallsList
+                      -- chain = findChainOfColor ballDiameter actor2 balls
+                      -- tmpDeleteThis = trace ("findChainOfColor: " <> show chain ) $ \_ -> 1
+                   in actor2
+          in actorResult
     _ -> actor
 
 moveGun :: Time -> Array ControlKey -> GameActor -> GameActor
