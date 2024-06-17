@@ -21,6 +21,7 @@ type GameConfig
       ballSpeed :: Number
     , ballDiameter :: Number
     , loseHeightLevel :: Number
+    , initialRows :: Int
     , actors :: 
         {
           gun :: {data :: ActorData | ActorCommonConfig }

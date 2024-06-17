@@ -1,5 +1,6 @@
 module Bananan.GameStep
-  ( gameStep
+  ( addRandomBalls
+  , gameStep
   )
   where
 
@@ -9,7 +10,8 @@ import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig)
-import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec)
+import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, modgs)
+import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
 import Data.Map as M
@@ -23,6 +25,37 @@ import Engine.UserInput (keyWasPressedOnce)
 type BoxWidth = Number
 type BoxHeight = Number
 type Diameter = Number
+type Y = Number
+
+
+addRandomBalls :: Int -> Diameter -> BoxWidth -> Y -> AppGame Unit
+addRandomBalls n ballDiameter width y = do
+  let xOffset = (width - (toNumber n) * ballDiameter) / 2.0
+  for_ (range 0 (n - 1)) $ \i -> do
+    nameId <- mkNewNameId
+    randN :: Int <- getRandom
+    let color = colorFromRandomInt randN
+    let newBallActor = Actor
+          {
+            nameId : nameId
+          , x : xOffset + (toNumber i * ballDiameter)
+          , y : y
+          , width : ballDiameter
+          , height : ballDiameter
+          , z : 1
+          , visible : true
+          , angle : 0.0
+          , cssClass : cssClassOfColor color
+          , imageSource : ""
+          , htmlElement : Nothing
+          , data : ActorBall 
+              { color : color
+              , flying : Nothing
+              } 
+          }
+    modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
+    modgs $ \gs -> gs{ actors{balls = M.insert nameId newBallActor gs.actors.balls}}
+
 
 ballsIntersection :: forall ac. Diameter -> Actor ac -> List (Actor ac) -> List (Actor ac)
 ballsIntersection d (Actor ball) = List.filter predicate
@@ -142,15 +175,8 @@ fireBall ballDiameter = do
         , htmlElement : Nothing
         , data : ActorBall ball
         }
-  modmod $ \mr -> mr{
-          act {
-              recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors 
-              },
-          game = GameState game{
-            actors{balls = M.insert nameId newBallActor game.actors.balls},
-            ballQueue = newQueueBall            
-            }
-        }
+  modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
+  modgs $ \gs -> gs { actors{balls = M.insert nameId newBallActor game.actors.balls}, ballQueue = newQueueBall }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
@@ -167,9 +193,8 @@ loseCondition loseHeightLevel ballDiameter boxHeight  balls =
 -- gameStep :: Config -> Time -> AppMod GameConfig GameState Unit
 gameStep :: GameConfig -> GameStepFunc ActorData GameState
 gameStep gameConf conf dt = do
-  model <- get
-  let m = getModelRec model
-  let game = getGameRec model
+  m <- getModelRec <$> get
+  game <- getGameRec <$> get
 
   if not game.gameIsRunning 
     then pure unit
@@ -182,7 +207,7 @@ gameStep gameConf conf dt = do
           updatedBalls = map (moveBall dt gameConf.ballDiameter game.canvasWidth staticBalls) game.actors.balls
           updatedGun = moveGun dt controlKeys game.actors.gun
       let isRunning = not (loseCondition gameConf.loseHeightLevel gameConf.ballDiameter game.canvasHeight staticBalls)
-      modmod $ \mr -> mr { game = GameState game { actors { balls = updatedBalls , gun = updatedGun }, gameIsRunning = isRunning}}
+      modgs $ \gs -> gs { actors { balls = updatedBalls , gun = updatedGun }, gameIsRunning = isRunning}
       when (keyWasPressedOnce controlKeys prevControlKeys C.Space) (fireBall gameConf.ballDiameter)
       let wsOut = m.io.wsIn --[]
 

@@ -2,6 +2,7 @@
   "ballSpeed": 0.8,
   "ballDiameter" : 74.0,
   "loseHeightLevel" : 100.0,
+  "initialRows" : 3,
   "actors": 
     { "gun" :
         { "nameId": "gun",

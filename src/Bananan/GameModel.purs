@@ -6,6 +6,7 @@ module Bananan.GameModel
   , GameStateRec
   , getGameRec
   , mkActorData
+  , modgs
   )
   where
 
@@ -35,6 +36,11 @@ newtype GameState = GameState GameStateRec
 
 instance showGameState :: Show GameState where
   show (GameState g) = show g
+
+derive instance newtypeGameState :: Newtype GameState _
+
+modgs :: (GameStateRec -> GameStateRec) -> AppGame Unit
+modgs f = modmod $ \mr -> let (GameState g) = mr.game in mr { game = GameState (f g) }
 
 getGameRec :: GameModel -> GameStateRec
 getGameRec m = let (GameState r) = (getModelRec m).game in r

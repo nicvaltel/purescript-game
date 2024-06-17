@@ -4,21 +4,21 @@ import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock)
 import Bananan.GameConfig (GameConfig, gameConfigFromJson)
-import Bananan.GameModel (GameState(..), mkActorData)
-import Bananan.GameStep (gameStep)
+import Bananan.GameModel (AppGame, GameState(..), getGameRec, mkActorData)
+import Bananan.GameStep (addRandomBalls, gameStep)
 import Control.Monad.State (runStateT)
 import Data.Either (either)
+import Data.Foldable (for_)
+import Data.Int (even)
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.InitGame (initGame)
-import Engine.Model (Actor(..), AppModAff, actorMock, initialModelZeroTime, mkUniqueNameId)
+import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, initialModelZeroTime, mkUniqueNameId)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (getHtmlElement, loadJson, parseConfigFile)
 import Engine.Utils.Html (getElementById)
 import Web.DOM.Element (getBoundingClientRect)
-
--- import Web.HTML.HTMLCanvasElement (width)
 
 configFilePath :: FilePath
 
@@ -82,6 +82,15 @@ initialGameState conf gameConf = do
           } 
     }
 
+initialBallRows :: GameConfig -> AppGame Unit
+initialBallRows gameConf = do
+  game <- getGameRec <$> get
+  let deltaH = gameConf.ballDiameter * 0.866 -- 0.866 = sqrt(3)/2
+  for_ (range 0 (gameConf.initialRows - 1)) $ \r -> do
+    let n = if even r then 8 else 7
+    addRandomBalls n gameConf.ballDiameter game.canvasWidth (toNumber r * deltaH)
+
+
 run :: Effect Unit
 run =
   launchAff_
@@ -104,6 +113,7 @@ run =
 runAppModEff :: Config -> GameConfig -> GameState -> AppModAff ActorData GameState Unit
 runAppModEff config gameConfig gameState = do
   initGame config gameState mkActorData -- TODO pass initGame thrue runStateT
+  appModToAppModAff $ initialBallRows gameConfig
   let rGame = runGame :: Config -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
   rGame config (gameStep gameConfig)
 
