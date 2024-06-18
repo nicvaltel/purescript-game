@@ -3,6 +3,7 @@
   "ballDiameter" : 74.0,
   "loseHeightLevel" : 100.0,
   "initialRows" : 3,
+  "numberOfBallsInChainToDelete" : 3,
   "actors": 
     { "gun" :
         { "nameId": "gun",

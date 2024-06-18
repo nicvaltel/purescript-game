@@ -12,8 +12,8 @@ module Bananan.GameModel
 
 import Bananan.Reexport hiding ((:))
 
-import Bananan.Actors (ActorData, Ball)
-import Data.List ((:))
+import Bananan.Actors (ActorData, Ball, BallColor)
+import Data.List (List, (:))
 import Data.Map as M
 import Engine.Model (class ActorContainer, Actor(..), AppMod, Model, NameId, checkActorNameId, getActorRec, getModelRec, modmod)
 

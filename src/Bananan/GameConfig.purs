@@ -22,6 +22,7 @@ type GameConfig
     , ballDiameter :: Number
     , loseHeightLevel :: Number
     , initialRows :: Int
+    , numberOfBallsInChainToDelete :: Int
     , actors :: 
         {
           gun :: {data :: ActorData | ActorCommonConfig }

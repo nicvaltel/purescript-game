@@ -12,6 +12,7 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig)
 import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, modgs)
+import Data.Array (fromFoldable)
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
@@ -61,7 +62,7 @@ findChainOfColor d actorBall@(Actor ball) staticBalls =
     ActorBall ab ->
       let balls = flip List.filter staticBalls $ \(Actor b) -> 
             case b.data of
-              ActorBall aball -> ab.color == aball.color
+              ActorBall aball -> ab.color == aball.color && ball.nameId /= b.nameId
               _ -> false
          
        in findChain actorBall balls List.Nil
@@ -117,35 +118,50 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
 
-moveFlyingBall :: Time -> Diameter -> BoxWidth -> AppGame Unit
-moveFlyingBall dt ballDiameter width = do
+moveFlyingBall :: Time -> Diameter -> BoxWidth -> Int -> AppGame Unit
+moveFlyingBall dt ballDiameter width numberOfBallsInChainToDelete = do
   game <- getGameRec <$> get
 
   case game.actors.flyingBall of
     Just {flyball, vx,vy} -> do
-      let (Actor fb) = flyball
-      let newVx
-            | fb.x <= 0.0 = abs vx
-            | fb.x + fb.width >= width = -(abs vx)
-            | otherwise = vx
-      let newX = fb.x + dt * newVx
-      let newY = max 0.0 (fb.y + dt * vy)
-      let newFlyball = Actor fb{x = newX, y = newY}
+        let (Actor fb) = flyball
+        let newVx
+              | fb.x <= 0.0 = abs vx
+              | fb.x + fb.width >= width = -(abs vx)
+              | otherwise = vx
+        let newX = fb.x + dt * newVx
+        let newY = max 0.0 (fb.y + dt * vy)
+        let newFlyball = Actor fb{x = newX, y = newY}
 
-      -- check that ball reachs the top
-      if newY > 0.0
-        then modgs $ \gs -> gs{actors{flyingBall = Just {flyball : newFlyball, vx : newVx, vy : vy}}}
-        else do modgs $ \gs -> gs{actors{
-                                  flyingBall = Nothing, 
-                                  balls = M.insert fb.nameId newFlyball gs.actors.balls}}
+        -- check that ball reachs the top
+        if newY > 0.0
+          then modgs $ \gs -> gs{actors{flyingBall = Just {flyball : newFlyball, vx : newVx, vy : vy}}}
+          else do modgs $ \gs -> gs{actors{
+                                    flyingBall = Nothing, 
+                                    balls = M.insert fb.nameId newFlyball gs.actors.balls}}
 
-      -- checks balls intersection
-      let intersectsBallsList = ballsIntersection ballDiameter newFlyball (M.values game.actors.balls)
-      when (not $ null intersectsBallsList) $ do
-        let newFlyballCorrected = correctBallPosition ballDiameter newFlyball intersectsBallsList
-        modgs $ \gs -> gs{actors{
-                                  flyingBall = Nothing, 
-                                  balls = M.insert fb.nameId newFlyballCorrected gs.actors.balls}}
+        -- checks balls intersection
+        let intersectsBallsList = ballsIntersection ballDiameter newFlyball (M.values game.actors.balls)
+        when (not $ null intersectsBallsList) $ do
+          let newFlyballCorrected = correctBallPosition ballDiameter newFlyball intersectsBallsList
+
+          modgs $ \gs -> gs{actors{
+                                    flyingBall = Nothing, 
+                                    balls = M.insert fb.nameId newFlyballCorrected gs.actors.balls}}
+        
+        -- if flying ball just stopped right now, then process chain of balls of the same color
+        gameUpdated <- getGameRec <$> get
+        case gameUpdated.actors.flyingBall of
+          Just _ -> pure unit
+          Nothing -> unsafePartial $ do
+            let (Just newStaticBall) =  M.lookup fb.nameId gameUpdated.actors.balls
+            let chainToDelete = findChainOfColor ballDiameter newStaticBall (M.values gameUpdated.actors.balls)
+            when (List.length chainToDelete >= numberOfBallsInChainToDelete) $ do
+              let newBalls = foldr (\(Actor a) ballsAcc -> M.delete a.nameId ballsAcc) gameUpdated.actors.balls chainToDelete
+              let deletedBalls = map (\(Actor a) -> a.nameId) chainToDelete
+              modgs $ \gs -> gs{ actors{balls = newBalls}}
+              modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable deletedBalls) }}
+
     _ -> pure unit
 
 
@@ -227,7 +243,7 @@ gameStep gameConf conf dt = do
   if not game.gameIsRunning 
     then pure unit
     else do
-      moveFlyingBall dt gameConf.ballDiameter game.canvasWidth
+      moveFlyingBall dt gameConf.ballDiameter game.canvasWidth gameConf.numberOfBallsInChainToDelete
 
       let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       let prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
