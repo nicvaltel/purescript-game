@@ -65,17 +65,14 @@ initialGameState conf gameConf = do
   pure $ GameState 
     {
       score: 0
-    , ballQueue : 
-        {
-          color : colorFromRandomInt n
-        , flying : Nothing
-        } 
+    , ballQueue : { color : colorFromRandomInt n } 
     , canvasWidth : rect.width
     , canvasHeight : rect.height
     , ballSpeed : gameConf.ballSpeed
     , gameIsRunning : true
     , actors : 
           { balls : M.empty
+          , flyingBall : Nothing
           , gun : gun
           , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock} -- TODO fill with config
           , ballQueueActor : let (Actor a) = actorMock in Actor a{data = ActorBallQueue ballQueueActorMock}

@@ -11,7 +11,7 @@ import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig)
-import Bananan.GameModel (AppGame, GameState(..), GameActor, getGameRec, modgs)
+import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, modgs)
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
@@ -19,7 +19,7 @@ import Data.Map as M
 import Data.Maybe (isNothing)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getModelRec, getRandom, mkNewNameId, modmod)
+import Engine.Model (Actor(..), getActorData, getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
 
@@ -49,10 +49,7 @@ addRandomBalls n ballDiameter width y = do
           , cssClass : cssClassOfColor color
           , imageSource : ""
           , htmlElement : Nothing
-          , data : ActorBall 
-              { color : color
-              , flying : Nothing
-              } 
+          , data : ActorBall { color : color } 
           }
     modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
     modgs $ \gs -> gs{ actors{balls = M.insert nameId newBallActor gs.actors.balls}}
@@ -85,6 +82,7 @@ findChainOfColor d actorBall@(Actor ball) staticBalls =
                   in findChain cb newBalls newBallsInChain
               nubChain = List.nubByEq (\(Actor x) (Actor y) -> x.nameId == y.nameId) chain -- TODO How to get rid of nub?
            in List.Cons currentBall nubChain
+
 
 ballsIntersection :: forall ac. Diameter -> Actor ac -> List (Actor ac) -> List (Actor ac)
 ballsIntersection d (Actor ball) = List.filter predicate
@@ -119,36 +117,37 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
 
-moveBall :: Time -> Diameter -> BoxWidth -> List GameActor -> GameActor -> GameActor
-moveBall dt ballDiameter width balls actor@(Actor a) =
-  case a.data of
-    (ActorBall ball) ->
-      case ball.flying of
-        Nothing -> actor
-        Just {vx,vy} ->
-          let newVx
-                | a.x <= 0.0 = abs vx
-                | a.x + a.width >= width = -(abs vx)
-                | otherwise = vx
-              newX = a.x + dt * newVx
-              newY = let y' = a.y + dt * vy in if y' <= 0.0 then 0.0 else y' 
-              
-              -- check that ball reachs the top
-              newBall1 = if vx /= newVx then ball{flying = Just {vx : newVx, vy : vy}} else ball
-              newBall2 = if newY <= 0.0 then newBall1{flying = Nothing} else newBall1
-              
-              -- checks balls intersection
-              intersectsBallsList = ballsIntersection ballDiameter actor balls
-              actorResult = if null intersectsBallsList
-                then Actor a { x = newX , y = newY, data = ActorBall newBall2}
-                else
-                  let actor1 = Actor a { x = newX , y = newY, data = ActorBall newBall2{flying = Nothing}}
-                      actor2 = correctBallPosition ballDiameter actor1 intersectsBallsList
-                      -- chain = findChainOfColor ballDiameter actor2 balls
-                      -- tmpDeleteThis = trace ("findChainOfColor: " <> show chain ) $ \_ -> 1
-                   in actor2
-          in actorResult
-    _ -> actor
+moveFlyingBall :: Time -> Diameter -> BoxWidth -> AppGame Unit
+moveFlyingBall dt ballDiameter width = do
+  game <- getGameRec <$> get
+
+  case game.actors.flyingBall of
+    Just {flyball, vx,vy} -> do
+      let (Actor fb) = flyball
+      let newVx
+            | fb.x <= 0.0 = abs vx
+            | fb.x + fb.width >= width = -(abs vx)
+            | otherwise = vx
+      let newX = fb.x + dt * newVx
+      let newY = max 0.0 (fb.y + dt * vy)
+      let newFlyball = Actor fb{x = newX, y = newY}
+
+      -- check that ball reachs the top
+      if newY > 0.0
+        then modgs $ \gs -> gs{actors{flyingBall = Just {flyball : newFlyball, vx : newVx, vy : vy}}}
+        else do modgs $ \gs -> gs{actors{
+                                  flyingBall = Nothing, 
+                                  balls = M.insert fb.nameId newFlyball gs.actors.balls}}
+
+      -- checks balls intersection
+      let intersectsBallsList = ballsIntersection ballDiameter newFlyball (M.values game.actors.balls)
+      when (not $ null intersectsBallsList) $ do
+        let newFlyballCorrected = correctBallPosition ballDiameter newFlyball intersectsBallsList
+        modgs $ \gs -> gs{actors{
+                                  flyingBall = Nothing, 
+                                  balls = M.insert fb.nameId newFlyballCorrected gs.actors.balls}}
+    _ -> pure unit
+
 
 moveGun :: Time -> Array ControlKey -> GameActor -> GameActor
 moveGun dt controlKeys actor@(Actor a) =
@@ -177,7 +176,7 @@ fireBall ballDiameter = do
   let sinPhi = sin phi
   let vx = cosPhi * game.ballSpeed
   let vy = - sinPhi * game.ballSpeed
-  let ball = game.ballQueue{flying = Just {vx : vx, vy : vy}}
+  -- let ball = game.ballQueue
 
   let gunBottomX = gun.x + gun.width/2.0
   let gunBottomY = gun.y + gun.height
@@ -188,10 +187,7 @@ fireBall ballDiameter = do
 
   nameId <- mkNewNameId
   randN :: Int <- getRandom
-  let newQueueBall = {
-          color : colorFromRandomInt randN
-        , flying : Nothing
-        }
+  let newQueueBall = { color : colorFromRandomInt randN }
   let newBallActor = Actor
         {
           nameId : nameId
@@ -202,13 +198,13 @@ fireBall ballDiameter = do
         , z : 1
         , visible : true
         , angle : 0.0
-        , cssClass : cssClassOfColor ball.color
+        , cssClass : cssClassOfColor game.ballQueue.color
         , imageSource : ""
         , htmlElement : Nothing
-        , data : ActorBall ball
+        , data : ActorBall game.ballQueue
         }
   modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
-  modgs $ \gs -> gs { actors{balls = M.insert nameId newBallActor game.actors.balls}, ballQueue = newQueueBall }
+  modgs $ \gs -> gs { actors{flyingBall = Just {flyball : newBallActor, vx, vy }}, ballQueue = newQueueBall }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
@@ -231,16 +227,18 @@ gameStep gameConf conf dt = do
   if not game.gameIsRunning 
     then pure unit
     else do
-      let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
-          prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
-          staticBalls = flip List.filter (M.values game.actors.balls) $ \(Actor a) -> case a.data of 
-                      ActorBall b | isNothing b.flying -> true
-                      _ -> false
-          updatedBalls = map (moveBall dt gameConf.ballDiameter game.canvasWidth staticBalls) game.actors.balls
-          updatedGun = moveGun dt controlKeys game.actors.gun
-      let isRunning = not (loseCondition gameConf.loseHeightLevel gameConf.ballDiameter game.canvasHeight staticBalls)
-      modgs $ \gs -> gs { actors { balls = updatedBalls , gun = updatedGun }, gameIsRunning = isRunning}
-      when (keyWasPressedOnce controlKeys prevControlKeys C.Space) (fireBall gameConf.ballDiameter)
-      let wsOut = m.io.wsIn --[]
+      moveFlyingBall dt gameConf.ballDiameter game.canvasWidth
 
+      let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
+      let prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
+      let updatedGun = moveGun dt controlKeys game.actors.gun
+      let isRunning = not (loseCondition gameConf.loseHeightLevel gameConf.ballDiameter game.canvasHeight (M.values game.actors.balls))
+      
+      modgs $ \gs -> gs { actors {gun = updatedGun }, gameIsRunning = isRunning}
+
+      gameUpdated <- getGameRec <$> get
+      when (isNothing gameUpdated.actors.flyingBall &&  keyWasPressedOnce controlKeys prevControlKeys C.Space) 
+            (fireBall gameConf.ballDiameter)
+      
+      let wsOut = m.io.wsIn --[]
       modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }

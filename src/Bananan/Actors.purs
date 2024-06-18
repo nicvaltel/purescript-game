@@ -68,7 +68,6 @@ instance decodeJsonBallColor :: DecodeJson BallColor where
 
 type Ball = {
    color :: BallColor
-  ,flying :: Maybe {vx :: Number, vy :: Number}
 }
 
 

@@ -1,5 +1,6 @@
 module Engine.Model
   ( Actor(..)
+  , ActorRec
   , AppMod
   , AppModAff
   , AppModEffect
@@ -12,13 +13,14 @@ module Engine.Model
   , appModToAppModEffect
   , checkActorNameId
   , class ActorContainer
+  , getActorData
+  , getActorRec
   , getAllActors
   , getModelRec
   , getNameId
   , getRandom
   , initialModelZeroTime
   , lookupActor
-  -- , mkActorsFromConfig
   , mkNewNameId
   , mkUniqueNameId
   , modmod
@@ -87,8 +89,7 @@ instance decodeJsonNameId :: DecodeJson NameId where
       nameIdFromString :: String -> Maybe NameId
       nameIdFromString str = Just (NameId str)
 
-
-newtype Actor ac = Actor {
+type ActorRec ac = {
     nameId :: NameId
   , x :: Number
   , y :: Number
@@ -103,6 +104,7 @@ newtype Actor ac = Actor {
   , data :: ac
 }
 
+newtype Actor ac = Actor (ActorRec ac)
 actorMock :: Actor Unit 
 actorMock = Actor
         {   nameId: mkUniqueNameId "actor_mock",
@@ -118,6 +120,12 @@ actorMock = Actor
             imageSource: "",
             data: unit
             }
+
+getActorData :: forall ac. Actor ac -> ac
+getActorData (Actor a) = a.data
+
+getActorRec :: forall ac. Actor ac -> ActorRec ac
+getActorRec (Actor r) = r
 
 checkActorNameId :: forall ac. NameId -> Actor ac -> Boolean
 checkActorNameId nameId (Actor aRec) = nameId == aRec.nameId

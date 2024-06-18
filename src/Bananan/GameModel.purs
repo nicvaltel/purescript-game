@@ -15,7 +15,7 @@ import Bananan.Reexport hiding ((:))
 import Bananan.Actors (ActorData, Ball)
 import Data.List ((:))
 import Data.Map as M
-import Engine.Model (class ActorContainer, Actor, AppMod, Model, NameId, checkActorNameId, getModelRec, modmod)
+import Engine.Model (class ActorContainer, Actor(..), AppMod, Model, NameId, checkActorNameId, getActorRec, getModelRec, modmod)
 
 type GameStateRec = {
       score :: Int
@@ -26,6 +26,7 @@ type GameStateRec = {
     , gameIsRunning :: Boolean
     , actors :: 
         { balls :: M.Map NameId (Actor ActorData)
+        , flyingBall :: Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number}
         , gun :: Actor ActorData
         , dragon :: Actor ActorData
         , ballQueueActor :: Actor ActorData
@@ -54,35 +55,43 @@ mkActorData :: GameState -> ActorData -> ActorData
 mkActorData _ actorData = actorData
 
 instance actorContainerGameState :: ActorContainer ActorData GameState where
-  getAllActors model = let as = (getGameRec model).actors in  
-    as.ballQueueActor : as.dragon : as.gun : (M.values as.balls)
+  getAllActors model = 
+    let as = (getGameRec model).actors  
+        allActors = as.ballQueueActor : as.dragon : as.gun : (M.values as.balls)
+     in case as.flyingBall of
+      Just{flyball} -> flyball : allActors
+      _ -> allActors
 
   updateActor nameId mbTypeName f = do
     g <- getGameRec <$> get
     case mbTypeName of
-      Just "ActorGun" -> updateActorGun g
-      Just "ActorBall" -> updateActorBall g
-      Just "ActorDragon" -> updateActorDragon g
-      Just "ActorBallQueue" -> undeteActorBallQueue g
+      Just "ActorGun" -> updateActorGun 
+      Just "ActorBall" -> updateActorBall 
+      Just "ActorDragon" -> updateActorDragon 
+      Just "ActorBallQueue" -> undeteActorBallQueue 
       _ -> updateActorAnyType g
     where
-      updateActorGun g = do
-        modmod $ \mr -> mr{ game = GameState g {actors {gun = f g.actors.gun} }}
-      updateActorBall g = do
-        let newBalls = M.update (\a -> Just $ f a) nameId g.actors.balls
-        modmod $ \mr -> mr{ game = GameState g {actors {balls = newBalls}}}
-      updateActorDragon g = do
-        modmod $ \mr -> mr{ game = GameState g {actors {dragon = f g.actors.dragon} }}
-      undeteActorBallQueue g = do
-        modmod $ \mr -> mr{ game = GameState g {actors {ballQueueActor = f g.actors.ballQueueActor} }}
+      updateActorGun = do
+        modgs $ \gs -> gs {actors {gun = f gs.actors.gun} }
+      updateActorBall = do
+            modgs $ \gs ->
+                case gs.actors.flyingBall of
+                  Just {flyball, vx,vy} | (getActorRec flyball).nameId == nameId ->
+                        gs {actors {flyingBall = Just {flyball : f flyball, vx, vy }}}
+                  _ -> let newBalls = M.update (\a -> Just $ f a) nameId gs.actors.balls
+                        in gs {actors{ balls = newBalls} }
+      updateActorDragon = do
+        modgs $ \gs -> gs {actors {dragon = f gs.actors.dragon }}
+      undeteActorBallQueue = do
+        modgs $ \gs -> gs {actors {ballQueueActor = f gs.actors.ballQueueActor }}
       updateActorAnyType g =
         if checkActorNameId nameId g.actors.gun
-          then updateActorGun g
+          then updateActorGun 
           else if checkActorNameId nameId g.actors.dragon 
-            then updateActorDragon g
+            then updateActorDragon 
             else if checkActorNameId nameId g.actors.ballQueueActor
-              then undeteActorBallQueue g
-              else updateActorBall g
+              then undeteActorBallQueue 
+              else updateActorBall 
 
   lookupActor nameId mbTypeName model =
     let ga = (getGameRec model).actors
@@ -95,7 +104,9 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
         _ -> lookupActorAnyType ga
     where
       lookupGun ga       = if checkActorNameId nameId ga.gun then Just ga.gun else Nothing
-      lookupBall ga      = M.lookup nameId ga.balls
+      lookupBall ga      = case ga.flyingBall of
+                              Just {flyball, vx,vy} | (getActorRec flyball).nameId == nameId -> Just flyball -- TODO how to remove vx, vy?
+                              _ -> M.lookup nameId ga.balls
       lookupDragon ga    = if checkActorNameId nameId ga.dragon then Just ga.dragon else Nothing
       lookupBallQueue ga = if checkActorNameId nameId ga.ballQueueActor then Just ga.ballQueueActor else Nothing 
       lookupActorAnyType ga = 
