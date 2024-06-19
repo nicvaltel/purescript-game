@@ -2,14 +2,16 @@ module Bananan.Run(run) where
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock)
+import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock, selectBallQueueImageSource)
+import Bananan.BallsGraph (GraphBall(..))
 import Bananan.GameConfig (GameConfig, gameConfigFromJson)
-import Bananan.GameModel (AppGame, GameState(..), getGameRec, mkActorData)
-import Bananan.GameStep (addRandomBalls, gameStep)
+import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, mkActorData)
+import Bananan.GameStep (addRandomBalls, ballsIntersection, gameStep)
 import Control.Monad.State (runStateT)
 import Data.Either (either)
 import Data.Foldable (for_)
 import Data.Int (even)
+import Data.List as List
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
@@ -31,13 +33,16 @@ gameConfigFilePath = "game_config.json"
 initialGameState :: Config -> GameConfig -> Effect GameState
 initialGameState conf gameConf = do
   n :: Int <- randomEff
+  let randColor =  colorFromRandomInt n 
   mbCanvas <- getElementById conf.canvasElementId
   rect <- case mbCanvas of
     Just canvas -> getBoundingClientRect canvas
     Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
-  mbElem <- getHtmlElement "gun"
 
   let gunConf = gameConf.actors.gun
+  mbElemGun <- getHtmlElement gunConf.nameId
+  let ballQ = gameConf.actors.ballQueueActor
+  mbElemBallQ <- getHtmlElement ballQ.nameId
   let gunConfData = case gameConf.actors.gun.data of
         ActorGun d -> d
         _ -> error "gameConfig.actors.gun.data is not ActorGun"
@@ -51,7 +56,7 @@ initialGameState conf gameConf = do
         ,  height : gunConf.height
         ,  visible : true
         ,  angle : 0.0
-        ,  htmlElement : mbElem
+        ,  htmlElement : mbElemGun
         ,  cssClass : gunConf.cssClass
         ,  imageSource: gunConf.imageSource
         ,  data: ActorGun 
@@ -61,11 +66,27 @@ initialGameState conf gameConf = do
                 , maxRightAngle: gunConfData.maxRightAngle
                 }
             }
+
+  let ballQueue = Actor
+        {
+          nameId: mkUniqueNameId ballQ.nameId
+        ,  x: ballQ.x
+        ,  y: ballQ.y
+        ,  z: ballQ.z
+        ,  width : ballQ.width
+        ,  height : ballQ.height
+        ,  visible : true
+        ,  angle : 0.0
+        ,  htmlElement : mbElemBallQ
+        ,  cssClass : ballQ.cssClass
+        ,  imageSource: selectBallQueueImageSource randColor
+        ,  data: ActorBallQueue ballQueueActorMock
+        }
   
   pure $ GameState 
     {
       score: 0
-    , ballQueue : { color : colorFromRandomInt n } 
+    , ballQueue : { color : randColor } 
     , canvasWidth : rect.width
     , canvasHeight : rect.height
     , ballSpeed : gameConf.ballSpeed
@@ -75,8 +96,9 @@ initialGameState conf gameConf = do
           , flyingBall : Nothing
           , gun : gun
           , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock} -- TODO fill with config
-          , ballQueueActor : let (Actor a) = actorMock in Actor a{data = ActorBallQueue ballQueueActorMock}
-          } 
+          , ballQueueActor : ballQueue -- let (Actor a) = actorMock in Actor a{data = ActorBallQueue ballQueueActorMock}
+          }
+    , graphBall : List.Nil
     }
 
 initialBallRows :: GameConfig -> AppGame Unit
@@ -85,8 +107,7 @@ initialBallRows gameConf = do
   let deltaH = gameConf.ballDiameter * 0.866 -- 0.866 = sqrt(3)/2
   for_ (range 0 (gameConf.initialRows - 1)) $ \r -> do
     let n = if even r then 8 else 7
-    addRandomBalls n gameConf.ballDiameter game.canvasWidth (toNumber r * deltaH)
-
+    addRandomBalls n gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.canvasWidth (toNumber r * deltaH)
 
 run :: Effect Unit
 run =

@@ -23,6 +23,7 @@ type GameConfig
     , loseHeightLevel :: Number
     , initialRows :: Int
     , numberOfBallsInChainToDelete :: Int
+    , nearestBallDiameterFactor :: Number -- used in findNearesBalls and findChainOfColor for search in range =  diameter * nearestBallDiameterFactor
     , actors :: 
         {
           gun :: {data :: ActorData | ActorCommonConfig }

@@ -85,10 +85,10 @@
 
 #ball_queue_actor {
     position: absolute;
-    scale: 25%;
-    width: 128px;
-    height: 128px;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
     left: -512px;
     transform-origin: top left; /* Scale from the top left corner */
-    background: url(../images/gun.png);
+    background: url(../images/EggPurple.png);
 }

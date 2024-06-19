@@ -19,6 +19,9 @@ type NodeBallRec =
 
 derive instance newtypeNodeBall :: Newtype NodeBall _
 
+instance showNodeBall :: Show NodeBall where
+  show (NodeBall r) = show r
+
 type GraphBall = List NodeBall
 
 getNamesId :: GraphBall -> List NameId
@@ -39,12 +42,20 @@ addNodeBall (Actor a) connectedBalls graph = case a.data of
     _ -> graph
 
 
-deleteNodeBall :: Actor ActorData -> GraphBall -> GraphBall
-deleteNodeBall (Actor a) graph = case a.data of
-    ActorBall ball | a.nameId `List.elem` (getNamesId graph) -> do
-        map (\(NodeBall node) -> NodeBall node{neighbours = List.filter (\(NodeBall neigh) -> neigh.nameId /= a.nameId ) node.neighbours}) $
-            List.filter (\(NodeBall nb) -> nb.nameId /= a.nameId) graph
-    _ -> graph
+-- deleteNodeBall :: Actor ActorData -> GraphBall -> GraphBall
+-- deleteNodeBall (Actor a) graph = case a.data of
+--     ActorBall ball | a.nameId `List.elem` (getNamesId graph) -> do
+--         map (\(NodeBall node) -> NodeBall node{neighbours = List.filter (\(NodeBall neigh) -> neigh.nameId /= a.nameId ) node.neighbours}) $
+--             List.filter (\(NodeBall nb) -> nb.nameId /= a.nameId) graph
+--     _ -> graph
+
+deleteNodeBall :: NameId -> GraphBall -> GraphBall
+deleteNodeBall nameId graph =
+    if nameId `List.elem` (getNamesId graph) 
+        then
+            map (\(NodeBall node) -> NodeBall node{neighbours = List.filter (\(NodeBall neigh) -> neigh.nameId /= nameId ) node.neighbours}) $
+                List.filter (\(NodeBall nb) -> nb.nameId /= nameId) graph
+        else graph
 
 findAttachedToCeilingBalls :: List NodeBall -> List NameId -> List NameId
 findAttachedToCeilingBalls nodesToCheck attachedNodes = do
@@ -58,3 +69,4 @@ findAttachedToCeilingBalls nodesToCheck attachedNodes = do
 
 findNotAttachedToCeilingBalls :: GraphBall -> List NameId
 findNotAttachedToCeilingBalls graph = List.(\\) (getNamesId graph) (findAttachedToCeilingBalls graph List.Nil)
+

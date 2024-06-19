@@ -1,5 +1,6 @@
 module Bananan.GameStep
   ( addRandomBalls
+  , ballsIntersection
   , gameStep
   )
   where
@@ -7,7 +8,8 @@ module Bananan.GameStep
 import Bananan.Reexport
 import Prelude
 
-import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
+import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor, selectBallQueueImageSource)
+import Bananan.BallsGraph (NodeBall(..), addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig)
@@ -20,7 +22,7 @@ import Data.Map as M
 import Data.Maybe (isNothing)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getActorData, getModelRec, getRandom, mkNewNameId, modmod)
+import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
 
@@ -30,9 +32,15 @@ type Diameter = Number
 type Y = Number
 
 
-addRandomBalls :: Int -> Diameter -> BoxWidth -> Y -> AppGame Unit
-addRandomBalls n ballDiameter width y = do
+addRandomBalls :: Int -> Diameter -> Number -> BoxWidth -> Y -> AppGame Unit
+addRandomBalls n ballDiameter dFactor width y = do
   let xOffset = (width - (toNumber n) * ballDiameter) / 2.0
+  let nearRange = ballDiameter * dFactor
+  let 
+    findNearesBalls ::  GameActor -> List GameActor -> List GameActor
+    findNearesBalls ball allBalls = ballsIntersection nearRange ball allBalls
+
+
   for_ (range 0 (n - 1)) $ \i -> do
     nameId <- mkNewNameId
     randN :: Int <- getRandom
@@ -48,16 +56,25 @@ addRandomBalls n ballDiameter width y = do
           , visible : true
           , angle : 0.0
           , cssClass : cssClassOfColor color
-          , imageSource : ""
+          , imageSource : selectBallQueueImageSource color
           , htmlElement : Nothing
           , data : ActorBall { color : color } 
           }
+    game <- getGameRec <$> get
+    let neighbours = findNearesBalls newBallActor (M.values game.actors.balls)
+    let newGraphBall = addNodeBall newBallActor neighbours game.graphBall
     modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
+    modgs $ \gs -> gs{graphBall = newGraphBall}
     modgs $ \gs -> gs{ actors{balls = M.insert nameId newBallActor gs.actors.balls}}
 
 
-findChainOfColor :: Diameter -> GameActor -> List GameActor -> List GameActor
-findChainOfColor d actorBall@(Actor ball) staticBalls =
+
+
+
+  
+
+findChainOfColor :: Diameter -> Number -> GameActor -> List GameActor -> List GameActor
+findChainOfColor d dFactor actorBall@(Actor ball) staticBalls =
   case ball.data of
     ActorBall ab ->
       let balls = flip List.filter staticBalls $ \(Actor b) -> 
@@ -71,7 +88,7 @@ findChainOfColor d actorBall@(Actor ball) staticBalls =
   where
     findChain :: GameActor -> List GameActor -> List GameActor -> List GameActor 
     findChain currentBall balls ballsInChain =
-      let closeBalls = ballsIntersection (d * 1.05) currentBall balls
+      let closeBalls = ballsIntersection (d * dFactor) currentBall balls
        in if List.null closeBalls
         then ballsInChain
         else
@@ -97,6 +114,7 @@ ballsIntersection d (Actor ball) = List.filter predicate
           else false
 
 
+
 correctBallPosition :: forall ac. Diameter -> Actor ac -> List (Actor ac) -> Actor ac 
 correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
   where
@@ -118,8 +136,13 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
 
-moveFlyingBall :: Time -> Diameter -> BoxWidth -> Int -> AppGame Unit
-moveFlyingBall dt ballDiameter width numberOfBallsInChainToDelete = do
+moveFlyingBall :: Time -> Diameter -> Number -> BoxWidth -> Int -> AppGame Unit
+moveFlyingBall dt ballDiameter dFactor width numberOfBallsInChainToDelete = do
+  let nearRange = ballDiameter * dFactor
+  let 
+    findNearesBalls ::  GameActor -> List GameActor -> List GameActor
+    findNearesBalls ball allBalls = ballsIntersection nearRange ball allBalls
+
   game <- getGameRec <$> get
 
   case game.actors.flyingBall of
@@ -148,6 +171,7 @@ moveFlyingBall dt ballDiameter width numberOfBallsInChainToDelete = do
           modgs $ \gs -> gs{actors{
                                     flyingBall = Nothing, 
                                     balls = M.insert fb.nameId newFlyballCorrected gs.actors.balls}}
+
         
         -- if flying ball just stopped right now, then process chain of balls of the same color
         gameUpdated <- getGameRec <$> get
@@ -155,12 +179,30 @@ moveFlyingBall dt ballDiameter width numberOfBallsInChainToDelete = do
           Just _ -> pure unit
           Nothing -> unsafePartial $ do
             let (Just newStaticBall) =  M.lookup fb.nameId gameUpdated.actors.balls
-            let chainToDelete = findChainOfColor ballDiameter newStaticBall (M.values gameUpdated.actors.balls)
+
+            -- add newBall to graphBall
+            let neighbours = findNearesBalls newStaticBall (M.values gameUpdated.actors.balls)
+            let newGraphBall = addNodeBall newStaticBall neighbours gameUpdated.graphBall
+            modgs $ \gs -> gs{graphBall = newGraphBall}
+
+            -- find chain of balls of same color
+            let chainToDelete = findChainOfColor ballDiameter dFactor newStaticBall (M.values gameUpdated.actors.balls)
             when (List.length chainToDelete >= numberOfBallsInChainToDelete) $ do
               let newBalls = foldr (\(Actor a) ballsAcc -> M.delete a.nameId ballsAcc) gameUpdated.actors.balls chainToDelete
               let deletedBalls = map (\(Actor a) -> a.nameId) chainToDelete
               modgs $ \gs -> gs{ actors{balls = newBalls}}
               modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable deletedBalls) }}
+              let newGrahpBall1 = foldr deleteNodeBall gameUpdated.graphBall (map (\(Actor a) -> a.nameId) chainToDelete)
+              modgs $ \gs -> gs{graphBall = newGrahpBall1}
+
+              -- find not attached balls
+              gameUpdated2 <- getGameRec <$> get
+              let unAttached = findNotAttachedToCeilingBalls gameUpdated2.graphBall
+              let newBalls2 = foldr (\nameId ballsAcc -> M.delete nameId ballsAcc) gameUpdated2.actors.balls unAttached
+              modgs $ \gs -> gs{ actors{balls = newBalls2}}
+              modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable unAttached) }}
+              let newGrahpBall2 = foldr deleteNodeBall gameUpdated2.graphBall unAttached
+              modgs $ \gs -> gs{graphBall = newGrahpBall2}
 
     _ -> pure unit
 
@@ -203,7 +245,9 @@ fireBall ballDiameter = do
 
   nameId <- mkNewNameId
   randN :: Int <- getRandom
-  let newQueueBall = { color : colorFromRandomInt randN }
+  let color = colorFromRandomInt randN
+  let newQueueBall = { color : color }
+  let newBallQAct = Actor (unwrap game.actors.ballQueueActor){imageSource = selectBallQueueImageSource color}
   let newBallActor = Actor
         {
           nameId : nameId
@@ -215,12 +259,14 @@ fireBall ballDiameter = do
         , visible : true
         , angle : 0.0
         , cssClass : cssClassOfColor game.ballQueue.color
-        , imageSource : ""
+        , imageSource : selectBallQueueImageSource game.ballQueue.color
         , htmlElement : Nothing
         , data : ActorBall game.ballQueue
         }
   modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
-  modgs $ \gs -> gs { actors{flyingBall = Just {flyball : newBallActor, vx, vy }}, ballQueue = newQueueBall }
+  modgs $ \gs -> gs { actors { flyingBall = Just {flyball : newBallActor, vx, vy }
+                             , ballQueueActor = newBallQAct}
+                    , ballQueue = newQueueBall }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
@@ -228,6 +274,7 @@ moveDragon dt dragon actor = actor
 
 moveBallQueue :: Time -> BallQueueActor -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
+
 
 loseCondition :: Number -> Diameter -> BoxHeight -> List (Actor ActorData) -> Boolean
 loseCondition loseHeightLevel ballDiameter boxHeight  balls =
@@ -243,7 +290,7 @@ gameStep gameConf conf dt = do
   if not game.gameIsRunning 
     then pure unit
     else do
-      moveFlyingBall dt gameConf.ballDiameter game.canvasWidth gameConf.numberOfBallsInChainToDelete
+      moveFlyingBall dt gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.canvasWidth gameConf.numberOfBallsInChainToDelete
 
       let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       let prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey

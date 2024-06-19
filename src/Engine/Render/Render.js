@@ -18,6 +18,7 @@ export function _renderObject(o) {
     o.elem.style.left = (o.baseX + (o.x | 0)) + 'px';
     o.elem.style.top = (o.baseY + (o.y | 0)) + 'px';
     // o.elem.style.zIndex = (o.z | 0);
+    o.elem.style.background =  'url(' + o.imageSource + ')';
     o.elem.style.transform = 'rotate(' + (o.angle | 0) + 'deg)';
   }
 }

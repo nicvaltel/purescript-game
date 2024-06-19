@@ -11,8 +11,10 @@ module Bananan.GameModel
   where
 
 import Bananan.Reexport hiding ((:))
+import Record as Record
 
 import Bananan.Actors (ActorData, Ball, BallColor)
+import Bananan.BallsGraph (GraphBall)
 import Data.List (List, (:))
 import Data.Map as M
 import Engine.Model (class ActorContainer, Actor(..), AppMod, Model, NameId, checkActorNameId, getActorRec, getModelRec, modmod)
@@ -31,12 +33,13 @@ type GameStateRec = {
         , dragon :: Actor ActorData
         , ballQueueActor :: Actor ActorData
         }
+    , graphBall :: GraphBall
   }
 
 newtype GameState = GameState GameStateRec
 
 instance showGameState :: Show GameState where
-  show (GameState g) = show g
+  show (GameState g) = show $ Record.delete (Proxy :: Proxy "graphBall") g
 
 derive instance newtypeGameState :: Newtype GameState _
 

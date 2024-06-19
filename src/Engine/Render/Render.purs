@@ -9,7 +9,7 @@ import Engine.Model (class ActorContainer, Actor(..), Model, getAllActors)
 
 
 type ActorObj
-  = { elem :: HTMLElement, cssClass :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number }
+  = { elem :: HTMLElement, cssClass :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number, imageSource :: String }
 
 foreign import _renderObject :: ActorObj -> Effect Unit
 
@@ -41,4 +41,5 @@ render conf model = do
                   , y: floor $ actor.y
                   , z : actor.z
                   , angle : floor $ actor.angle
+                  , imageSource : actor.imageSource
                   }

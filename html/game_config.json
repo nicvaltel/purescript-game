@@ -4,6 +4,7 @@
   "loseHeightLevel" : 100.0,
   "initialRows" : 3,
   "numberOfBallsInChainToDelete" : 3,
+  "nearestBallDiameterFactor" : 1.05,
   "actors": 
     { "gun" :
         { "nameId": "gun",
@@ -44,13 +45,13 @@
     , "ballQueueActor" :
         {
           "nameId": "ball_queue_actor",
-          "x": -500.0,
-          "y": 0.0,
-          "z": 10,
-          "width" : 0.0,
-          "height" : 0.0,
+          "x": 20.0,
+          "y": 810.0,
+          "width"  : 76.0,
+          "height" : 76.0,
+          "z": 1,
           "cssClass" : "ball_queue_actor",
-          "imageSource": "../images/gun.png",
+          "imageSource": "../images/EggPurple.png",
           "data": {
             "type": "ball_queue_actor",
             "data": {
