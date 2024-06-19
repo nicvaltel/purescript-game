@@ -26,6 +26,8 @@ type GameStateRec = {
     , canvasHeight :: Number
     , ballSpeed :: Number
     , gameIsRunning :: Boolean
+    , shotsCounter :: Int
+    , lastRowsAdded :: { time :: Instant, numberOfBalls :: Int}
     , actors :: 
         { balls :: M.Map NameId (Actor ActorData)
         , flyingBall :: Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number}

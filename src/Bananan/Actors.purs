@@ -10,7 +10,6 @@ module Bananan.Actors
   , cssClassOfColor
   , dragonMock
   , gunMock
-  , selectBallQueueImageSource
   )
   where
 
@@ -36,6 +35,8 @@ gunMock =
 data BallColor = Red | Green | Blue | Yellow | Purple
 
 derive instance eqBallColor :: Eq BallColor
+
+derive instance ordBallColor :: Ord BallColor
 
 instance showBallColor :: Show BallColor where
   show Red  = "Red"
@@ -68,12 +69,12 @@ instance decodeJsonBallColor :: DecodeJson BallColor where
         _ -> Nothing
 
 
-selectBallQueueImageSource :: BallColor -> FilePath
-selectBallQueueImageSource Red = "../images/EggRed.png"
-selectBallQueueImageSource Green = "../images/EggGreen.png"
-selectBallQueueImageSource Blue = "../images/EggBlue.png"
-selectBallQueueImageSource Yellow = "../images/EggYellow.png"
-selectBallQueueImageSource Purple = "../images/EggPurple.png"
+-- selectBallQueueImageSource :: BallColor -> FilePath
+-- selectBallQueueImageSource Red = "../images/EggRed.png"
+-- selectBallQueueImageSource Green = "../images/EggGreen.png"
+-- selectBallQueueImageSource Blue = "../images/EggBlue.png"
+-- selectBallQueueImageSource Yellow = "../images/EggYellow.png"
+-- selectBallQueueImageSource Purple = "../images/EggPurple.png"
 
 type Ball = {
    color :: BallColor

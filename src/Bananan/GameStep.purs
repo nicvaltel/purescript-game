@@ -8,11 +8,11 @@ module Bananan.GameStep
 import Bananan.Reexport
 import Prelude
 
-import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor, selectBallQueueImageSource)
+import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
 import Bananan.BallsGraph (NodeBall(..), addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
-import Bananan.GameConfig (GameConfig)
+import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, modgs)
 import Data.Array (fromFoldable)
 import Data.Foldable (for_)
@@ -32,10 +32,10 @@ type Diameter = Number
 type Y = Number
 
 
-addRandomBalls :: Int -> Diameter -> Number -> BoxWidth -> Y -> AppGame Unit
-addRandomBalls n ballDiameter dFactor width y = do
-  let xOffset = (width - (toNumber n) * ballDiameter) / 2.0
-  let nearRange = ballDiameter * dFactor
+addRandomBalls :: GameConfig -> Int -> BoxWidth -> Y -> AppGame Unit
+addRandomBalls gameConf n width y = do
+  let xOffset = (width - (toNumber n) * gameConf.ballDiameter) / 2.0
+  let nearRange = gameConf.ballDiameter * gameConf.nearestBallDiameterFactor
   let 
     findNearesBalls ::  GameActor -> List GameActor -> List GameActor
     findNearesBalls ball allBalls = ballsIntersection nearRange ball allBalls
@@ -48,15 +48,15 @@ addRandomBalls n ballDiameter dFactor width y = do
     let newBallActor = Actor
           {
             nameId : nameId
-          , x : xOffset + (toNumber i * ballDiameter)
+          , x : xOffset + (toNumber i * gameConf.ballDiameter)
           , y : y
-          , width : ballDiameter
-          , height : ballDiameter
+          , width : gameConf.ballDiameter
+          , height : gameConf.ballDiameter
           , z : 1
           , visible : true
           , angle : 0.0
           , cssClass : cssClassOfColor color
-          , imageSource : selectBallQueueImageSource color
+          , imageSource : selectBallQueueImageSource gameConf color
           , htmlElement : Nothing
           , data : ActorBall { color : color } 
           }
@@ -67,11 +67,6 @@ addRandomBalls n ballDiameter dFactor width y = do
     modgs $ \gs -> gs{graphBall = newGraphBall}
     modgs $ \gs -> gs{ actors{balls = M.insert nameId newBallActor gs.actors.balls}}
 
-
-
-
-
-  
 
 findChainOfColor :: Diameter -> Number -> GameActor -> List GameActor -> List GameActor
 findChainOfColor d dFactor actorBall@(Actor ball) staticBalls =
@@ -223,8 +218,8 @@ moveGun dt controlKeys actor@(Actor a) =
       in Actor a{angle = newAngle, data = ActorGun gun{angleSpeed = newSpeed}}
     _ -> actor
 
-fireBall :: Diameter -> AppGame Unit
-fireBall ballDiameter = do
+fireBall :: GameConfig -> Diameter -> AppGame Unit
+fireBall gameConf ballDiameter = do
   model <- get
   let game = getGameRec model
   let (Actor gun) = game.actors.gun 
@@ -247,7 +242,7 @@ fireBall ballDiameter = do
   randN :: Int <- getRandom
   let color = colorFromRandomInt randN
   let newQueueBall = { color : color }
-  let newBallQAct = Actor (unwrap game.actors.ballQueueActor){imageSource = selectBallQueueImageSource color}
+  let newBallQAct = Actor (unwrap game.actors.ballQueueActor){imageSource = selectBallQueueImageSource gameConf color}
   let newBallActor = Actor
         {
           nameId : nameId
@@ -259,14 +254,15 @@ fireBall ballDiameter = do
         , visible : true
         , angle : 0.0
         , cssClass : cssClassOfColor game.ballQueue.color
-        , imageSource : selectBallQueueImageSource game.ballQueue.color
+        , imageSource : selectBallQueueImageSource gameConf game.ballQueue.color
         , htmlElement : Nothing
         , data : ActorBall game.ballQueue
         }
   modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
   modgs $ \gs -> gs { actors { flyingBall = Just {flyball : newBallActor, vx, vy }
                              , ballQueueActor = newBallQAct}
-                    , ballQueue = newQueueBall }
+                    , ballQueue = newQueueBall
+                    , shotsCounter = gs.shotsCounter + 1 }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
@@ -301,7 +297,16 @@ gameStep gameConf conf dt = do
 
       gameUpdated <- getGameRec <$> get
       when (isNothing gameUpdated.actors.flyingBall &&  keyWasPressedOnce controlKeys prevControlKeys C.Space) 
-            (fireBall gameConf.ballDiameter)
+            (fireBall gameConf gameConf.ballDiameter)
       
+      -- add new balls row
+      let (Milliseconds deltaTime) = diff m.sys.lastUpdateTime game.lastRowsAdded.time
+      when (deltaTime > gameConf.addNewRowsTimeInterval) $ do
+        let deltaH = gameConf.ballDiameter * 0.866 -- 0.866 = sqrt(3)/2
+        let nBalls = if game.lastRowsAdded.numberOfBalls == gameConf.ballsInSmallRow then gameConf.ballsInSmallRow + 1 else gameConf.ballsInSmallRow
+        modgs $ \gs -> gs{actors {balls = map (\(Actor a) -> Actor a{y = a.y + deltaH}) gs.actors.balls}}
+        addRandomBalls gameConf nBalls game.canvasWidth 0.0
+        modgs $ \gs -> gs{lastRowsAdded = {time : m.sys.lastUpdateTime, numberOfBalls : nBalls}}
+
       let wsOut = m.io.wsIn --[]
       modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }

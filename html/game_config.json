@@ -5,6 +5,8 @@
   "initialRows" : 3,
   "numberOfBallsInChainToDelete" : 3,
   "nearestBallDiameterFactor" : 1.05,
+  "addNewRowsTimeInterval" : 9000.0,
+  "ballsInSmallRow" : 7,
   "actors": 
     { "gun" :
         { "nameId": "gun",
@@ -60,4 +62,11 @@
           }
         }
     }
+  , "colorImageSources" : [
+      {"color" : "Red", "imageSource" : "../images/EggRed.png"  },
+      {"color" : "Green", "imageSource" : "../images/EggGreen.png"  },
+      {"color" : "Blue", "imageSource" : "../images/EggBlue.png"  },
+      {"color" : "Yellow", "imageSource" : "../images/EggYellow.png"  },
+      {"color" : "Purple", "imageSource" : "../images/EggPurple.png"  }
+  ]
 } 

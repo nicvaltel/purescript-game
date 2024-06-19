@@ -41,14 +41,6 @@ addNodeBall (Actor a) connectedBalls graph = case a.data of
         List.(:) newNode graph
     _ -> graph
 
-
--- deleteNodeBall :: Actor ActorData -> GraphBall -> GraphBall
--- deleteNodeBall (Actor a) graph = case a.data of
---     ActorBall ball | a.nameId `List.elem` (getNamesId graph) -> do
---         map (\(NodeBall node) -> NodeBall node{neighbours = List.filter (\(NodeBall neigh) -> neigh.nameId /= a.nameId ) node.neighbours}) $
---             List.filter (\(NodeBall nb) -> nb.nameId /= a.nameId) graph
---     _ -> graph
-
 deleteNodeBall :: NameId -> GraphBall -> GraphBall
 deleteNodeBall nameId graph =
     if nameId `List.elem` (getNamesId graph) 
