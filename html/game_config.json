@@ -5,7 +5,7 @@
   "initialRows" : 3,
   "numberOfBallsInChainToDelete" : 3,
   "nearestBallDiameterFactor" : 1.05,
-  "addNewRowsTimeInterval" : 9000.0,
+  "addNewRowsTimeInterval" : 15000.0,
   "ballsInSmallRow" : 7,
   "actors": 
     { "gun" :
@@ -21,7 +21,7 @@
             "type": "gun",
             "data": {
               "angleSpeed": 0.0,
-              "maxAngleSpeed": 0.2,
+              "maxAngleSpeed": 0.1,
               "maxLeftAngle": -80.0,
               "maxRightAngle": 80.0
             }

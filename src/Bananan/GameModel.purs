@@ -110,7 +110,7 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
     where
       lookupGun ga       = if checkActorNameId nameId ga.gun then Just ga.gun else Nothing
       lookupBall ga      = case ga.flyingBall of
-                              Just {flyball, vx,vy} | (getActorRec flyball).nameId == nameId -> Just flyball -- TODO how to remove vx, vy?
+                              Just {flyball} | (getActorRec flyball).nameId == nameId -> Just flyball
                               _ -> M.lookup nameId ga.balls
       lookupDragon ga    = if checkActorNameId nameId ga.dragon then Just ga.dragon else Nothing
       lookupBallQueue ga = if checkActorNameId nameId ga.ballQueueActor then Just ga.ballQueueActor else Nothing 

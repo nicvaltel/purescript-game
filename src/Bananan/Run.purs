@@ -6,7 +6,7 @@ import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dr
 import Bananan.GameConfig (GameConfig, gameConfigFromJson, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameState(..), getGameRec, mkActorData)
 import Bananan.GameStep (addRandomBalls, gameStep)
-import Control.Monad.State (runStateT)
+import Control.Monad.State (evalStateT, runStateT)
 import Data.Either (either)
 import Data.Foldable (for_)
 import Data.Int (even, odd)
@@ -14,7 +14,6 @@ import Data.List as List
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
-import Engine.InitGame (initGame)
 import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, initialModelZeroTime, mkUniqueNameId)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (getHtmlElement, loadJson, parseConfigFile)
@@ -112,7 +111,8 @@ initialBallRows gameConf = do
     addRandomBalls gameConf n game.canvasWidth (toNumber r * deltaH)
 
 run :: Effect Unit
-run =
+run = do
+  seed :: Int <- randomEff
   launchAff_
     $ do
         eitherConf <- parseConfigFile configFilePath :: Aff ( Either String Config)
@@ -125,14 +125,12 @@ run =
            logShow config
            logShow gameConfig
 
-        gameState <- liftEffect $ initialGameState config gameConfig
-        _ <- runStateT (runAppModEff config gameConfig gameState) (initialModelZeroTime gameState)
-        pure unit
+        gameState@(GameState gs) <- liftEffect $ initialGameState config gameConfig
+        evalStateT (runAppModEff config gameConfig) (initialModelZeroTime seed gs.canvasWidth gs.canvasHeight gameState)
 
 
-runAppModEff :: Config -> GameConfig -> GameState -> AppModAff ActorData GameState Unit
-runAppModEff config gameConfig gameState = do
-  initGame config gameState mkActorData -- TODO pass initGame thrue runStateT
+runAppModEff :: Config -> GameConfig -> AppModAff ActorData GameState Unit
+runAppModEff config gameConfig = do
   appModToAppModAff $ initialBallRows gameConfig
   let rGame = runGame :: Config -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
   rGame config (gameStep gameConfig)

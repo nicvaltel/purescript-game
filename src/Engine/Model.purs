@@ -219,9 +219,8 @@ getRandom = do
   modify_ (\(Model m) -> Model m{sys{seed = randomPair.newSeed}})
   pure randomPair.newVal
 
--- TODO setup Model with config
-initialModelZeroTime :: forall ac gm. gm -> Model ac gm
-initialModelZeroTime gameState =
+initialModelZeroTime :: forall ac gm. Int -> Number -> Number -> gm -> Model ac gm
+initialModelZeroTime seed screenWidth screenHeight gameState =
   unsafePartial
     $ let
         Just time = instant (Milliseconds 0.0)
@@ -240,11 +239,11 @@ initialModelZeroTime gameState =
         }
         , sys : {
             gameStepNumber : 0
-          , screenWidth : 0.0 -- TODO setup this
-          , screenHeight : 0.0
+          , screenWidth : screenWidth
+          , screenHeight : screenHeight
           , lastUpdateTime : time 
           , lastActorId : 0
-          , seed : mkSeed 0
+          , seed : mkSeed seed
           }
         , actorNothing : Nothing
         }
@@ -257,30 +256,6 @@ mkNewNameId = do
 
 mkUniqueNameId :: String -> NameId
 mkUniqueNameId nameId = NameId nameId
-
--- mkActorsFromConfig :: forall ac gm. 
---   Config -> 
---   (gm -> ac -> ac) ->
---   Effect (Map NameId (Actor ac))
--- mkActorsFromConfig conf mkActorData = do
---   actorsArr <- for conf.actors
---     $ \a -> do
---         mbElem <- getHtmlElement a.nameId
---         pure $ Tuple (NameId a.nameId) (Actor
---           { nameId: (NameId a.nameId)
---           , x: a.x
---           , y: a.y
---           , z: a.z
---           , width : 0.0
---           , height : 0.0
---           , visible : true
---           , angle : 0.0
---           , cssClass : a.cssClass
---           , imageSource : a.imageSource
---           , htmlElement: mbElem
---           , data: mkActorData conf.state a.data
---           })
---   pure $ M.fromFoldable actorsArr
 
 
 class ActorContainer ac gm where
