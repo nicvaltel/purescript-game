@@ -6,14 +6,13 @@ module Bananan.GameStep
   where
 
 import Bananan.Reexport
-import Prelude
 
 import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
-import Bananan.BallsGraph (NodeBall(..), addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
+import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
-import Bananan.GameModel (AppGame, GameActor, GameState(..), getGameRec, modgs)
+import Bananan.GameModel (AppGame, GameActor, GameState, getGameRec, getGameRec', modgs)
 import Data.Array (fromFoldable)
 import Data.Foldable (for_)
 import Data.List (List)
@@ -22,7 +21,7 @@ import Data.Map as M
 import Data.Maybe (isNothing)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
+import Engine.Model (Actor(..), getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
 
@@ -259,6 +258,7 @@ fireBall gameConf ballDiameter = do
         , data : ActorBall game.ballQueue
         }
   modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
+  modmod $ \mr -> mr {audioElemsToPlay = (getGameRec' mr).audio.shoot : mr.audioElemsToPlay}
   modgs $ \gs -> gs { actors { flyingBall = Just {flyball : newBallActor, vx, vy }
                              , ballQueueActor = newBallQAct}
                     , ballQueue = newQueueBall

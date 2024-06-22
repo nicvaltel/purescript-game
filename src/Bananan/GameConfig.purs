@@ -33,6 +33,7 @@ type GameConfig
         , ballQueueActor :: {data :: ActorData | ActorCommonConfig }
         }
     , colorImageSources :: Array {color :: String, imageSource :: FilePath}
+    , audio :: { shoot :: FilePath  }
     }
 
 

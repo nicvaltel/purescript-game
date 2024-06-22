@@ -4,9 +4,9 @@ import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock)
 import Bananan.GameConfig (GameConfig, gameConfigFromJson, selectBallQueueImageSource)
-import Bananan.GameModel (AppGame, GameState(..), getGameRec, mkActorData)
+import Bananan.GameModel (AppGame, GameState(..), getGameRec)
 import Bananan.GameStep (addRandomBalls, gameStep)
-import Control.Monad.State (evalStateT, runStateT)
+import Control.Monad.State (evalStateT)
 import Data.Either (either)
 import Data.Foldable (for_)
 import Data.Int (even, odd)
@@ -16,7 +16,7 @@ import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
 import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, initialModelZeroTime, mkUniqueNameId)
 import Engine.Random.PseudoRandom (randomEff)
-import Engine.ResourceLoader (getHtmlElement, loadJson, parseConfigFile)
+import Engine.ResourceLoader (getHtmlElement, loadAudioFile, loadJson, parseConfigFile)
 import Engine.Utils.Html (getElementById)
 import Web.DOM.Element (getBoundingClientRect)
 
@@ -38,6 +38,7 @@ initialGameState conf gameConf = do
     Just canvas -> getBoundingClientRect canvas
     Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
 
+  audioShoot <- loadAudioFile gameConf.audio.shoot
   let gunConf = gameConf.actors.gun
   mbElemGun <- getHtmlElement gunConf.nameId
   let ballQ = gameConf.actors.ballQueueActor
@@ -100,6 +101,7 @@ initialGameState conf gameConf = do
           , ballQueueActor : ballQueue
           }
     , graphBall : List.Nil
+    , audio : { shoot : audioShoot } 
     }
 
 initialBallRows :: GameConfig -> AppGame Unit

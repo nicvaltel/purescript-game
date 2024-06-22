@@ -8,10 +8,9 @@ import Engine.Reexport
 import Concurrent.Queue as Q
 import Control.Monad.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
-import Data.Map as M
 import Data.Traversable (for_, sequence)
 import Engine.Config (Config)
-import Engine.Model (class ActorContainer, Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, appModToAppModEffect, getAllActors, getModelRec, getNameId, lookupActor, modmodAff, modmodEffect, updateActor)
+import Engine.Model (class ActorContainer, Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, appModToAppModEffect, getModelRec, getNameId, lookupActor, modmodAff, modmodEffect, updateActor)
 import Engine.Render.Render (render)
 import Engine.ResourceLoader (getHtmlElement)
 import Engine.Types (Time)
@@ -45,7 +44,10 @@ mainLoop :: forall ac gm.
   AppModAff ac gm Unit
 mainLoop conf socket queueWS gameStep canvasElem = do
   model <- get
+  
   renderFiber <- lift $ forkAff $ liftEffect (render conf model)
+  modmodAff $ \m -> m{audioElemsToPlay = []}
+
   currentTime <- liftEffect now
   seed <- liftEffect randomSeed
   let (Milliseconds deltaTime') = diff currentTime (getModelRec model).sys.lastUpdateTime
@@ -61,7 +63,10 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     log $ show $ show userInput
 
   modmodAff $ \m -> m {io{userInput = userInput, prevUserInput = m.io.userInput, wsIn = messages, wsOut = []}, sys{seed = seed}}
+  
+  -- GAME STEP
   appModToAppModAff $ gameStep conf deltaTime
+
   appModEffectToAppModAff $ updateRecentlyAddedActors canvasElem
   appModEffectToAppModAff $ removeRecentlyDeletedActors
   modmodAff $ \m -> m { sys{ lastUpdateTime = currentTime }}
@@ -74,6 +79,7 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     logShow (getModelRec modelSendOut).io.wsOut
 
   lift $ joinFiber renderFiber
+  
   newModel <- get
   _ <- liftEffect $ _requestAnimationFrame (launchAff_ $ evalStateT (mainLoop conf socket queueWS gameStep canvasElem) newModel)
   pure unit

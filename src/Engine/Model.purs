@@ -36,13 +36,11 @@ module Engine.Model
 import Engine.Reexport
 import Control.Monad.State (runStateT)
 import Data.List (List)
-import Data.Map as M
-import Engine.Config (Config)
 import Engine.Random.PseudoRandom (class Random)
-import Engine.ResourceLoader (getHtmlElement)
 import Engine.UserInput (UserInput, emptyUserInput)
 import Engine.WebSocket.WSSignalChan as WS
 import Record as R
+import Web.HTML.HTMLMediaElement(HTMLMediaElement)
 
 type AppMod ac gm x = State (Model ac gm) x
 type AppModEffect ac gm x = StateT (Model ac gm) Effect x
@@ -130,15 +128,6 @@ getActorRec (Actor r) = r
 checkActorNameId :: forall ac. NameId -> Actor ac -> Boolean
 checkActorNameId nameId (Actor aRec) = nameId == aRec.nameId
 
--- instance decodeJsonActor :: DecodeJsonField ac => DecodeJson (Actor ac) where
---   decodeJson json = do
---     obj <- decodeJson json -- attempts to decode the JSON value as an object.
---     t <- obj .: "type" -- extracts the "type" field from the JSON object.
---     case t of
---       "actor" -> Actor <$> (obj .: "data") -- This pattern matches the "type" field to determine which constructor to use (ActorBall or ActorGun).
---       -- "gameState" -> undefined
---       _      -> Left $ TypeMismatch $ "Unknown Actor type: " <> t
-
 derive instance newtypeActor :: Newtype (Actor ac) _
 
 instance showActor :: Show ac => Show (Actor ac) where
@@ -168,11 +157,12 @@ type ModelRec ac gm =
       , seed :: Seed
       }
     , actorNothing :: Maybe (Actor ac) --need for Model contain ac type
+    , audioElemsToPlay :: Array HTMLMediaElement
     }
 
 newtype Model ac gm = Model (ModelRec ac gm)
 
--- derive instance newtypeModel :: Newtype (Model ac gm) _
+-- derive instance newtypeModel :: Newtype (Model ac gm) _ -- TODO use unwrap instead of GetModelRec
 
 instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
   show (Model m) =  
@@ -190,6 +180,8 @@ instance showModel :: (Show ac, Show gm) => Show (Model ac gm) where
         , "wsOut" <> show (m.io.wsOut)
         ]
 
+-- Q: Why not unwrap instead of getModelRec?
+-- A: An export for Model hides data constructors but the type declares an instance of Data.Newtype.Newtype. Such instance allows to match and construct values of this type, effectively making the constructors public.
 getModelRec :: forall ac gm. Model ac gm -> ModelRec ac gm
 getModelRec (Model m) = m
 
@@ -246,6 +238,7 @@ initialModelZeroTime seed screenWidth screenHeight gameState =
           , seed : mkSeed seed
           }
         , actorNothing : Nothing
+        , audioElemsToPlay : []
         }
 
 mkNewNameId :: forall ac gm. AppMod ac gm NameId

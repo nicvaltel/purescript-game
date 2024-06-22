@@ -1,12 +1,15 @@
-module Engine.Render.Render (render) where
+module Engine.Render.Render
+  ( render
+  )
+  where
 
 import Engine.Reexport
 
 import Data.Foldable (for_)
 import Data.List (List)
 import Engine.Config (Config)
-import Engine.Model (class ActorContainer, Actor(..), Model, getAllActors)
-
+import Engine.Model (class ActorContainer, Actor(..), Model, getAllActors, getModelRec)
+import Web.HTML.HTMLMediaElement (play, HTMLMediaElement)
 
 type ActorObj
   = { elem :: HTMLElement, cssClass :: String, baseX :: Number, baseY :: Number, x :: Number, y :: Number, z :: Int, angle :: Number, imageSource :: String }
@@ -22,6 +25,7 @@ render :: forall ac gm.
   Effect Unit
 render conf model = do
   when conf.debugModel $ log (show model)
+  for_ ((getModelRec model).audioElemsToPlay :: Array HTMLMediaElement) play
   for_ (getAllActors model :: List (Actor ac))
     $ \(Actor actor) -> do
         when actor.visible $

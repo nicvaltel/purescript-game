@@ -69,4 +69,5 @@
       {"color" : "Yellow", "imageSource" : "../images/EggYellow.png"  },
       {"color" : "Purple", "imageSource" : "../images/EggPurple.png"  }
   ]
+  , "audio" : { "shoot" : "../audio/alienshoot2.ogg" }
 } 

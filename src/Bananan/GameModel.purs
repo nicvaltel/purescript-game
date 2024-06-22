@@ -5,19 +5,21 @@ module Bananan.GameModel
   , GameState(..)
   , GameStateRec
   , getGameRec
+  , getGameRec'
   , mkActorData
   , modgs
   )
   where
 
 import Bananan.Reexport hiding ((:))
-import Record as Record
 
-import Bananan.Actors (ActorData, Ball, BallColor)
+import Bananan.Actors (ActorData, Ball)
 import Bananan.BallsGraph (GraphBall)
-import Data.List (List, (:))
+import Data.List ((:))
 import Data.Map as M
-import Engine.Model (class ActorContainer, Actor(..), AppMod, Model, NameId, checkActorNameId, getActorRec, getModelRec, modmod)
+import Engine.Model (class ActorContainer, Actor, AppMod, Model, NameId, ModelRec, checkActorNameId, getActorRec, getModelRec, modmod)
+import Record as Record
+import Web.HTML.HTMLMediaElement (HTMLMediaElement)
 
 type GameStateRec = {
       score :: Int
@@ -36,12 +38,15 @@ type GameStateRec = {
         , ballQueueActor :: Actor ActorData
         }
     , graphBall :: GraphBall
+    , audio :: { shoot :: HTMLMediaElement }
   }
 
 newtype GameState = GameState GameStateRec
 
 instance showGameState :: Show GameState where
-  show (GameState g) = show $ Record.delete (Proxy :: Proxy "graphBall") g
+  show (GameState g) = show $
+    Record.delete (Proxy :: Proxy "audio") $ 
+    Record.delete (Proxy :: Proxy "graphBall") g
 
 derive instance newtypeGameState :: Newtype GameState _
 
@@ -50,6 +55,9 @@ modgs f = modmod $ \mr -> let (GameState g) = mr.game in mr { game = GameState (
 
 getGameRec :: GameModel -> GameStateRec
 getGameRec m = let (GameState r) = (getModelRec m).game in r
+
+getGameRec' :: ModelRec ActorData GameState -> GameStateRec
+getGameRec' m = let (GameState r) = m.game in r
 
 type GameModel = Model ActorData GameState
 type GameActor = Actor ActorData

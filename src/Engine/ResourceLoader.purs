@@ -1,5 +1,7 @@
 module Engine.ResourceLoader
   ( getHtmlElement
+  , loadAudioFile
+  , loadAudioFiles
   , loadImages
   , loadJson
   , parseConfigFile
@@ -11,7 +13,6 @@ import Engine.Reexport
 import Affjax as AX
 import Affjax.ResponseFormat as ResponseFormat
 import Affjax.Web (driver)
-import Control.Bind (join)
 import Data.Argonaut.Parser (jsonParser)
 import Data.HTTP.Method (Method(..))
 import Data.Map as Map
@@ -20,6 +21,8 @@ import Effect.Exception (Error, error)
 import Engine.Config (Config, fromJson)
 import Engine.Types (FilePath)
 import Graphics.Canvas (CanvasImageSource, tryLoadImage)
+import Web.HTML.HTMLAudioElement as HTMLAudio
+import Web.HTML.HTMLMediaElement (HTMLMediaElement)
 
 foreign import _getHtmlElenentById :: String -> Effect (Nullable HTMLElement)
 
@@ -53,7 +56,7 @@ parseConfigFile ::
 parseConfigFile filePath = do 
   eitherJson <- loadJson filePath
   pure $ join (fromJson <$> eitherJson)
-  -- join <$> ((map fromJson) <$> loadJson configFilePath) 
+  -- Control.Bind.join <$> ((map fromJson) <$> loadJson configFilePath) 
 
 tryLoadImageAff :: FilePath -> Aff CanvasImageSource
 tryLoadImageAff path = makeAff wrappedFn
@@ -77,3 +80,9 @@ getHtmlElement :: String -> Effect (Maybe HTMLElement)
 getHtmlElement nameId = do 
   foreignElem <- _getHtmlElenentById nameId
   pure $ toMaybe foreignElem
+
+loadAudioFiles :: Array FilePath -> Effect (Array HTMLMediaElement)
+loadAudioFiles files = traverse loadAudioFile files
+
+loadAudioFile :: FilePath -> Effect HTMLMediaElement
+loadAudioFile file = HTMLAudio.toHTMLMediaElement <$> HTMLAudio.create' file
