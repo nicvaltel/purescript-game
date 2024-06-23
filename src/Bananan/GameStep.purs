@@ -13,12 +13,14 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameActor, GameState, getGameRec, getGameRec', modgs)
+import Bananan.WSClient (modelDiff, modelDiffToJson)
+import Data.Argonaut.Core (stringify)
 import Data.Array (fromFoldable)
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
 import Data.Map as M
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, maybe)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
 import Engine.Model (Actor(..), getModelRec, getRandom, mkNewNameId, modmod)
@@ -280,6 +282,7 @@ loseCondition loseHeightLevel ballDiameter boxHeight  balls =
 -- gameStep :: Config -> Time -> AppMod GameConfig GameState Unit
 gameStep :: GameConfig -> GameStepFunc ActorData GameState
 gameStep gameConf conf dt = do
+  model0 <- get
   m <- getModelRec <$> get
   game <- getGameRec <$> get
 
@@ -308,5 +311,6 @@ gameStep gameConf conf dt = do
         addRandomBalls gameConf nBalls game.canvasWidth 0.0
         modgs $ \gs -> gs{lastRowsAdded = {time : m.sys.lastUpdateTime, numberOfBalls : nBalls}}
 
-      let wsOut = m.io.wsIn --[]
+      mbWsOutJson <- (modelDiffToJson <<< modelDiff model0) <$> get
+      let wsOut = maybe [] (\json -> [stringify json]) mbWsOutJson
       modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }

@@ -103,6 +103,7 @@ type ActorRec ac = {
 }
 
 newtype Actor ac = Actor (ActorRec ac)
+
 actorMock :: Actor Unit 
 actorMock = Actor
         {   nameId: mkUniqueNameId "actor_mock",

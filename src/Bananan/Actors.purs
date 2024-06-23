@@ -14,6 +14,8 @@ module Bananan.Actors
   where
 
 import Bananan.Reexport
+
+import Data.Argonaut.Encode (class EncodeJson, encodeJson)
 import Data.String (toLower)
 
 type Gun = {
@@ -64,17 +66,15 @@ instance decodeJsonBallColor :: DecodeJson BallColor where
       ballColorFromString :: String -> Maybe BallColor
       ballColorFromString str = case str of
         "Red" -> Just Red
+        "Green" -> Just Green
         "Blue" -> Just Blue
         "Yellow" -> Just Yellow
+        "Purple" -> Just Purple
         _ -> Nothing
 
+instance encodeJsonBallColor :: EncodeJson BallColor where
+  encodeJson bc = encodeJson $ show bc  
 
--- selectBallQueueImageSource :: BallColor -> FilePath
--- selectBallQueueImageSource Red = "../images/EggRed.png"
--- selectBallQueueImageSource Green = "../images/EggGreen.png"
--- selectBallQueueImageSource Blue = "../images/EggBlue.png"
--- selectBallQueueImageSource Yellow = "../images/EggYellow.png"
--- selectBallQueueImageSource Purple = "../images/EggPurple.png"
 
 type Ball = {
    color :: BallColor
@@ -99,6 +99,11 @@ data ActorData =
   | ActorBall Ball
   | ActorDragon Dragon
   | ActorBallQueue BallQueueActor 
+
+-- derive instance eqActorData :: Eq ActorData
+
+-- instance encodeJsonActorData :: EncodeJson ActorData where
+--   encodeJson actorData = encodeJson (show actorData)
 
 instance showActorData :: Show ActorData where
   show (ActorBall ball)  = "ActorBall" <> show ball
