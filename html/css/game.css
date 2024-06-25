@@ -83,7 +83,7 @@
     background: url(../images/EggPurple.png);
 }
 
-#ball_queue_actor {
+#ball_queue {
     position: absolute;
     scale: 100%;
     width: 76px;

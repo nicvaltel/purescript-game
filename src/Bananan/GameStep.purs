@@ -7,7 +7,7 @@ module Bananan.GameStep
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), BallQueueActor, Dragon, colorFromRandomInt, cssClassOfColor)
+import Bananan.Actors (ActorData(..), BallQueue, Dragon, colorFromRandomInt, cssClassOfColor)
 import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
@@ -23,7 +23,7 @@ import Data.Map as M
 import Data.Maybe (isNothing, maybe)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getModelRec, getRandom, mkNewNameId, modmod)
+import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
 
@@ -241,9 +241,8 @@ fireBall gameConf ballDiameter = do
 
   nameId <- mkNewNameId
   randN :: Int <- getRandom
-  let color = colorFromRandomInt randN
-  let newQueueBall = { color : color }
-  let newBallQAct = Actor (unwrap game.actors.ballQueueActor){imageSource = selectBallQueueImageSource gameConf color}
+  let nextRandcolor = colorFromRandomInt randN
+  let flyingBallColor = unsafePartial $ let (ActorBallQueue nextBall) = getActorData game.actors.ballQueue in nextBall.nextBallColor
   let newBallActor = Actor
         {
           nameId : nameId
@@ -254,23 +253,27 @@ fireBall gameConf ballDiameter = do
         , z : 1
         , visible : true
         , angle : 0.0
-        , cssClass : cssClassOfColor game.ballQueue.color
-        , imageSource : selectBallQueueImageSource gameConf game.ballQueue.color
+        , cssClass : cssClassOfColor flyingBallColor
+        , imageSource : selectBallQueueImageSource gameConf flyingBallColor
         , htmlElement : Nothing
-        , data : ActorBall game.ballQueue
+        , data : ActorBall {color : flyingBallColor}
         }
   modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
   modmod $ \mr -> mr {audioElemsToPlay = (getGameRec' mr).audio.shoot : mr.audioElemsToPlay}
-  modgs $ \gs -> gs { actors { flyingBall = Just {flyball : newBallActor, vx, vy }
-                             , ballQueueActor = newBallQAct}
-                    , ballQueue = newQueueBall
+  modgs $ \gs -> gs { actors { flyingBall = Just {flyball : newBallActor, vx, vy },
+                               ballQueue = Actor (getActorRec gs.actors.ballQueue) 
+                                  { cssClass = cssClassOfColor nextRandcolor
+                                  , imageSource = selectBallQueueImageSource gameConf nextRandcolor
+                                  , data = ActorBallQueue {nextBallColor : nextRandcolor , animation : ""}
+                                  } 
+                              }
                     , shotsCounter = gs.shotsCounter + 1 }
 
 
 moveDragon :: Time -> Dragon -> GameActor -> GameActor
 moveDragon dt dragon actor = actor
 
-moveBallQueue :: Time -> BallQueueActor -> GameActor -> GameActor
+moveBallQueue :: Time -> BallQueue -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
 

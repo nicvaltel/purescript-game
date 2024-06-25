@@ -30,7 +30,7 @@ type GameConfig
         {
           gun :: {data :: ActorData | ActorCommonConfig }
         , dragon :: {data :: ActorData | ActorCommonConfig }
-        , ballQueueActor :: {data :: ActorData | ActorCommonConfig }
+        , ballQueue :: {data :: ActorData | ActorCommonConfig }
         }
     , colorImageSources :: Array {color :: String, imageSource :: FilePath}
     , audio :: { shoot :: FilePath  }

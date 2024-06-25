@@ -2,7 +2,7 @@ module Bananan.Run(run) where
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), ballQueueActorMock, colorFromRandomInt, dragonMock)
+import Bananan.Actors (ActorData(..), ballQueueMock, colorFromRandomInt, dragonMock)
 import Bananan.GameConfig (GameConfig, gameConfigFromJson, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameState(..), getGameRec)
 import Bananan.GameStep (addRandomBalls, gameStep)
@@ -41,7 +41,7 @@ initialGameState conf gameConf = do
   audioShoot <- loadAudioFile gameConf.audio.shoot
   let gunConf = gameConf.actors.gun
   mbElemGun <- getHtmlElement gunConf.nameId
-  let ballQ = gameConf.actors.ballQueueActor
+  let ballQ = gameConf.actors.ballQueue
   mbElemBallQ <- getHtmlElement ballQ.nameId
   let gunConfData = case gameConf.actors.gun.data of
         ActorGun d -> d
@@ -80,13 +80,12 @@ initialGameState conf gameConf = do
         ,  htmlElement : mbElemBallQ
         ,  cssClass : ballQ.cssClass
         ,  imageSource: selectBallQueueImageSource gameConf randColor
-        ,  data: ActorBallQueue ballQueueActorMock
+        ,  data: ActorBallQueue ballQueueMock{nextBallColor = randColor}
         }
   
   pure $ GameState 
     {
       score: 0
-    , ballQueue : { color : randColor } 
     , canvasWidth : rect.width
     , canvasHeight : rect.height
     , ballSpeed : gameConf.ballSpeed
@@ -98,7 +97,7 @@ initialGameState conf gameConf = do
           , flyingBall : Nothing
           , gun : gun
           , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock} -- TODO fill with config
-          , ballQueueActor : ballQueue
+          , ballQueue : ballQueue
           }
     , graphBall : List.Nil
     , audio : { shoot : audioShoot } 

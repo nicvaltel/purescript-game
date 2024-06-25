@@ -5,6 +5,7 @@ module Engine.Render.Render
 
 import Engine.Reexport
 
+import Bananan.GameModel (getGameRec)
 import Data.Foldable (for_)
 import Data.List (List)
 import Engine.Config (Config)

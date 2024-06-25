@@ -2,10 +2,10 @@ module Bananan.Actors
   ( ActorData(..)
   , Ball(..)
   , BallColor(..)
-  , BallQueueActor(..)
+  , BallQueue(..)
   , Dragon(..)
   , Gun(..)
-  , ballQueueActorMock
+  , ballQueueMock
   , colorFromRandomInt
   , cssClassOfColor
   , dragonMock
@@ -88,17 +88,18 @@ type Dragon = {
 dragonMock :: Dragon
 dragonMock = {animation : ""}
 
-type BallQueueActor = {
-  animation :: String
-}
+type BallQueue = 
+  { nextBallColor :: BallColor
+  , animation :: String
+  }
 
-ballQueueActorMock = {animation : ""}
+ballQueueMock = {nextBallColor : Red, animation : ""}
 
 data ActorData = 
     ActorGun Gun
   | ActorBall Ball
   | ActorDragon Dragon
-  | ActorBallQueue BallQueueActor 
+  | ActorBallQueue BallQueue 
 
 -- derive instance eqActorData :: Eq ActorData
 
@@ -119,5 +120,5 @@ instance decodeJsonActorData :: DecodeJson ActorData where
       "ball" -> ActorBall <$> (obj .: "data") -- This pattern matches the "type" field to determine which constructor to use (ActorBall or ActorGun).
       "gun"  -> ActorGun <$> (obj .: "data")
       "dragon"  -> ActorDragon <$> (obj .: "data")
-      "ball_queue_actor"  -> ActorBallQueue <$> (obj .: "data")
+      "ball_queue"  -> ActorBallQueue <$> (obj .: "data")
       _      -> Left $ TypeMismatch $ "Unknown actor type: " <> actorType

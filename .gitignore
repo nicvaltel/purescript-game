@@ -10,6 +10,7 @@
 /.spago
 
 _back/
+backend/
 assets/
 /html/scripts/*
 /changes.md

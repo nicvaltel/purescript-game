@@ -23,7 +23,6 @@ import Web.HTML.HTMLMediaElement (HTMLMediaElement)
 
 type GameStateRec = {
       score :: Int
-    , ballQueue :: Ball
     , canvasWidth :: Number
     , canvasHeight :: Number
     , ballSpeed :: Number
@@ -35,7 +34,7 @@ type GameStateRec = {
         , flyingBall :: Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number}
         , gun :: Actor ActorData
         , dragon :: Actor ActorData
-        , ballQueueActor :: Actor ActorData
+        , ballQueue :: Actor ActorData
         }
     , graphBall :: GraphBall
     , audio :: { shoot :: HTMLMediaElement }
@@ -70,7 +69,7 @@ mkActorData _ actorData = actorData
 instance actorContainerGameState :: ActorContainer ActorData GameState where
   getAllActors model = 
     let as = (getGameRec model).actors  
-        allActors = as.ballQueueActor : as.dragon : as.gun : (M.values as.balls)
+        allActors = as.ballQueue : as.dragon : as.gun : (M.values as.balls)
      in case as.flyingBall of
       Just{flyball} -> flyball : allActors
       _ -> allActors
@@ -96,13 +95,13 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
       updateActorDragon = do
         modgs $ \gs -> gs {actors {dragon = f gs.actors.dragon }}
       undeteActorBallQueue = do
-        modgs $ \gs -> gs {actors {ballQueueActor = f gs.actors.ballQueueActor }}
+        modgs $ \gs -> gs {actors {ballQueue = f gs.actors.ballQueue }}
       updateActorAnyType g =
         if checkActorNameId nameId g.actors.gun
           then updateActorGun 
           else if checkActorNameId nameId g.actors.dragon 
             then updateActorDragon 
-            else if checkActorNameId nameId g.actors.ballQueueActor
+            else if checkActorNameId nameId g.actors.ballQueue
               then undeteActorBallQueue 
               else updateActorBall 
 
@@ -121,12 +120,12 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
                               Just {flyball} | (getActorRec flyball).nameId == nameId -> Just flyball
                               _ -> M.lookup nameId ga.balls
       lookupDragon ga    = if checkActorNameId nameId ga.dragon then Just ga.dragon else Nothing
-      lookupBallQueue ga = if checkActorNameId nameId ga.ballQueueActor then Just ga.ballQueueActor else Nothing 
+      lookupBallQueue ga = if checkActorNameId nameId ga.ballQueue then Just ga.ballQueue else Nothing 
       lookupActorAnyType ga = 
         if checkActorNameId nameId ga.gun
               then Just ga.gun
               else if checkActorNameId nameId ga.dragon 
                 then Just ga.dragon
-                else if checkActorNameId nameId ga.ballQueueActor
-                  then Just ga.ballQueueActor
+                else if checkActorNameId nameId ga.ballQueue
+                  then Just ga.ballQueue
                   else M.lookup nameId ga.balls

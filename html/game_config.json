@@ -44,21 +44,22 @@
             }
           }
         }
-    , "ballQueueActor" :
+    , "ballQueue" :
         {
-          "nameId": "ball_queue_actor",
+          "nameId": "ball_queue",
           "x": 20.0,
           "y": 810.0,
           "width"  : 76.0,
           "height" : 76.0,
           "z": 1,
-          "cssClass" : "ball_queue_actor",
+          "cssClass" : "ball_queue",
           "imageSource": "../images/EggPurple.png",
           "data": {
-            "type": "ball_queue_actor",
-            "data": {
-              "animation": "ball_queue_actor.gif"
-            }
+            "type": "ball_queue",
+            "data": 
+              { "nextBallColor": "Red"
+              , "animation": "ball_queue.gif"
+              }
           }
         }
     }
