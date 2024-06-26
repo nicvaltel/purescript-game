@@ -71,4 +71,5 @@
       {"color" : "Purple", "imageSource" : "../images/EggPurple.png"  }
   ]
   , "audio" : { "shoot" : "../audio/alienshoot2.ogg" }
+  , "boards" : {"boardElementId" : "board", "remoteBoardElementId" : "remote_board" }
 } 

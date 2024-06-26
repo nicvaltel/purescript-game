@@ -14,11 +14,11 @@ import Data.List as List
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
-import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, initialModelZeroTime, mkUniqueNameId)
+import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, getNameId, initialModelZeroTime, mkUniqueNameId)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (getHtmlElement, loadAudioFile, loadJson, parseConfigFile)
 import Engine.Utils.Html (getElementById)
-import Web.DOM.Element (getBoundingClientRect)
+import Web.DOM.Element (DOMRect, getBoundingClientRect)
 
 configFilePath :: FilePath
 
@@ -43,6 +43,12 @@ initialGameState conf gameConf = do
   mbElemGun <- getHtmlElement gunConf.nameId
   let ballQ = gameConf.actors.ballQueue
   mbElemBallQ <- getHtmlElement ballQ.nameId
+
+  boardRect <- getBoardFromElemet (getNameId gameConf.boards.boardElementId)
+  let board = {top: boardRect.top, left: boardRect.left, width: boardRect.width, height : boardRect.height}
+  remoteBoardRect <- getBoardFromElemet (getNameId gameConf.boards.boardElementId)
+  let remoteBoard = {top: remoteBoardRect.top, left: remoteBoardRect.left, width: remoteBoardRect.width, height : remoteBoardRect.height}
+
   let gunConfData = case gameConf.actors.gun.data of
         ActorGun d -> d
         _ -> error "gameConfig.actors.gun.data is not ActorGun"
@@ -101,7 +107,19 @@ initialGameState conf gameConf = do
           }
     , graphBall : List.Nil
     , audio : { shoot : audioShoot } 
+    , boards : 
+      { board : board
+      , remoteBoard : remoteBoard
+      }
     }
+  where
+    getBoardFromElemet :: String -> Effect DOMRect
+    getBoardFromElemet elemId = do
+      mbElemBoard <- getElementById elemId
+      case mbElemBoard of
+        Just elem -> getBoundingClientRect elem
+        Nothing -> error $ "Element not found. elementId = " <> elemId
+
 
 initialBallRows :: GameConfig -> AppGame Unit
 initialBallRows gameConf = do
@@ -109,7 +127,7 @@ initialBallRows gameConf = do
   let deltaH = gameConf.ballDiameter * 0.866 -- 0.866 = sqrt(3)/2
   for_ (range 0 (gameConf.initialRows - 1)) $ \r -> do
     let n = if even r then gameConf.ballsInSmallRow + 1 else gameConf.ballsInSmallRow
-    addRandomBalls gameConf n game.canvasWidth (toNumber r * deltaH)
+    addRandomBalls gameConf n game.boards.board.width (toNumber r * deltaH)
 
 run :: Effect Unit
 run = do

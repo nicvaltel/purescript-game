@@ -64,7 +64,7 @@ addRandomBalls gameConf n width y = do
     game <- getGameRec <$> get
     let neighbours = findNearesBalls newBallActor (M.values game.actors.balls)
     let newGraphBall = addNodeBall newBallActor neighbours game.graphBall
-    modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
+    modmod $ \mr -> mr{ act { recentlyAddedActors = {nameId : nameId, parentElemId : gameConf.boards.boardElementId , clue : "ActorBall"} : mr.act.recentlyAddedActors }}
     modgs $ \gs -> gs{graphBall = newGraphBall}
     modgs $ \gs -> gs{ actors{balls = M.insert nameId newBallActor gs.actors.balls}}
 
@@ -258,7 +258,7 @@ fireBall gameConf ballDiameter = do
         , htmlElement : Nothing
         , data : ActorBall {color : flyingBallColor}
         }
-  modmod $ \mr -> mr{ act { recentlyAddedActors = (Tuple nameId "ActorBall") : mr.act.recentlyAddedActors }}
+  modmod $ \mr -> mr{ act { recentlyAddedActors = {nameId : nameId, parentElemId : gameConf.boards.boardElementId , clue : "ActorBall"} : mr.act.recentlyAddedActors }}
   modmod $ \mr -> mr {audioElemsToPlay = (getGameRec' mr).audio.shoot : mr.audioElemsToPlay}
   modgs $ \gs -> gs { actors { flyingBall = Just {flyball : newBallActor, vx, vy },
                                ballQueue = Actor (getActorRec gs.actors.ballQueue) 
@@ -292,12 +292,12 @@ gameStep gameConf conf dt = do
   if not game.gameIsRunning 
     then pure unit
     else do
-      moveFlyingBall dt gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.canvasWidth gameConf.numberOfBallsInChainToDelete
+      moveFlyingBall dt gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.boards.board.width gameConf.numberOfBallsInChainToDelete
 
       let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       let prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey
       let updatedGun = moveGun dt controlKeys game.actors.gun
-      let isRunning = not (loseCondition gameConf.loseHeightLevel gameConf.ballDiameter game.canvasHeight (M.values game.actors.balls))
+      let isRunning = not (loseCondition gameConf.loseHeightLevel gameConf.ballDiameter game.boards.board.height (M.values game.actors.balls))
       
       modgs $ \gs -> gs { actors {gun = updatedGun }, gameIsRunning = isRunning}
 
@@ -311,7 +311,7 @@ gameStep gameConf conf dt = do
         let deltaH = gameConf.ballDiameter * 0.866 -- 0.866 = sqrt(3)/2
         let nBalls = if game.lastRowsAdded.numberOfBalls == gameConf.ballsInSmallRow then gameConf.ballsInSmallRow + 1 else gameConf.ballsInSmallRow
         modgs $ \gs -> gs{actors {balls = map (\(Actor a) -> Actor a{y = a.y + deltaH}) gs.actors.balls}}
-        addRandomBalls gameConf nBalls game.canvasWidth 0.0
+        addRandomBalls gameConf nBalls game.boards.board.width 0.0
         modgs $ \gs -> gs{lastRowsAdded = {time : m.sys.lastUpdateTime, numberOfBalls : nBalls}}
 
       mbWsOutJson <- (modelDiffToJson <<< modelDiff model0) <$> get

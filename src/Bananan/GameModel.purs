@@ -1,5 +1,6 @@
 module Bananan.GameModel
   ( AppGame
+  , Board
   , GameActor
   , GameModel(..)
   , GameState(..)
@@ -13,13 +14,20 @@ module Bananan.GameModel
 
 import Bananan.Reexport hiding ((:))
 
-import Bananan.Actors (ActorData, Ball)
+import Bananan.Actors (ActorData)
 import Bananan.BallsGraph (GraphBall)
 import Data.List ((:))
 import Data.Map as M
 import Engine.Model (class ActorContainer, Actor, AppMod, Model, NameId, ModelRec, checkActorNameId, getActorRec, getModelRec, modmod)
 import Record as Record
 import Web.HTML.HTMLMediaElement (HTMLMediaElement)
+
+type Board = 
+  { top    :: Number
+  , left   :: Number
+  , width  :: Number
+  , height :: Number 
+  }
 
 type GameStateRec = {
       score :: Int
@@ -38,6 +46,7 @@ type GameStateRec = {
         }
     , graphBall :: GraphBall
     , audio :: { shoot :: HTMLMediaElement }
+    , boards :: {board :: Board, remoteBoard :: Board}
   }
 
 newtype GameState = GameState GameStateRec

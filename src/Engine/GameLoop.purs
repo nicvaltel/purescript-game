@@ -8,6 +8,7 @@ import Engine.Reexport
 import Concurrent.Queue as Q
 import Control.Monad.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
+import Data.Maybe (maybe)
 import Data.Traversable (for_, sequence)
 import Engine.Config (Config)
 import Engine.Model (class ActorContainer, Actor(..), AppMod, AppModAff, AppModEffect, NameId, appModEffectToAppModAff, appModToAppModAff, appModToAppModEffect, getModelRec, getNameId, lookupActor, modmodAff, modmodEffect, updateActor)
@@ -67,7 +68,7 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   -- GAME STEP
   appModToAppModAff $ gameStep conf deltaTime
 
-  appModEffectToAppModAff $ updateRecentlyAddedActors canvasElem
+  appModEffectToAppModAff $ updateRecentlyAddedActors
   appModEffectToAppModAff $ removeRecentlyDeletedActors
   modmodAff $ \m -> m { sys{ lastUpdateTime = currentTime }}
 
@@ -85,16 +86,18 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   pure unit
 
   where
-    updateRecentlyAddedActors :: HTMLElement -> AppModEffect ac gm Unit
-    updateRecentlyAddedActors canvasElem = do
+    updateRecentlyAddedActors :: AppModEffect ac gm Unit
+    updateRecentlyAddedActors = do
       model <- get
       let m = getModelRec model
-      newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \(Tuple nameId actorTypeStr) -> do
-        maybeElem <- getHtmlElement (getNameId nameId)
+      newActorsArr :: Array (Tuple NameId (Maybe HTMLElement)) <- liftEffect $ for m.act.recentlyAddedActors $ \addedActor -> do
+        maybeParentElem <- getHtmlElement (getNameId addedActor.parentElemId)
+        let parentElem = maybe canvasElem identity maybeParentElem
+        maybeElem <- getHtmlElement (getNameId addedActor.nameId)
         elem <- case maybeElem of
           Just el -> pure $ Just el
-          Nothing -> sequence (createNewHtmlElem canvasElem <$> (lookupActor nameId (Just actorTypeStr) model :: Maybe (Actor ac))) 
-        pure (Tuple nameId elem)
+          Nothing -> sequence (createNewHtmlElem parentElem <$> (lookupActor addedActor.nameId (Just addedActor.clue) model :: Maybe (Actor ac))) 
+        pure (Tuple addedActor.nameId elem)
       appModToAppModEffect $ for_ newActorsArr $ \(Tuple nameId elem) -> 
         let update = updateActor :: NameId -> Maybe String -> (Actor ac -> Actor ac) -> AppMod ac gm Unit
         in update nameId Nothing (\(Actor a) -> Actor a{htmlElement = elem})
@@ -102,8 +105,8 @@ mainLoop conf socket queueWS gameStep canvasElem = do
       pure unit
 
 createNewHtmlElem :: forall ac. HTMLElement -> Actor ac -> Effect HTMLElement
-createNewHtmlElem canvasElem (Actor a) = _createImageElement {
-  canvasElem : canvasElem, 
+createNewHtmlElem parentElem (Actor a) = _createImageElement {
+  canvasElem : parentElem, 
   x : a.x, 
   y : a.y, 
   imageSource : a.imageSource, 

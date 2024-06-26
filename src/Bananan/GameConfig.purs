@@ -3,6 +3,7 @@ module Bananan.GameConfig where
 import Engine.Reexport
 
 import Bananan.Actors (ActorData, BallColor)
+import Engine.Model (NameId)
 
 type ActorCommonConfig = 
     ( nameId :: String
@@ -34,6 +35,7 @@ type GameConfig
         }
     , colorImageSources :: Array {color :: String, imageSource :: FilePath}
     , audio :: { shoot :: FilePath  }
+    , boards :: {boardElementId :: NameId, remoteBoardElementId :: NameId }
     }
 
 

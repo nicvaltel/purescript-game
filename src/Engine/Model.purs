@@ -1,6 +1,7 @@
 module Engine.Model
   ( Actor(..)
   , ActorRec
+  , AddedActor
   , AppMod
   , AppModAff
   , AppModEffect
@@ -136,11 +137,17 @@ instance showActor :: Show ac => Show (Actor ac) where
     R.modify (Proxy :: Proxy "htmlElement") (\el -> if isJust el then "Just HtmlElem" else "Nothing" ) actor
 
 
+type AddedActor = 
+  { nameId :: NameId
+  , parentElemId :: NameId
+  , clue :: String -- String is a clue to ActorContainer functions, where to find this actor
+  }
+
 type ModelRec ac gm =
     { 
     game :: gm
     , act :: {
-      recentlyAddedActors :: Array (Tuple NameId String) -- String is a clue to ActorContainer functions, where to find this actor
+      recentlyAddedActors :: Array AddedActor
     , recentlyDeletedActors :: Array NameId
     }
     , io :: {
