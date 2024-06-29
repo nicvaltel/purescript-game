@@ -6,7 +6,7 @@
   "canvasElementId": "canvas",
   "debugConfig": true,
   "debugModel": false,
-  "debugWebsocket": true,
+  "debugWebsocket": false,
   "debugUserInput": false,
   "maxDeltaTime" : 100.0
 }

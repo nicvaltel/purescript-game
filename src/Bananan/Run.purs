@@ -14,7 +14,7 @@ import Data.List as List
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
-import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, getNameId, initialModelZeroTime, mkUniqueNameId)
+import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, getNameId, initialModelZeroTime, mkUniqueNameId, modActor)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (getHtmlElement, loadAudioFile, loadJson, parseConfigFile)
 import Engine.Utils.Html (getElementById)
@@ -39,10 +39,16 @@ initialGameState conf gameConf = do
     Nothing -> error $ "Canvas not found. canvasId = " <> conf.canvasElementId
 
   audioShoot <- loadAudioFile gameConf.audio.shoot
+
   let gunConf = gameConf.actors.gun
   mbElemGun <- getHtmlElement gunConf.nameId
   let ballQ = gameConf.actors.ballQueue
   mbElemBallQ <- getHtmlElement ballQ.nameId
+
+  let gunConfRemote = gameConf.actorsRemote.gun
+  mbElemGunRemote <- getHtmlElement gunConfRemote.nameId
+  let ballQRemote = gameConf.actorsRemote.ballQueue
+  mbElemBallQRemote <- getHtmlElement ballQRemote.nameId
 
   boardRect <- getBoardFromElemet (getNameId gameConf.boards.boardElementId)
   let board = {top: boardRect.top, left: boardRect.left, width: boardRect.width, height : boardRect.height}
@@ -88,6 +94,17 @@ initialGameState conf gameConf = do
         ,  imageSource: selectBallQueueImageSource gameConf randColor
         ,  data: ActorBallQueue ballQueueMock{nextBallColor = randColor}
         }
+  let actorsMock = 
+          { balls : M.empty
+          , flyingBall : Nothing
+          , gun : gun
+          , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock} -- TODO fill with config
+          , ballQueue : ballQueue
+          }
+  let remoteAcorsMock = actorsMock
+          { gun = modActor gun $ \a -> a{htmlElement = mbElemGunRemote}
+          , ballQueue = modActor  ballQueue $ \a -> a{htmlElement = mbElemBallQRemote}
+          }
   
   pure $ GameState 
     {
@@ -98,13 +115,8 @@ initialGameState conf gameConf = do
     , gameIsRunning : true
     , shotsCounter : 0
     , lastRowsAdded : { time : currentTime, numberOfBalls : if odd gameConf.initialRows then 8 else 7 }
-    , actors : 
-          { balls : M.empty
-          , flyingBall : Nothing
-          , gun : gun
-          , dragon : let (Actor a) = actorMock in Actor a{data = ActorDragon dragonMock} -- TODO fill with config
-          , ballQueue : ballQueue
-          }
+    , actors : actorsMock
+    , remoteActors : remoteAcorsMock
     , graphBall : List.Nil
     , audio : { shoot : audioShoot } 
     , boards : 

@@ -63,6 +63,62 @@
           }
         }
     }
+    , "actorsRemote": 
+      { "gun" :
+          { "nameId": "remote_gun",
+            "x": 287.5,
+            "y": 810.0,
+            "width" : 25.0,
+            "height" : 74.0,
+            "z": 1,
+            "cssClass" : "remote_gun",
+            "imageSource": "../images/gun.png",
+            "data": {
+              "type": "gun",
+              "data": {
+                "angleSpeed": 0.0,
+                "maxAngleSpeed": 0.1,
+                "maxLeftAngle": -80.0,
+                "maxRightAngle": 80.0
+              }
+            }
+          }
+      , "dragon" : 
+          {
+            "nameId": "remote_dragon",
+            "x": -500.0,
+            "y": 57.0,
+            "width" : 0.0,
+            "height" : 0.0,
+            "z": 1,
+            "cssClass" : "remote_dragon",
+            "imageSource": "../images/gun.png",
+            "data": {
+              "type": "dragon",
+              "data": {
+                "animation": "gragon.gif"
+              }
+            }
+          }
+      , "ballQueue" :
+          {
+            "nameId": "remote_ball_queue",
+            "x": 20.0,
+            "y": 810.0,
+            "width"  : 76.0,
+            "height" : 76.0,
+            "z": 1,
+            "cssClass" : "remote_ball_queue",
+            "imageSource": "../images/EggPurple.png",
+            "data": {
+              "type": "ball_queue",
+              "data": 
+                { "nextBallColor": "Red"
+                , "animation": "ball_queue.gif"
+                }
+            }
+          }
+      }
   , "colorImageSources" : [
       {"color" : "Red", "imageSource" : "../images/EggRed.png"  },
       {"color" : "Green", "imageSource" : "../images/EggGreen.png"  },

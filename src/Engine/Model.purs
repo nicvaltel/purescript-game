@@ -24,6 +24,7 @@ module Engine.Model
   , lookupActor
   , mkNewNameId
   , mkUniqueNameId
+  , modActor
   , modmod
   , modmodAff
   , modmodEffect
@@ -120,6 +121,9 @@ actorMock = Actor
             imageSource: "",
             data: unit
             }
+
+modActor :: forall ac.  Actor ac -> (ActorRec ac -> ActorRec ac) -> Actor ac
+modActor (Actor a) f = Actor (f a)
 
 getActorData :: forall ac. Actor ac -> ac
 getActorData (Actor a) = a.data

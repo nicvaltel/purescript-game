@@ -16,7 +16,8 @@ import Bananan.Reexport hiding ((:))
 
 import Bananan.Actors (ActorData)
 import Bananan.BallsGraph (GraphBall)
-import Data.List ((:))
+-- import Control.Monad.List.Trans (catMaybes)
+import Data.List (List(..), (:),catMaybes)
 import Data.Map as M
 import Engine.Model (class ActorContainer, Actor, AppMod, Model, NameId, ModelRec, checkActorNameId, getActorRec, getModelRec, modmod)
 import Record as Record
@@ -39,6 +40,12 @@ type GameStateRec = {
     , lastRowsAdded :: { time :: Instant, numberOfBalls :: Int}
     , actors :: 
         { balls :: M.Map NameId (Actor ActorData)
+        , flyingBall :: Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number}
+        , gun :: Actor ActorData
+        , dragon :: Actor ActorData
+        , ballQueue :: Actor ActorData
+        }
+    , remoteActors :: { balls :: M.Map NameId (Actor ActorData)
         , flyingBall :: Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number}
         , gun :: Actor ActorData
         , dragon :: Actor ActorData
@@ -75,13 +82,21 @@ type AppGame a = AppMod ActorData GameState a
 mkActorData :: GameState -> ActorData -> ActorData
 mkActorData _ actorData = actorData
 
+
+-- TODO implement for remote actors
 instance actorContainerGameState :: ActorContainer ActorData GameState where
   getAllActors model = 
-    let as = (getGameRec model).actors  
-        allActors = as.ballQueue : as.dragon : as.gun : (M.values as.balls)
-     in case as.flyingBall of
-      Just{flyball} -> flyball : allActors
-      _ -> allActors
+    let as = (getGameRec model).actors
+        ras = (getGameRec model).remoteActors
+        staticActors = 
+          as.ballQueue : 
+          as.dragon : 
+          as.gun : 
+          ras.ballQueue : 
+          ras.dragon : 
+          ras.gun : 
+          (M.values as.balls <> M.values ras.balls)
+     in (map (\{flyball} -> flyball) $ catMaybes $ as.flyingBall : ras.flyingBall : Nil) <> staticActors
 
   updateActor nameId mbTypeName f = do
     g <- getGameRec <$> get

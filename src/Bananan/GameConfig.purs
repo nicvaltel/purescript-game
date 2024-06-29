@@ -33,6 +33,12 @@ type GameConfig
         , dragon :: {data :: ActorData | ActorCommonConfig }
         , ballQueue :: {data :: ActorData | ActorCommonConfig }
         }
+    , actorsRemote :: 
+        {
+          gun :: {data :: ActorData | ActorCommonConfig }
+        , dragon :: {data :: ActorData | ActorCommonConfig }
+        , ballQueue :: {data :: ActorData | ActorCommonConfig }
+        }
     , colorImageSources :: Array {color :: String, imageSource :: FilePath}
     , audio :: { shoot :: FilePath  }
     , boards :: {boardElementId :: NameId, remoteBoardElementId :: NameId }

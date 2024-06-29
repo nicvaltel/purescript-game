@@ -62,6 +62,9 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   when conf.debugWebsocket $ when (not $ null messages) $ liftEffect do
     log "MESSAGES IN:"
     logShow messages
+    -- let (wsMsgsIn :: Array (Either String Json)) = map jsonParser messages
+    -- logShow $ map (fromRight undefined <<< fromRight undefined) (map (map decodeJson) wsMsgsIn :: Array (Either String (Either JsonDecodeError WSMessage)))
+
   when conf.debugUserInput $ liftEffect do
     log "INPUTS:"
     log $ show $ show userInput

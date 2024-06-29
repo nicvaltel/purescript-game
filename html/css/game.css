@@ -4,7 +4,6 @@
     left: 0px;
     width: 1920px;
     height: 1080px;
-    /* background: url(../images/clouds.png); */
     background-size: cover;
     overflow: hidden;
     -moz-transform-origin: 0 0;
@@ -48,7 +47,6 @@
     left: -512px;
     transform: rotate(45deg);
     transform-origin: bottom center; /* Scale from the bottom center */
-    /* background: url(../images/gun.png); */
 }
 
 #dragon {
@@ -58,57 +56,6 @@
     height: 128px;
     left: -512px;
     transform-origin: top left; /* Scale from the top left corner */
-    /* background: url(../images/gun.png); */
-}
-
-.red_ball {
-    position: absolute;
-    scale: 100%;
-    width: 76px;
-    height: 76px;
-    left: -512px;
-    transform-origin: top left;
-    /* background: url(../images/EggRed.png); */
-}
-
-.green_ball {
-    position: absolute;
-    scale: 100%;
-    width: 76px;
-    height: 76px;
-    left: -512px;
-    transform-origin: top left;
-    /* background: url(../images/EggGreen.png); */
-}
-
-.blue_ball {
-    position: absolute;
-    scale: 100%;
-    width: 76px;
-    height: 76px;
-    left: -512px;
-    transform-origin: top left;
-    /* background: url(../images/EggBlue.png); */
-}
-
-.yellow_ball {
-    position: absolute;
-    scale: 100%;
-    width: 76px;
-    height: 76px;
-    left: -512px;
-    transform-origin: top left;
-    /* background: url(../images/EggYellow.png); */
-}
-
-.purple_ball {
-    position: absolute;
-    scale: 100%;
-    width: 76px;
-    height: 76px;
-    left: -512px;
-    transform-origin: top left;
-    /* background: url(../images/EggPurple.png); */
 }
 
 #ball_queue {
@@ -118,5 +65,78 @@
     height: 76px;
     left: -512px;
     transform-origin: top left; /* Scale from the top left corner */
-    /* background: url(../images/EggPurple.png); */
 }
+
+#remote_gun {
+    position: absolute;
+    scale: 100%;
+    width: 25px;
+    height: 74px;
+    left: -512px;
+    transform: rotate(45deg);
+    transform-origin: bottom center; /* Scale from the bottom center */
+}
+
+#remote_dragon {
+    position: absolute;
+    scale: 25%;
+    width: 128px;
+    height: 128px;
+    left: -512px;
+    transform-origin: top left; /* Scale from the top left corner */
+}
+
+#remote_ball_queue {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left; /* Scale from the top left corner */
+}
+
+.red_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+}
+
+.green_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+}
+
+.blue_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+}
+
+.yellow_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+}
+
+.purple_ball {
+    position: absolute;
+    scale: 100%;
+    width: 76px;
+    height: 76px;
+    left: -512px;
+    transform-origin: top left;
+}
+
