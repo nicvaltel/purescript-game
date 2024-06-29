@@ -5,9 +5,12 @@ module Engine.GameLoop
 
 import Engine.Reexport
 
+import Bananan.WSClient (WSMessage)
 import Concurrent.Queue as Q
 import Control.Monad.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
+import Data.Argonaut.Parser (jsonParser)
+import Data.Either (fromRight)
 import Data.Maybe (maybe)
 import Data.Traversable (for_, sequence)
 import Engine.Config (Config)
@@ -78,6 +81,8 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   when conf.debugWebsocket $ when (not $ null (getModelRec modelSendOut).io.wsOut) $ liftEffect do
     log "MESSAGES OUT:"
     logShow (getModelRec modelSendOut).io.wsOut
+    -- let (wsMsgs :: Array (Either String Json)) = map jsonParser (getModelRec modelSendOut).io.wsOut
+    -- logShow $ map (fromRight undefined <<< fromRight undefined) (map (map decodeJson) wsMsgs :: Array (Either String (Either JsonDecodeError WSMessage)))
 
   lift $ joinFiber renderFiber
   

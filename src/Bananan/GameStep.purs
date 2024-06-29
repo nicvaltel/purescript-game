@@ -13,14 +13,16 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameActor, GameState, getGameRec, getGameRec', modgs)
-import Bananan.WSClient (modelDiff, modelDiffToJson)
+import Bananan.WSClient (WSMessage(..), mkModelDiff, modelDiffChanged)
 import Data.Argonaut.Core (stringify)
+import Data.Argonaut.Encode (encodeJson)
 import Data.Array (fromFoldable)
+import Data.Array as Array
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
 import Data.Map as M
-import Data.Maybe (isNothing, maybe)
+import Data.Maybe (isNothing)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
 import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
@@ -314,6 +316,9 @@ gameStep gameConf conf dt = do
         addRandomBalls gameConf nBalls game.boards.board.width 0.0
         modgs $ \gs -> gs{lastRowsAdded = {time : m.sys.lastUpdateTime, numberOfBalls : nBalls}}
 
-      mbWsOutJson <- (modelDiffToJson <<< modelDiff model0) <$> get
-      let wsOut = maybe [] (\json -> [stringify json]) mbWsOutJson
+      modelDiff <- (mkModelDiff model0) <$> get
+      let wsOut = Array.catMaybes 
+            [ if modelDiff.gameIsRunning == Just false then Just (stringify $ encodeJson GameOverMsg) else Nothing
+            , if modelDiffChanged modelDiff then Just (stringify $ encodeJson (ModelDiffMsg modelDiff)) else Nothing  
+            ]
       modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }

@@ -1,16 +1,47 @@
 module Bananan.WSClient where
 
 import Bananan.Reexport
-import Prelude
 
 import Bananan.Actors (ActorData(..), BallColor(..))
 import Bananan.GameModel (GameModel, getGameRec)
+import Data.Argonaut.Core (jsonEmptyObject)
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
+import Data.Argonaut.Encode.Combinators ((:=), (~>))
 import Data.Array (fromFoldable)
-import Data.List (List)
 import Data.Map as M
 import Data.Maybe (isNothing)
-import Engine.Model (Actor(..), NameId, getActorData)
+import Engine.Model (Actor(..), NameId)
+
+
+data WSMessage = ModelDiffMsg ModelDiff | GameOverMsg
+
+instance showWSMessage :: Show WSMessage where
+  show (ModelDiffMsg mDiff) = "ModelDiffMsg: " <> show mDiff
+  show GameOverMsg = "GameOverMsg" 
+
+-- https://www.dgendill.com/posts/2017-03-05-purescript-json.html
+-- https://github.com/purescript-contrib/purescript-argonaut-codecs/blob/main/docs/README.md
+-- see EncodeJson AppUser / DecodeJson AppUser  
+instance encodeWSMessage :: EncodeJson WSMessage where
+  encodeJson (ModelDiffMsg modelDiff) = 
+    "type" := "ModelDiffMsg"
+      ~> "data" := encodeJson modelDiff
+      ~> jsonEmptyObject
+  encodeJson GameOverMsg =
+    "type" := "GameOverMsg"
+      ~> jsonEmptyObject 
+
+instance decodeJsonWSMessage :: DecodeJson WSMessage where
+  decodeJson json = do
+    obj <- decodeJson json
+    (msgType :: String) <- obj .: "type"
+    case msgType of
+      "ModelDiffMsg" -> do
+        modelDiffData :: ModelDiff <- obj .: "data"
+        pure (ModelDiffMsg modelDiffData)
+
+      "GameOverMsg" -> pure GameOverMsg
+      other -> Left (TypeMismatch other)
 
 
 type BallPosition = {col :: BallColor, x :: Int, y :: Int}
@@ -25,8 +56,8 @@ type ModelDiff = {
         }
 }
 
-modelDiff :: GameModel -> GameModel -> ModelDiff
-modelDiff model0 model1 = do
+mkModelDiff :: GameModel -> GameModel -> ModelDiff
+mkModelDiff model0 model1 = do
     let g0 = getGameRec model0
     let g1 = getGameRec model1
     { gameIsRunning : change g0.gameIsRunning g1.gameIsRunning
@@ -61,10 +92,10 @@ actorToBallPosition (Actor a) = case a.data of
 ballsToBallPositions :: M.Map NameId (Actor ActorData) -> Array BallPosition
 ballsToBallPositions = map actorToBallPosition <<< fromFoldable <<< M.values
 
-modelDiffToJson :: ModelDiff -> Maybe Json
-modelDiffToJson md
+modelDiffChanged :: ModelDiff -> Boolean
+modelDiffChanged md
     | isNothing md.gameIsRunning && 
       isNothing md.shotsCounter && 
       isNothing md.actors.balls && 
-      isNothing md.actors.flyingBall = Nothing
-    | otherwise = Just (encodeJson md)
+      isNothing md.actors.flyingBall = false
+    | otherwise = true
