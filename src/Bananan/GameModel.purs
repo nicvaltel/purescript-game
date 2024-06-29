@@ -83,7 +83,6 @@ mkActorData :: GameState -> ActorData -> ActorData
 mkActorData _ actorData = actorData
 
 
--- TODO implement for remote actors
 instance actorContainerGameState :: ActorContainer ActorData GameState where
   getAllActors model = 
     let as = (getGameRec model).actors
@@ -101,14 +100,21 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
   updateActor nameId mbTypeName f = do
     g <- getGameRec <$> get
     case mbTypeName of
+      Nothing -> updateActorAnyType g
       Just "ActorGun" -> updateActorGun 
       Just "ActorBall" -> updateActorBall 
       Just "ActorDragon" -> updateActorDragon 
-      Just "ActorBallQueue" -> undeteActorBallQueue 
+      Just "ActorBallQueue" -> updeteActorBallQueue
+      Just "RemoteActorGun" -> updateRemoteActorGun 
+      Just "RemoteActorBall" -> updateRemoteActorBall 
+      Just "RemoteActorDragon" -> updateRemoteActorDragon 
+      Just "RemoteActorBallQueue" -> updeteRemoteActorBallQueue 
       _ -> updateActorAnyType g
     where
       updateActorGun = do
         modgs $ \gs -> gs {actors {gun = f gs.actors.gun} }
+      updateRemoteActorGun = do
+        modgs $ \gs -> gs {remoteActors {gun = f gs.remoteActors.gun} }
       updateActorBall = do
             modgs $ \gs ->
                 case gs.actors.flyingBall of
@@ -116,27 +122,52 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
                         gs {actors {flyingBall = Just {flyball : f flyball, vx, vy }}}
                   _ -> let newBalls = M.update (\a -> Just $ f a) nameId gs.actors.balls
                         in gs {actors{ balls = newBalls} }
+      updateRemoteActorBall = do
+            modgs $ \gs ->
+                case gs.remoteActors.flyingBall of
+                  Just {flyball, vx,vy} | (getActorRec flyball).nameId == nameId ->
+                        gs {remoteActors {flyingBall = Just {flyball : f flyball, vx, vy }}}
+                  _ -> let newBalls = M.update (\a -> Just $ f a) nameId gs.remoteActors.balls
+                        in gs {remoteActors{ balls = newBalls} }
       updateActorDragon = do
         modgs $ \gs -> gs {actors {dragon = f gs.actors.dragon }}
-      undeteActorBallQueue = do
+      updateRemoteActorDragon = do
+        modgs $ \gs -> gs {remoteActors {dragon = f gs.remoteActors.dragon }}
+      updeteActorBallQueue = do
         modgs $ \gs -> gs {actors {ballQueue = f gs.actors.ballQueue }}
+      updeteRemoteActorBallQueue = do
+        modgs $ \gs -> gs {actors {ballQueue = f gs.remoteActors.ballQueue }}
       updateActorAnyType g =
         if checkActorNameId nameId g.actors.gun
           then updateActorGun 
           else if checkActorNameId nameId g.actors.dragon 
             then updateActorDragon 
             else if checkActorNameId nameId g.actors.ballQueue
-              then undeteActorBallQueue 
-              else updateActorBall 
+              then updeteActorBallQueue
+                else if checkActorNameId nameId g.remoteActors.gun
+                  then updateRemoteActorGun 
+                  else if checkActorNameId nameId g.remoteActors.dragon 
+                    then updateRemoteActorDragon 
+                    else if checkActorNameId nameId g.remoteActors.ballQueue
+                      then updeteRemoteActorBallQueue
+                      else do
+                        updateActorBall
+                        updateRemoteActorBall 
 
   lookupActor nameId mbTypeName model =
     let ga = (getGameRec model).actors
+        gar = (getGameRec model).remoteActors
     in
       case mbTypeName of
+        Nothing -> lookupActorAnyType ga 
         Just "ActorGun" -> lookupGun ga
         Just "ActorBall" -> lookupBall ga
         Just "ActorDragon" -> lookupDragon ga
         Just "ActorBallQueue" -> lookupBallQueue ga
+        Just "RemoteActorGun" -> lookupGun gar
+        Just "RemoteActorBall" -> lookupBall gar
+        Just "RemoteActorDragon" -> lookupDragon gar
+        Just "RemoteActorBallQueue" -> lookupBallQueue gar
         _ -> lookupActorAnyType ga
     where
       lookupGun ga       = if checkActorNameId nameId ga.gun then Just ga.gun else Nothing
