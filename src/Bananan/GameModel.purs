@@ -13,11 +13,11 @@ module Bananan.GameModel
   where
 
 import Bananan.Reexport hiding ((:))
+import Prelude
 
 import Bananan.Actors (ActorData)
 import Bananan.BallsGraph (GraphBall)
--- import Control.Monad.List.Trans (catMaybes)
-import Data.List (List(..), (:),catMaybes)
+import Data.List (List(..), (:), catMaybes)
 import Data.Map as M
 import Engine.Model (class ActorContainer, Actor, AppMod, Model, NameId, ModelRec, checkActorNameId, getActorRec, getModelRec, modmod)
 import Record as Record
@@ -137,22 +137,16 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
         modgs $ \gs -> gs {actors {ballQueue = f gs.actors.ballQueue }}
       updeteRemoteActorBallQueue = do
         modgs $ \gs -> gs {actors {ballQueue = f gs.remoteActors.ballQueue }}
-      updateActorAnyType g =
-        if checkActorNameId nameId g.actors.gun
-          then updateActorGun 
-          else if checkActorNameId nameId g.actors.dragon 
-            then updateActorDragon 
-            else if checkActorNameId nameId g.actors.ballQueue
-              then updeteActorBallQueue
-                else if checkActorNameId nameId g.remoteActors.gun
-                  then updateRemoteActorGun 
-                  else if checkActorNameId nameId g.remoteActors.dragon 
-                    then updateRemoteActorDragon 
-                    else if checkActorNameId nameId g.remoteActors.ballQueue
-                      then updeteRemoteActorBallQueue
-                      else do
-                        updateActorBall
-                        updateRemoteActorBall 
+      updateActorAnyType g
+        | checkActorNameId nameId g.actors.gun = updateActorGun 
+        | checkActorNameId nameId g.actors.dragon = updateActorDragon 
+        | checkActorNameId nameId g.actors.ballQueue = updeteActorBallQueue
+        | checkActorNameId nameId g.remoteActors.gun = updateRemoteActorGun 
+        | checkActorNameId nameId g.remoteActors.dragon = updateRemoteActorDragon 
+        | checkActorNameId nameId g.remoteActors.ballQueue = updeteRemoteActorBallQueue
+        | otherwise = do
+            updateActorBall
+            updateRemoteActorBall 
 
   lookupActor nameId mbTypeName model =
     let ga = (getGameRec model).actors
@@ -176,11 +170,8 @@ instance actorContainerGameState :: ActorContainer ActorData GameState where
                               _ -> M.lookup nameId ga.balls
       lookupDragon ga    = if checkActorNameId nameId ga.dragon then Just ga.dragon else Nothing
       lookupBallQueue ga = if checkActorNameId nameId ga.ballQueue then Just ga.ballQueue else Nothing 
-      lookupActorAnyType ga = 
-        if checkActorNameId nameId ga.gun
-              then Just ga.gun
-              else if checkActorNameId nameId ga.dragon 
-                then Just ga.dragon
-                else if checkActorNameId nameId ga.ballQueue
-                  then Just ga.ballQueue
-                  else M.lookup nameId ga.balls
+      lookupActorAnyType ga
+        | checkActorNameId nameId ga.gun = Just ga.gun
+        | checkActorNameId nameId ga.dragon = Just ga.dragon
+        | checkActorNameId nameId ga.ballQueue = Just ga.ballQueue
+        | otherwise = M.lookup nameId ga.balls
