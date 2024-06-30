@@ -13,7 +13,6 @@ module Bananan.GameModel
   where
 
 import Bananan.Reexport hiding ((:))
-import Prelude
 
 import Bananan.Actors (ActorData)
 import Bananan.BallsGraph (GraphBall)
@@ -45,7 +44,8 @@ type GameStateRec = {
         , dragon :: Actor ActorData
         , ballQueue :: Actor ActorData
         }
-    , remoteActors :: { balls :: M.Map NameId (Actor ActorData)
+    , remoteActors :: 
+        { balls :: M.Map NameId (Actor ActorData)
         , flyingBall :: Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number}
         , gun :: Actor ActorData
         , dragon :: Actor ActorData

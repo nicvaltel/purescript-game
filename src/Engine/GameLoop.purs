@@ -5,7 +5,7 @@ module Engine.GameLoop
 
 import Engine.Reexport
 
-import Bananan.WSClient (WSMessage)
+import Bananan.WSClient (RemoteMessage)
 import Concurrent.Queue as Q
 import Control.Monad.State (evalStateT)
 import Control.Monad.Trans.Class (lift)

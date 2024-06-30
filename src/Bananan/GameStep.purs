@@ -13,9 +13,10 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameActor, GameState, getGameRec, getGameRec', modgs)
-import Bananan.WSClient (WSMessage(..), mkModelDiff, modelDiffChanged)
+import Bananan.WSClient (ModelDiff, RemoteMessage(..), mkModelDiff, modelDiffChanged)
 import Data.Argonaut.Core (stringify)
 import Data.Argonaut.Encode (encodeJson)
+import Data.Argonaut.Parser (jsonParser)
 import Data.Array (fromFoldable)
 import Data.Array as Array
 import Data.Foldable (for_)
@@ -28,6 +29,7 @@ import Engine.GameLoop (GameStepFunc)
 import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
+import Engine.WebSocket.WSSignalChan as WS
 
 type BoxWidth = Number
 type BoxHeight = Number
@@ -279,6 +281,51 @@ moveBallQueue :: Time -> BallQueue -> GameActor -> GameActor
 moveBallQueue dt queue actor = actor
 
 
+processInputMessages :: GameConfig -> AppGame Unit
+processInputMessages gameConf = do
+  model <- get
+  traverse_ processOneInputMessage (getModelRec model).io.wsIn
+
+  where   
+    processOneInputMessage :: WS.WSMessage -> AppGame Unit
+    processOneInputMessage msg = do
+      case (decodeJson <$> (jsonParser msg) :: Either String (Either JsonDecodeError RemoteMessage)) of
+        Right (Right remMsg) -> case remMsg of
+          ModelDiffMsg mDiff -> do
+            processModelDiff mDiff
+          _ -> pure unit
+        _ -> pure unit
+
+    processModelDiff :: ModelDiff -> AppGame Unit
+    processModelDiff mDiff = do
+      case mDiff.actors.balls of
+        Just newBallsPositions -> do
+          gsr <- getGameRec  <$> get
+          let deletedBallsNamesId = map (\(Actor a) -> a.nameId) $ M.values gsr.remoteActors.balls
+          modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable deletedBallsNamesId) }}
+          modgs $ \gs -> gs{remoteActors{balls = M.empty}}
+
+          for_ newBallsPositions $ \bp -> do
+            nameId <- mkNewNameId
+            let newBallActor = Actor
+                  {
+                    nameId : nameId
+                  , x : toNumber bp.x
+                  , y : toNumber bp.y
+                  , width : gameConf.ballDiameter
+                  , height : gameConf.ballDiameter
+                  , z : 1
+                  , visible : true
+                  , angle : 0.0
+                  , cssClass : cssClassOfColor bp.col
+                  , imageSource : selectBallQueueImageSource gameConf bp.col
+                  , htmlElement : Nothing
+                  , data : ActorBall { color : bp.col } 
+                  }
+            modmod $ \mr -> mr{ act { recentlyAddedActors = {nameId : nameId, parentElemId : gameConf.boards.remoteBoardElementId , clue : "RemoteActorBall"} : mr.act.recentlyAddedActors }}
+            modgs $ \gs -> gs{ remoteActors{balls = M.insert nameId newBallActor gs.remoteActors.balls}}
+        _ -> pure unit
+
 loseCondition :: Number -> Diameter -> BoxHeight -> List (Actor ActorData) -> Boolean
 loseCondition loseHeightLevel ballDiameter boxHeight  balls =
   let yLevel = boxHeight - ballDiameter - loseHeightLevel
@@ -294,6 +341,8 @@ gameStep gameConf conf dt = do
   if not game.gameIsRunning 
     then pure unit
     else do
+      processInputMessages gameConf
+
       moveFlyingBall dt gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.boards.board.width gameConf.numberOfBallsInChainToDelete
 
       let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey

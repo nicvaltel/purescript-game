@@ -13,16 +13,16 @@ import Data.Maybe (isNothing)
 import Engine.Model (Actor(..), NameId)
 
 
-data WSMessage = ModelDiffMsg ModelDiff | GameOverMsg
+data RemoteMessage = ModelDiffMsg ModelDiff | GameOverMsg
 
-instance showWSMessage :: Show WSMessage where
+instance showWSMessage :: Show RemoteMessage where
   show (ModelDiffMsg mDiff) = "ModelDiffMsg: " <> show mDiff
   show GameOverMsg = "GameOverMsg" 
 
 -- https://www.dgendill.com/posts/2017-03-05-purescript-json.html
 -- https://github.com/purescript-contrib/purescript-argonaut-codecs/blob/main/docs/README.md
 -- see EncodeJson AppUser / DecodeJson AppUser  
-instance encodeWSMessage :: EncodeJson WSMessage where
+instance encodeRemoteMessage :: EncodeJson RemoteMessage where
   encodeJson (ModelDiffMsg modelDiff) = 
     "type" := "ModelDiffMsg"
       ~> "data" := encodeJson modelDiff
@@ -31,7 +31,7 @@ instance encodeWSMessage :: EncodeJson WSMessage where
     "type" := "GameOverMsg"
       ~> jsonEmptyObject 
 
-instance decodeJsonWSMessage :: DecodeJson WSMessage where
+instance decodeJsonRemoteMessage :: DecodeJson RemoteMessage where
   decodeJson json = do
     obj <- decodeJson json
     (msgType :: String) <- obj .: "type"
