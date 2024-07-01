@@ -13,7 +13,7 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameActor, GameState, getGameRec, getGameRec', modgs)
-import Bananan.WSClient (BallPosition, ModelDiff, RemoteMessage(..), FlyingBallPosition, mkModelDiff, modelDiffChanged)
+import Bananan.WSClient (BallPosition, FlyingBallPosition, ModelDiff, RemoteMessage(..), GunPosition, mkModelDiff, modelDiffChanged)
 import Data.Argonaut.Core (stringify)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
@@ -26,7 +26,7 @@ import Data.Map as M
 import Data.Maybe (isNothing, maybe)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
-import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
+import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modActor, modmod)
 import Engine.Types (Time)
 import Engine.UserInput (keyWasPressedOnce)
 import Engine.WebSocket.WSSignalChan as WS
@@ -135,6 +135,18 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
         dy = (c0.y - c.y) / dist
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
+
+
+moveRemoteGun :: Time -> AppGame Unit
+moveRemoteGun dt = do
+  game <- getGameRec <$> get
+  let gunActorRec = getActorRec game.remoteActors.gun 
+  case gunActorRec.data of
+    ActorGun gunData -> 
+      let newAngle = clamp gunData.maxLeftAngle gunData.maxRightAngle (gunActorRec.angle + dt * gunData.angleSpeed )
+          newGunActor = Actor gunActorRec{angle = newAngle}
+      in modgs $ \ gs -> gs {remoteActors{gun = newGunActor}}
+    _ -> pure unit
 
 moveRemoteFlyingBall :: Time -> BoxWidth -> AppGame Unit
 moveRemoteFlyingBall dt width = do
@@ -317,7 +329,16 @@ processInputMessages gameConf = do
     processModelDiff mDiff = do
       maybe (pure unit) updateRemoteBalls mDiff.actors.balls
       maybe (pure unit) updateRemoteFlyingBall mDiff.actors.flyingBall
-    
+      maybe (pure unit) updateRemoteGun mDiff.actors.gun
+
+    updateRemoteGun :: GunPosition -> AppGame Unit
+    updateRemoteGun gunPos = modgs $ \gs -> gs{remoteActors 
+      {gun = modActor gs.remoteActors.gun (\a -> 
+        case a.data of
+          ActorGun gun -> a{ data = ActorGun gun{angleSpeed = gunPos.angleSpeed}
+                           , angle = gunPos.angle}
+          _ -> a
+      )}}
     updateRemoteBalls :: Array BallPosition -> AppGame Unit
     updateRemoteBalls newBallsPositions = do
       gsr <- getGameRec  <$> get
@@ -392,6 +413,7 @@ gameStep gameConf conf dt = do
 
       moveFlyingBall dt gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.boards.board.width gameConf.numberOfBallsInChainToDelete
       moveRemoteFlyingBall dt game.boards.board.width
+      moveRemoteGun dt
 
       let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       let prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey

@@ -3,14 +3,14 @@ module Bananan.WSClient where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), BallColor(..))
-import Bananan.GameModel (GameModel, getGameRec)
+import Bananan.GameModel (GameModel, GameActor, getGameRec)
 import Data.Argonaut.Core (jsonEmptyObject)
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
 import Data.Argonaut.Encode.Combinators ((:=), (~>))
 import Data.Array (fromFoldable)
 import Data.Map as M
 import Data.Maybe (isNothing)
-import Engine.Model (Actor(..), NameId)
+import Engine.Model (Actor(..), NameId, getActorData, getActorRec)
 
 
 data RemoteMessage = ModelDiffMsg ModelDiff | GameOverMsg
@@ -45,6 +45,7 @@ instance decodeJsonRemoteMessage :: DecodeJson RemoteMessage where
 
 
 type BallPosition = {col :: BallColor, x :: Int, y :: Int}
+type GunPosition = {angleSpeed :: Number, angle :: Number}
 type FlyingBallPosition = {col :: BallColor, startX :: Int, startY :: Int, vx :: Number, vy :: Number} 
 
 type ModelDiff = {
@@ -53,6 +54,7 @@ type ModelDiff = {
     , actors :: 
         { balls :: Maybe (Array BallPosition)
         , flyingBall :: Maybe (Either Int FlyingBallPosition) -- Maybe (Maybe FlyingBallPosition) doesnt work - decodeJson(encodeJson $ Just Nothing) decodes to Nothing, not to Just Nothing. So using Either instead
+        , gun :: Maybe GunPosition -- angle speed
         }
 }
 
@@ -69,14 +71,23 @@ mkModelDiff model0 model1 = do
                 Tuple Nothing (Just fb) -> Just (Right (fromFlyingBall fb))
                 Tuple (Just _) Nothing -> Just (Left 0) -- no matter what number, only Just Left matters
                 _ -> Nothing
+        , gun : fromGun g0.actors.gun g1.actors.gun
         }
     }
 
     where 
         fromFlyingBall ::  {flyball :: Actor ActorData, vx :: Number, vy :: Number} -> FlyingBallPosition
         fromFlyingBall fb = (\{flyball,vx, vy} -> let bp = actorToBallPosition flyball
-                                      in {col: bp.col, startX : bp.x, startY : bp.y, vx: vx, vy: vy}) 
-                                   fb
+                                      in {col: bp.col, startX : bp.x, startY : bp.y, vx: vx, vy: vy}) fb
+
+        fromGun :: GameActor -> GameActor -> Maybe GunPosition
+        fromGun actor0 actor1 =
+          case Tuple (getActorData actor0) (getActorData actor1) of
+            Tuple (ActorGun gun0) (ActorGun gun1) ->
+              if gun0.angleSpeed == gun1.angleSpeed
+                then Nothing
+                else Just {angleSpeed : gun1.angleSpeed, angle : (getActorRec actor1).angle}
+            _ -> Nothing 
 
         change :: forall a. Eq a => a -> a -> Maybe a
         change old new = if old == new then Nothing else Just new
@@ -96,6 +107,7 @@ modelDiffChanged :: ModelDiff -> Boolean
 modelDiffChanged md
     | isNothing md.gameIsRunning && 
       isNothing md.shotsCounter && 
-      isNothing md.actors.balls && 
+      isNothing md.actors.balls &&
+      isNothing md.actors.gun && 
       isNothing md.actors.flyingBall = false
     | otherwise = true
