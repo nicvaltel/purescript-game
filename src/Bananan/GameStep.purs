@@ -13,7 +13,7 @@ import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameActor, GameState, getGameRec, getGameRec', modgs)
-import Bananan.WSClient (ModelDiff, RemoteMessage(..), mkModelDiff, modelDiffChanged)
+import Bananan.WSClient (BallPosition, ModelDiff, RemoteMessage(..), FlyingBallPosition, mkModelDiff, modelDiffChanged)
 import Data.Argonaut.Core (stringify)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
@@ -23,7 +23,7 @@ import Data.Foldable (for_)
 import Data.List (List)
 import Data.List as List
 import Data.Map as M
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, maybe)
 import Data.Number (abs, cos, pi, sin, sqrt)
 import Engine.GameLoop (GameStepFunc)
 import Engine.Model (Actor(..), getActorData, getActorRec, getModelRec, getRandom, mkNewNameId, modmod)
@@ -135,6 +135,23 @@ correctBallPosition d ball balls = foldr correctBallPositionOnce ball balls
         dy = (c0.y - c.y) / dist
       in
         Actor c0{ x = c0.x + dx * overlap, y = c0.y + dy * overlap }
+
+moveRemoteFlyingBall :: Time -> BoxWidth -> AppGame Unit
+moveRemoteFlyingBall dt width = do
+  game <- getGameRec <$> get
+  case game.remoteActors.flyingBall of
+    Just {flyball, vx,vy} -> do
+        let (Actor fb) = flyball
+        let newVx
+              | fb.x <= 0.0 = abs vx
+              | fb.x + fb.width >= width = -(abs vx)
+              | otherwise = vx
+        let newX = fb.x + dt * newVx
+        let newY = max 0.0 (fb.y + dt * vy)
+        let newFlyball = Actor fb{x = newX, y = newY}
+        modgs $ \gs -> gs { remoteActors { flyingBall = Just {flyball : newFlyball, vx: newVx, vy }}}
+    _ -> pure unit
+
 
 moveFlyingBall :: Time -> Diameter -> Number -> BoxWidth -> Int -> AppGame Unit
 moveFlyingBall dt ballDiameter dFactor width numberOfBallsInChainToDelete = do
@@ -298,33 +315,63 @@ processInputMessages gameConf = do
 
     processModelDiff :: ModelDiff -> AppGame Unit
     processModelDiff mDiff = do
-      case mDiff.actors.balls of
-        Just newBallsPositions -> do
-          gsr <- getGameRec  <$> get
-          let deletedBallsNamesId = map (\(Actor a) -> a.nameId) $ M.values gsr.remoteActors.balls
-          modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable deletedBallsNamesId) }}
-          modgs $ \gs -> gs{remoteActors{balls = M.empty}}
+      maybe (pure unit) updateRemoteBalls mDiff.actors.balls
+      maybe (pure unit) updateRemoteFlyingBall mDiff.actors.flyingBall
+    
+    updateRemoteBalls :: Array BallPosition -> AppGame Unit
+    updateRemoteBalls newBallsPositions = do
+      gsr <- getGameRec  <$> get
+      let deletedBallsNamesId = map (\(Actor a) -> a.nameId) $ M.values gsr.remoteActors.balls
+      modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable deletedBallsNamesId) }}
+      modgs $ \gs -> gs{remoteActors{balls = M.empty}}
 
-          for_ newBallsPositions $ \bp -> do
-            nameId <- mkNewNameId
-            let newBallActor = Actor
-                  {
-                    nameId : nameId
-                  , x : toNumber bp.x
-                  , y : toNumber bp.y
-                  , width : gameConf.ballDiameter
-                  , height : gameConf.ballDiameter
-                  , z : 1
-                  , visible : true
-                  , angle : 0.0
-                  , cssClass : cssClassOfColor bp.col
-                  , imageSource : selectBallQueueImageSource gameConf bp.col
-                  , htmlElement : Nothing
-                  , data : ActorBall { color : bp.col } 
-                  }
-            modmod $ \mr -> mr{ act { recentlyAddedActors = {nameId : nameId, parentElemId : gameConf.boards.remoteBoardElementId , clue : "RemoteActorBall"} : mr.act.recentlyAddedActors }}
-            modgs $ \gs -> gs{ remoteActors{balls = M.insert nameId newBallActor gs.remoteActors.balls}}
-        _ -> pure unit
+      for_ newBallsPositions $ \bp -> do
+        nameId <- mkNewNameId
+        let newBallActor = Actor
+              {
+                nameId : nameId
+              , x : toNumber bp.x
+              , y : toNumber bp.y
+              , width : gameConf.ballDiameter
+              , height : gameConf.ballDiameter
+              , z : 1
+              , visible : true
+              , angle : 0.0
+              , cssClass : cssClassOfColor bp.col
+              , imageSource : selectBallQueueImageSource gameConf bp.col
+              , htmlElement : Nothing
+              , data : ActorBall { color : bp.col } 
+              }
+        modmod $ \mr -> mr{ act { recentlyAddedActors = {nameId : nameId, parentElemId : gameConf.boards.remoteBoardElementId , clue : "RemoteActorBall"} : mr.act.recentlyAddedActors }}
+        modgs $ \gs -> gs{ remoteActors{balls = M.insert nameId newBallActor gs.remoteActors.balls}}
+
+    updateRemoteFlyingBall :: Either Int FlyingBallPosition -> AppGame Unit
+    updateRemoteFlyingBall (Left _) = do
+      gsr <- getGameRec  <$> get
+      case gsr.remoteActors.flyingBall of
+        Nothing -> pure unit
+        Just {flyball} -> modmod $ \mr -> mr{act{recentlyDeletedActors = (getActorRec flyball).nameId : mr.act.recentlyDeletedActors }}
+      modgs $ \gs -> gs{remoteActors{flyingBall = Nothing}}
+    updateRemoteFlyingBall (Right fb) = do
+      nameId <- mkNewNameId
+      let newFlyBallActor = Actor
+            {
+              nameId : nameId
+            , x : toNumber fb.startX
+            , y : toNumber fb.startY
+            , width : gameConf.ballDiameter
+            , height : gameConf.ballDiameter
+            , z : 1
+            , visible : true
+            , angle : 0.0
+            , cssClass : cssClassOfColor fb.col
+            , imageSource : selectBallQueueImageSource gameConf fb.col
+            , htmlElement : Nothing
+            , data : ActorBall { color : fb.col } 
+            }
+      modmod $ \mr -> mr{ act { recentlyAddedActors = {nameId : nameId, parentElemId : gameConf.boards.remoteBoardElementId , clue : "RemoteActorBall"} : mr.act.recentlyAddedActors }}
+      modgs $ \gs -> gs{ remoteActors
+        {flyingBall = Just{flyball : newFlyBallActor, vx : fb.vx, vy: fb.vy}}}
 
 loseCondition :: Number -> Diameter -> BoxHeight -> List (Actor ActorData) -> Boolean
 loseCondition loseHeightLevel ballDiameter boxHeight  balls =
@@ -344,6 +391,7 @@ gameStep gameConf conf dt = do
       processInputMessages gameConf
 
       moveFlyingBall dt gameConf.ballDiameter gameConf.nearestBallDiameterFactor game.boards.board.width gameConf.numberOfBallsInChainToDelete
+      moveRemoteFlyingBall dt game.boards.board.width
 
       let controlKeys = mapMaybe read m.io.userInput.keys :: Array ControlKey
       let prevControlKeys = mapMaybe read m.io.prevUserInput.keys :: Array ControlKey

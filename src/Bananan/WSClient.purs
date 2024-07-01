@@ -45,14 +45,14 @@ instance decodeJsonRemoteMessage :: DecodeJson RemoteMessage where
 
 
 type BallPosition = {col :: BallColor, x :: Int, y :: Int}
-type FlyingBallPosition = {col :: BallColor, startX :: Int, startY :: Int, vx :: Int, vy :: Int}
+type FlyingBallPosition = {col :: BallColor, startX :: Int, startY :: Int, vx :: Number, vy :: Number} 
 
 type ModelDiff = {
       gameIsRunning :: Maybe Boolean
     , shotsCounter :: Maybe Int
     , actors :: 
         { balls :: Maybe (Array BallPosition)
-        , flyingBall :: Maybe (Maybe FlyingBallPosition)
+        , flyingBall :: Maybe (Either Int FlyingBallPosition) -- Maybe (Maybe FlyingBallPosition) doesnt work - decodeJson(encodeJson $ Just Nothing) decodes to Nothing, not to Just Nothing. So using Either instead
         }
 }
 
@@ -66,17 +66,17 @@ mkModelDiff model0 model1 = do
         { balls : change (ballsToBallPositions g0.actors.balls) (ballsToBallPositions g1.actors.balls) 
         , flyingBall : 
             case Tuple g0.actors.flyingBall g1.actors.flyingBall of
-                Tuple Nothing (Just _) -> Just (fromFlyingBall g1.actors.flyingBall)
-                Tuple (Just _) Nothing -> Just Nothing
+                Tuple Nothing (Just fb) -> Just (Right (fromFlyingBall fb))
+                Tuple (Just _) Nothing -> Just (Left 0) -- no matter what number, only Just Left matters
                 _ -> Nothing
         }
     }
 
     where 
-        fromFlyingBall ::  Maybe {flyball :: Actor ActorData, vx :: Number, vy :: Number} -> Maybe FlyingBallPosition
-        fromFlyingBall mbFlBall = (\{flyball,vx, vy} -> let bp = actorToBallPosition flyball
-                                      in {col: bp.col, startX : bp.x, startY : bp.y, vx: round vx, vy: round vy}) 
-                                   <$> mbFlBall
+        fromFlyingBall ::  {flyball :: Actor ActorData, vx :: Number, vy :: Number} -> FlyingBallPosition
+        fromFlyingBall fb = (\{flyball,vx, vy} -> let bp = actorToBallPosition flyball
+                                      in {col: bp.col, startX : bp.x, startY : bp.y, vx: vx, vy: vy}) 
+                                   fb
 
         change :: forall a. Eq a => a -> a -> Maybe a
         change old new = if old == new then Nothing else Just new
