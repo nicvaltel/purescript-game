@@ -7,7 +7,7 @@ module Bananan.GameStep
 
 import Bananan.Reexport
 
-import Bananan.Actors (ActorData(..), BallQueue, Dragon, colorFromRandomInt, cssClassOfColor)
+import Bananan.Actors (ActorData(..), BallColor, BallQueue, Dragon, colorFromRandomInt, cssClassOfColor)
 import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
@@ -330,6 +330,18 @@ processInputMessages gameConf = do
       maybe (pure unit) updateRemoteBalls mDiff.actors.balls
       maybe (pure unit) updateRemoteFlyingBall mDiff.actors.flyingBall
       maybe (pure unit) updateRemoteGun mDiff.actors.gun
+      maybe (pure unit) updateRemoteBallQueue mDiff.actors.ballQueue
+
+    updateRemoteBallQueue :: BallColor -> AppGame Unit
+    updateRemoteBallQueue color = modgs $ \gs -> gs{remoteActors 
+      {ballQueue = modActor gs.remoteActors.ballQueue (\a -> 
+        case a.data of
+          ActorBallQueue q -> a{ 
+              imageSource = selectBallQueueImageSource gameConf color
+            , data = ActorBallQueue q{nextBallColor = color}
+            }
+          _ -> a
+      )}}
 
     updateRemoteGun :: GunPosition -> AppGame Unit
     updateRemoteGun gunPos = modgs $ \gs -> gs{remoteActors 

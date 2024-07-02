@@ -55,6 +55,7 @@ type ModelDiff = {
         { balls :: Maybe (Array BallPosition)
         , flyingBall :: Maybe (Either Int FlyingBallPosition) -- Maybe (Maybe FlyingBallPosition) doesnt work - decodeJson(encodeJson $ Just Nothing) decodes to Nothing, not to Just Nothing. So using Either instead
         , gun :: Maybe GunPosition -- angle speed
+        , ballQueue :: Maybe BallColor
         }
 }
 
@@ -72,6 +73,10 @@ mkModelDiff model0 model1 = do
                 Tuple (Just _) Nothing -> Just (Left 0) -- no matter what number, only Just Left matters
                 _ -> Nothing
         , gun : fromGun g0.actors.gun g1.actors.gun
+        , ballQueue : 
+            case Tuple (getActorData g0.actors.ballQueue) (getActorData g1.actors.ballQueue) of
+              Tuple (ActorBallQueue q0) (ActorBallQueue q1) -> change q0.nextBallColor q1.nextBallColor
+              _ -> Nothing
         }
     }
 
@@ -100,6 +105,10 @@ mkModelDiffInitial gs = do
         { balls : Just (ballsToBallPositions gs.actors.balls)
         , flyingBall : Nothing
         , gun : Nothing
+        , ballQueue :
+            case (getActorData gs.actors.ballQueue) of
+              ActorBallQueue q -> Just q.nextBallColor 
+              _ -> Nothing
         }
     }
 
@@ -118,5 +127,6 @@ modelDiffChanged md
       isNothing md.shotsCounter && 
       isNothing md.actors.balls &&
       isNothing md.actors.gun && 
+      isNothing md.actors.ballQueue &&
       isNothing md.actors.flyingBall = false
     | otherwise = true
