@@ -223,8 +223,8 @@ getRandom = do
   modify_ (\(Model m) -> Model m{sys{seed = randomPair.newSeed}})
   pure randomPair.newVal
 
-initialModelZeroTime :: forall ac gm. Int -> Number -> Number -> gm -> Model ac gm
-initialModelZeroTime seed screenWidth screenHeight gameState =
+initialModelZeroTime :: forall ac gm. Int -> Number -> Number -> gm -> Array WS.WSMessage -> Model ac gm
+initialModelZeroTime seed screenWidth screenHeight gameState wsOutInitial =
   unsafePartial
     $ let
         Just time = instant (Milliseconds 0.0)
@@ -239,7 +239,7 @@ initialModelZeroTime seed screenWidth screenHeight gameState =
           userInput : emptyUserInput
         , prevUserInput : emptyUserInput
         , wsIn : []
-        , wsOut : []
+        , wsOut : wsOutInitial
         }
         , sys : {
             gameStepNumber : 0

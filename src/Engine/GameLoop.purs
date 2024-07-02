@@ -5,7 +5,6 @@ module Engine.GameLoop
 
 import Engine.Reexport
 
-import Bananan.WSClient (RemoteMessage)
 import Concurrent.Queue as Q
 import Control.Monad.State (evalStateT)
 import Control.Monad.Trans.Class (lift)
@@ -69,7 +68,18 @@ mainLoop conf socket queueWS gameStep canvasElem = do
     log "INPUTS:"
     log $ show $ show userInput
 
-  modmodAff $ \m -> m {io{userInput = userInput, prevUserInput = m.io.userInput, wsIn = messages, wsOut = []}, sys{seed = seed}}
+  socketIsOpen <- liftEffect $ WS.webSocketConnectionStatusIsOpen socket
+  when socketIsOpen $ do
+    modelSendOut <- get
+    liftEffect $ sendWsOutMessages socket (getModelRec modelSendOut).io.wsOut
+    modmodAff $ \m -> m {io{ wsOut = []}} -- TODO clear wsOut when array is too big
+    when conf.debugWebsocket $ when (not $ null (getModelRec modelSendOut).io.wsOut) $ liftEffect do
+      log "MESSAGES OUT:"
+      logShow (getModelRec modelSendOut).io.wsOut
+      -- let (wsMsgs :: Array (Either String Json)) = map jsonParser (getModelRec modelSendOut).io.wsOut
+      -- logShow $ map (fromRight undefined <<< fromRight undefined) (map (map decodeJson) wsMsgs :: Array (Either String (Either JsonDecodeError WSMessage)))
+
+  modmodAff $ \m -> m {io{userInput = userInput, prevUserInput = m.io.userInput, wsIn = messages}, sys{seed = seed}}
   
   -- GAME STEP
   appModToAppModAff $ gameStep conf deltaTime
@@ -78,14 +88,6 @@ mainLoop conf socket queueWS gameStep canvasElem = do
   appModEffectToAppModAff $ removeRecentlyDeletedActors
   modmodAff $ \m -> m { sys{ lastUpdateTime = currentTime }}
 
-  modelSendOut <- get
-  liftEffect $ sendWsOutMessages socket (getModelRec modelSendOut).io.wsOut
-
-  when conf.debugWebsocket $ when (not $ null (getModelRec modelSendOut).io.wsOut) $ liftEffect do
-    log "MESSAGES OUT:"
-    logShow (getModelRec modelSendOut).io.wsOut
-    -- let (wsMsgs :: Array (Either String Json)) = map jsonParser (getModelRec modelSendOut).io.wsOut
-    -- logShow $ map (fromRight undefined <<< fromRight undefined) (map (map decodeJson) wsMsgs :: Array (Either String (Either JsonDecodeError WSMessage)))
 
   lift $ joinFiber renderFiber
   

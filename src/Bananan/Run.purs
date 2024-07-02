@@ -6,7 +6,10 @@ import Bananan.Actors (ActorData(..), ballQueueMock, colorFromRandomInt, dragonM
 import Bananan.GameConfig (GameConfig, gameConfigFromJson, selectBallQueueImageSource)
 import Bananan.GameModel (AppGame, GameState(..), getGameRec)
 import Bananan.GameStep (addRandomBalls, gameStep)
+import Bananan.WSClient (RemoteMessage(..), mkModelDiffInitial)
 import Control.Monad.State (evalStateT)
+import Data.Argonaut.Core (stringify)
+import Data.Argonaut.Encode (encodeJson)
 import Data.Either (either)
 import Data.Foldable (for_)
 import Data.Int (even, odd)
@@ -14,7 +17,7 @@ import Data.List as List
 import Data.Map as M
 import Engine.Config (Config)
 import Engine.GameLoop (GameStepFunc, runGame)
-import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, getNameId, initialModelZeroTime, mkUniqueNameId, modActor)
+import Engine.Model (Actor(..), AppModAff, actorMock, appModToAppModAff, getNameId, initialModelZeroTime, mkUniqueNameId, modActor, modmod)
 import Engine.Random.PseudoRandom (randomEff)
 import Engine.ResourceLoader (getHtmlElement, loadAudioFile, loadJson, parseConfigFile)
 import Engine.Utils.Html (getElementById)
@@ -157,12 +160,18 @@ run = do
            logShow gameConfig
 
         gameState@(GameState gs) <- liftEffect $ initialGameState config gameConfig
-        evalStateT (runAppModEff config gameConfig) (initialModelZeroTime seed gs.canvasWidth gs.canvasHeight gameState)
+        evalStateT (runAppModEff config gameConfig) (initialModelZeroTime seed gs.canvasWidth gs.canvasHeight gameState [])
 
 
 runAppModEff :: Config -> GameConfig -> AppModAff ActorData GameState Unit
 runAppModEff config gameConfig = do
-  appModToAppModAff $ initialBallRows gameConfig
+  appModToAppModAff $ do 
+    initialBallRows gameConfig
+    gs <- getGameRec <$> get
+    let modelDiff = mkModelDiffInitial gs
+    let wsOutInitial = [ stringify $ encodeJson (ModelDiffMsg modelDiff) ]
+    modmod $ \mr -> mr{io{wsOut = wsOutInitial <> mr.io.wsOut}}
+
   let rGame = runGame :: Config -> GameStepFunc ActorData GameState -> AppModAff ActorData GameState Unit
   rGame config (gameStep gameConfig)
 

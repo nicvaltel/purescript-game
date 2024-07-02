@@ -440,4 +440,4 @@ gameStep gameConf conf dt = do
             [ if modelDiff.gameIsRunning == Just false then Just (stringify $ encodeJson GameOverMsg) else Nothing
             , if modelDiffChanged modelDiff then Just (stringify $ encodeJson (ModelDiffMsg modelDiff)) else Nothing  
             ]
-      modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut} }
+      modmod $ \mr ->  mr { sys { gameStepNumber = mr.sys.gameStepNumber + 1}, io{wsOut = wsOut <> mr.io.wsOut} }

@@ -8,7 +8,9 @@ module Engine.WebSocket.WSSignalChan
   , onMessage
   , onOpen
   , sendMessage
-  ) where
+  , webSocketConnectionStatusIsOpen
+  )
+  where
 
 import Prelude
 import Effect (Effect)
@@ -34,6 +36,8 @@ foreign import _addEventListenerMessageRecieved :: forall a. WSocket -> (String 
 
 foreign import _sendMessage :: WSocket -> String -> Effect Unit
 
+foreign import _webSocketConnectionStatusIsOpen :: WSocket -> Effect Boolean
+
 sendMessage ∷ WSocket → String → Effect Unit
 sendMessage = _sendMessage
 
@@ -48,6 +52,9 @@ onClose = _addEventListenerConnectionIsClose
 
 onMessage :: forall a. WSocket -> (String -> Effect a) -> Effect a
 onMessage = _addEventListenerMessageRecieved
+
+webSocketConnectionStatusIsOpen :: WSocket -> Effect Boolean
+webSocketConnectionStatusIsOpen = _webSocketConnectionStatusIsOpen
 
 addListenerWSMessageToSignal :: WSocket -> Effect (Signal String)
 addListenerWSMessageToSignal socket = do

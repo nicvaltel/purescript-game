@@ -3,7 +3,7 @@ module Bananan.WSClient where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), BallColor(..))
-import Bananan.GameModel (GameModel, GameActor, getGameRec)
+import Bananan.GameModel (GameActor, GameModel, GameStateRec, getGameRec)
 import Data.Argonaut.Core (jsonEmptyObject)
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
 import Data.Argonaut.Encode.Combinators ((:=), (~>))
@@ -92,7 +92,16 @@ mkModelDiff model0 model1 = do
         change :: forall a. Eq a => a -> a -> Maybe a
         change old new = if old == new then Nothing else Just new
 
-
+mkModelDiffInitial :: GameStateRec -> ModelDiff
+mkModelDiffInitial gs = do
+    { gameIsRunning : Just true
+    , shotsCounter : Just 0
+    , actors : 
+        { balls : Just (ballsToBallPositions gs.actors.balls)
+        , flyingBall : Nothing
+        , gun : Nothing
+        }
+    }
 
 actorToBallPosition :: Actor ActorData -> BallPosition
 actorToBallPosition (Actor a) = case a.data of
