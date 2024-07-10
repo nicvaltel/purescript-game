@@ -8,7 +8,7 @@ module Bananan.GameStep
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), BallColor, BallQueue, Dragon, colorFromRandomInt, cssClassOfColor)
-import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls, updateAttachedToCeilingInGraphBall)
+import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
@@ -226,7 +226,7 @@ moveFlyingBall dt ballDiameter dFactor width numberOfBallsInChainToDelete = do
 
               -- find not attached balls
               gameUpdated2 <- getGameRec <$> get
-              let unAttached = findNotAttachedToCeilingBalls gameUpdated2.graphBall
+              let unAttached = findNotAttachedToCeilingBalls gameUpdated2.actors.balls gameUpdated2.graphBall
               let newBalls2 = foldr (\nameId ballsAcc -> M.delete nameId ballsAcc) gameUpdated2.actors.balls unAttached
               modgs $ \gs -> gs{ actors{balls = newBalls2}}
               modmod $ \mr -> mr{act{recentlyDeletedActors = mr.act.recentlyDeletedActors <> (fromFoldable unAttached) }}
@@ -445,7 +445,6 @@ gameStep gameConf conf dt = do
         let nBalls = if game.lastRowsAdded.numberOfBalls == gameConf.ballsInSmallRow then gameConf.ballsInSmallRow + 1 else gameConf.ballsInSmallRow
         modgs $ \gs -> gs{actors {balls = map (\(Actor a) -> Actor a{y = a.y + deltaH}) gs.actors.balls}}
         addRandomBalls gameConf nBalls game.boards.board.width 0.0
-        -- modgs $ \gs -> gs{graphBall = updateAttachedToCeilingInGraphBall gs.actors.balls gs.graphBall}
         modgs $ \gs -> gs{lastRowsAdded = {time : m.sys.lastUpdateTime, numberOfBalls : nBalls}}
 
       modelDiff <- (mkModelDiff model0) <$> get

@@ -6,7 +6,6 @@ module Bananan.BallsGraph
   , addNodeBall
   , deleteNodeBall
   , findNotAttachedToCeilingBalls
-  , updateAttachedToCeilingInGraphBall
   )
   where
 
@@ -15,7 +14,7 @@ import Bananan.Reexport hiding ((:))
 import Bananan.Actors (ActorData(..), BallColor)
 import Data.List (List(..), (:))
 import Data.List as List
-import Data.Map.Internal as M
+import Data.Map as Map
 import Engine.Model (Actor(..), NameId)
 
 
@@ -73,35 +72,18 @@ getTopLayerNamesId :: forall a id. Graph a id -> List id
 getTopLayerNamesId = map (\(Node{nodeId}) -> nodeId)
 
 
-type BallData =
-  { nameId :: NameId
-  , color :: BallColor
-  , attachedToCeiling :: Boolean
-  }
+type BallData = BallColor
 
 type GraphBall = Graph BallData NameId
-
-
-updateAttachedToCeilingInGraphBall :: M.Map NameId (Actor ActorData) -> GraphBall -> GraphBall
-updateAttachedToCeilingInGraphBall allBalls graph = do
-  let updateFunc :: NameId -> BallData -> BallData 
-      updateFunc nodeId nodeData = case M.lookup nodeId allBalls of
-        Just (Actor a) -> nodeData{attachedToCeiling = a.y < 1.0}
-        _ -> nodeData
-  mapGraphRecursive updateFunc graph
 
 addNodeBall :: Actor ActorData -> List (Actor ActorData) -> GraphBall -> GraphBall
 addNodeBall (Actor a) connectedBalls graph = case a.data of
     ActorBall ball | a.nameId `List.notElem` (getTopLayerNamesId graph) -> do -- getTopLayerNamesId is OK because all balls are present at top level of list (no need to recurcsive search)
         let connectedNamesIds = map (\(Actor b) -> b.nameId) connectedBalls
-        let neighbours = List.filter (\(Node{nodeData}) -> nodeData.nameId `List.elem` connectedNamesIds) graph
+        let neighbours = List.filter (\(Node{nodeId}) -> nodeId `List.elem` connectedNamesIds) graph
         let newNode = Node 
                 { nodeId : a.nameId
-                , nodeData : 
-                    { nameId : a.nameId
-                    , color : ball.color
-                    , attachedToCeiling : a.y < 1.0 -- TODO here is problem. When ball move down it stays attachedToCeiling
-                    }
+                , nodeData : ball.color
                 , neighbours : neighbours
                 }
         -- attache new ball as a neighbor to old ones
@@ -118,18 +100,23 @@ deleteNodeBall nameId graph = -- we need to delete ball from top level and from 
   in flip map filteredTopLayer $ \(Node node) -> 
       Node node{ neighbours = List.filter (\(Node{nodeId}) -> nodeId /= nameId ) node.neighbours}
 
-findAttachedToCeilingBalls :: GraphBall -> List NameId -> List NameId
-findAttachedToCeilingBalls nodesToCheck attachedNodes = do
+findAttachedToCeilingBalls :: Map.Map NameId (Actor ActorData) -> GraphBall -> List NameId -> List NameId
+findAttachedToCeilingBalls balls nodesToCheck attachedNodes = do
     let part = flip List.partition nodesToCheck $ \(Node n) -> 
-                    n.nodeData.attachedToCeiling || 
+                    isAttacedToCeiling n.nodeId || 
                     n.nodeId `List.elem` attachedNodes ||
                     List.any (\(Node m) -> m.nodeId `List.elem` attachedNodes) n.neighbours
     if null part.yes -- partition.yes for elems, where predicate is true; partition.no for elems where predicate is false
         then attachedNodes
-        else findAttachedToCeilingBalls part.no (attachedNodes <> getTopLayerNamesId part.yes)
+        else findAttachedToCeilingBalls balls part.no (attachedNodes <> getTopLayerNamesId part.yes)
+    where
+      isAttacedToCeiling :: NameId -> Boolean
+      isAttacedToCeiling nameId = case Map.lookup nameId balls of
+        Nothing -> false
+        Just (Actor a) -> a.y <= 1.0
 
-findNotAttachedToCeilingBalls :: GraphBall -> List NameId
-findNotAttachedToCeilingBalls graph = List.(\\) (getTopLayerNamesId graph) (findAttachedToCeilingBalls graph List.Nil)
+findNotAttachedToCeilingBalls :: Map.Map NameId (Actor ActorData) -> GraphBall -> List NameId
+findNotAttachedToCeilingBalls balls graph = List.(\\) (getTopLayerNamesId graph) (findAttachedToCeilingBalls balls graph List.Nil)
 
 
 
