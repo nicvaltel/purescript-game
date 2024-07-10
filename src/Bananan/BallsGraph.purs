@@ -3,7 +3,7 @@ module Bananan.BallsGraph where
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), BallColor)
-import Data.List (List)
+import Data.List (List(..))
 import Data.List as List
 import Engine.Model (Actor(..), NameId)
 
@@ -24,12 +24,26 @@ instance showNodeBall :: Show NodeBall where
 
 type GraphBall = List NodeBall
 
-getNamesId :: GraphBall -> List NameId
-getNamesId = map (\(NodeBall nb) -> nb.nameId)
+getAllNamesId :: GraphBall -> List NameId
+getAllNamesId graph = getBalls graph Nil
+  where
+    getBalls :: List NodeBall -> List NameId -> List NameId
+    getBalls neigs prevs = case neigs of
+      Nil -> prevs
+      _ -> foldr 
+              (\(NodeBall nb) prevsAcc -> 
+                  if (nb.nameId `List.elem` prevsAcc) 
+                    then prevsAcc 
+                    else getBalls nb.neighbours (List.(:) nb.nameId prevsAcc))
+              prevs 
+              neigs 
+
+getListNamesId :: GraphBall -> List NameId
+getListNamesId = map (\(NodeBall nb) -> nb.nameId)
 
 addNodeBall :: Actor ActorData -> List (Actor ActorData) -> GraphBall -> GraphBall
 addNodeBall (Actor a) connectedBalls graph = case a.data of
-    ActorBall ball | a.nameId `List.notElem` (getNamesId graph) -> do
+    ActorBall ball | a.nameId `List.notElem` (getAllNamesId graph) -> do
         let connectedNamesIds = map (\(Actor b) -> b.nameId) connectedBalls
         let neighbours = List.filter (\(NodeBall nb) -> nb.nameId `List.elem` connectedNamesIds) graph
         let newNode = NodeBall 
@@ -42,12 +56,16 @@ addNodeBall (Actor a) connectedBalls graph = case a.data of
     _ -> graph
 
 deleteNodeBall :: NameId -> GraphBall -> GraphBall
-deleteNodeBall nameId graph =
-    if nameId `List.elem` (getNamesId graph) 
-        then
-            map (\(NodeBall node) -> NodeBall node{neighbours = List.filter (\(NodeBall neigh) -> neigh.nameId /= nameId ) node.neighbours}) $
-                List.filter (\(NodeBall nb) -> nb.nameId /= nameId) graph
-        else graph
+deleteNodeBall nameId graph = deleteBall graph Nil
+  where
+    deleteBall :: GraphBall -> List NameId -> GraphBall
+    deleteBall graph prevNames =
+      let filtered = List.filter (\(NodeBall nb) -> nb.nameId /= nameId) graph
+      in flip map filtered $ \node@(NodeBall nb) ->
+          if nb.nameId `List.elem` prevNames
+            then node
+            else NodeBall nb{neighbours = deleteBall nb.neighbours (List.(:) nb.nameId prevNames)}
+  
 
 findAttachedToCeilingBalls :: List NodeBall -> List NameId -> List NameId
 findAttachedToCeilingBalls nodesToCheck attachedNodes = do
@@ -55,10 +73,9 @@ findAttachedToCeilingBalls nodesToCheck attachedNodes = do
                     n.attachedToCeiling || 
                     n.nameId `List.elem` attachedNodes ||
                     List.any (\(NodeBall m) -> m.nameId `List.elem` attachedNodes) n.neighbours
-    if null part.yes -- partition.ynodesToCheckes for elems, where predicate is true; partition.no for elems where predicate is false
+    if null part.yes -- partition.yes for elems, where predicate is true; partition.no for elems where predicate is false
         then attachedNodes
-        else findAttachedToCeilingBalls part.no (attachedNodes <> getNamesId part.yes)
+        else findAttachedToCeilingBalls part.no (attachedNodes <> getListNamesId part.yes)
 
 findNotAttachedToCeilingBalls :: GraphBall -> List NameId
-findNotAttachedToCeilingBalls graph = List.(\\) (getNamesId graph) (findAttachedToCeilingBalls graph List.Nil)
-
+findNotAttachedToCeilingBalls graph = List.(\\) (getListNamesId graph) (findAttachedToCeilingBalls graph List.Nil)
