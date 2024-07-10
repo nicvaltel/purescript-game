@@ -8,7 +8,7 @@ module Bananan.GameStep
 import Bananan.Reexport
 
 import Bananan.Actors (ActorData(..), BallColor, BallQueue, Dragon, colorFromRandomInt, cssClassOfColor)
-import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls)
+import Bananan.BallsGraph (addNodeBall, deleteNodeBall, findNotAttachedToCeilingBalls, updateAttachedToCeilingInGraphBall)
 import Bananan.Control (ControlKey)
 import Bananan.Control as C
 import Bananan.GameConfig (GameConfig, selectBallQueueImageSource)
@@ -445,6 +445,7 @@ gameStep gameConf conf dt = do
         let nBalls = if game.lastRowsAdded.numberOfBalls == gameConf.ballsInSmallRow then gameConf.ballsInSmallRow + 1 else gameConf.ballsInSmallRow
         modgs $ \gs -> gs{actors {balls = map (\(Actor a) -> Actor a{y = a.y + deltaH}) gs.actors.balls}}
         addRandomBalls gameConf nBalls game.boards.board.width 0.0
+        -- modgs $ \gs -> gs{graphBall = updateAttachedToCeilingInGraphBall gs.actors.balls gs.graphBall}
         modgs $ \gs -> gs{lastRowsAdded = {time : m.sys.lastUpdateTime, numberOfBalls : nBalls}}
 
       modelDiff <- (mkModelDiff model0) <$> get

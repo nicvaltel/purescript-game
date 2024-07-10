@@ -6,6 +6,7 @@ module Bananan.BallsGraph
   , addNodeBall
   , deleteNodeBall
   , findNotAttachedToCeilingBalls
+  , updateAttachedToCeilingInGraphBall
   )
   where
 
@@ -14,8 +15,8 @@ import Bananan.Reexport hiding ((:))
 import Bananan.Actors (ActorData(..), BallColor)
 import Data.List (List(..), (:))
 import Data.List as List
+import Data.Map.Internal as M
 import Engine.Model (Actor(..), NameId)
-
 
 
 
@@ -30,7 +31,7 @@ instance showGraphNode :: (Show a, Show id) => Show (GraphNode a id) where
 type Graph a id = List (GraphNode a id)
 
 
-mapGraphRecursive :: forall a b id. Eq id => (a -> b) -> List (GraphNode a id) -> List (GraphNode b id)
+mapGraphRecursive :: forall a b id. Eq id => (id -> a -> b) -> List (GraphNode a id) -> List (GraphNode b id)
 mapGraphRecursive f graph = mgraph graph Nil
   where
     mgraph :: List (GraphNode a id) -> List id -> List (GraphNode b id)
@@ -42,7 +43,7 @@ mapGraphRecursive f graph = mgraph graph Nil
           else
             let newPrevs = nodeId : accPrevs
                 newNeighbours = mgraph neighbours newPrevs
-                newNode = Node{nodeId, nodeData : f nodeData, neighbours : newNeighbours} 
+                newNode = Node{nodeId, nodeData : (f nodeId nodeData), neighbours : newNeighbours} 
             in Tuple (newNode : newGraph) newPrevs)
         (Tuple Nil prevs)
         neighs  
@@ -81,6 +82,14 @@ type BallData =
 type GraphBall = Graph BallData NameId
 
 
+updateAttachedToCeilingInGraphBall :: M.Map NameId (Actor ActorData) -> GraphBall -> GraphBall
+updateAttachedToCeilingInGraphBall allBalls graph = do
+  let updateFunc :: NameId -> BallData -> BallData 
+      updateFunc nodeId nodeData = case M.lookup nodeId allBalls of
+        Just (Actor a) -> nodeData{attachedToCeiling = a.y < 1.0}
+        _ -> nodeData
+  mapGraphRecursive updateFunc graph
+
 addNodeBall :: Actor ActorData -> List (Actor ActorData) -> GraphBall -> GraphBall
 addNodeBall (Actor a) connectedBalls graph = case a.data of
     ActorBall ball | a.nameId `List.notElem` (getTopLayerNamesId graph) -> do -- getTopLayerNamesId is OK because all balls are present at top level of list (no need to recurcsive search)
@@ -91,7 +100,7 @@ addNodeBall (Actor a) connectedBalls graph = case a.data of
                 , nodeData : 
                     { nameId : a.nameId
                     , color : ball.color
-                    , attachedToCeiling : a.y < 1.0
+                    , attachedToCeiling : a.y < 1.0 -- TODO here is problem. When ball move down it stays attachedToCeiling
                     }
                 , neighbours : neighbours
                 }
@@ -145,7 +154,7 @@ runTestGraph :: Effect Unit
 runTestGraph = do
   log (show gr1)
   log ""
-  log (show $ mapGraphRecursive (\s -> "_" <> s  ) gr1)
+  log (show $ mapGraphRecursive (\_ s -> "_" <> s  ) gr1)
   log ""
   log(show $ filterGraphRecursive (\id _ -> id < 15) gr1)
 
