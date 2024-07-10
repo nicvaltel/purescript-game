@@ -1,81 +1,152 @@
-module Bananan.BallsGraph where
+module Bananan.BallsGraph
+  ( BallData
+  , Graph
+  , GraphBall
+  , GraphNode(..)
+  , addNodeBall
+  , deleteNodeBall
+  , findNotAttachedToCeilingBalls
+  )
+  where
 
-import Bananan.Reexport
+import Bananan.Reexport hiding ((:))
 
 import Bananan.Actors (ActorData(..), BallColor)
-import Data.List (List(..))
+import Data.List (List(..), (:))
 import Data.List as List
 import Engine.Model (Actor(..), NameId)
 
 
-newtype NodeBall = NodeBall NodeBallRec
 
-type NodeBallRec =
+
+data GraphNode a id = Node {nodeId :: id, nodeData :: a, neighbours :: List (GraphNode a id)}
+
+instance showGraphNode :: (Show a, Show id) => Show (GraphNode a id) where
+  show (Node{nodeId, nodeData, neighbours})  = 
+    "Node nodeId = " <> show nodeId <>
+    " nodeData = " <> show nodeData <>
+    " neighbours = " <> show neighbours
+
+type Graph a id = List (GraphNode a id)
+
+
+mapGraphRecursive :: forall a b id. Eq id => (a -> b) -> List (GraphNode a id) -> List (GraphNode b id)
+mapGraphRecursive f graph = mgraph graph Nil
+  where
+    mgraph :: List (GraphNode a id) -> List id -> List (GraphNode b id)
+    mgraph Nil _ = Nil
+    mgraph neighs prevs = fst $
+      foldr (\(Node{nodeId, nodeData, neighbours}) tpl@(Tuple newGraph accPrevs) -> 
+        if nodeId `List.elem` accPrevs 
+          then tpl
+          else
+            let newPrevs = nodeId : accPrevs
+                newNeighbours = mgraph neighbours newPrevs
+                newNode = Node{nodeId, nodeData : f nodeData, neighbours : newNeighbours} 
+            in Tuple (newNode : newGraph) newPrevs)
+        (Tuple Nil prevs)
+        neighs  
+
+filterGraphRecursive :: forall a id. Eq id => (id -> a -> Boolean) -> List (GraphNode a id) -> List (GraphNode a id)
+filterGraphRecursive predicate graph = fgraph graph Nil
+  where 
+    filterNeighs :: List (GraphNode a id) -> List (GraphNode a id)
+    filterNeighs = List.filter (\(Node{nodeId, nodeData}) -> predicate nodeId nodeData)
+
+    fgraph :: List (GraphNode a id) -> List id -> List (GraphNode a id)
+    fgraph Nil _ = Nil
+    fgraph neighs prevs = fst $
+      foldr (\(Node{nodeId, nodeData, neighbours}) tpl@(Tuple newGraph accPrevs) -> 
+        if nodeId `List.elem` accPrevs 
+          then tpl
+          else
+            let newPrevs = nodeId : accPrevs
+                newNeighbours = fgraph (filterNeighs neighbours) newPrevs
+                newNode = Node{nodeId, nodeData, neighbours : newNeighbours} 
+            in Tuple (newNode : newGraph) newPrevs)
+        (Tuple Nil prevs)
+        neighs  
+
+
+getTopLayerNamesId :: forall a id. Graph a id -> List id
+getTopLayerNamesId = map (\(Node{nodeId}) -> nodeId)
+
+
+type BallData =
   { nameId :: NameId
   , color :: BallColor
   , attachedToCeiling :: Boolean
-  , neighbours :: List NodeBall
   }
 
-derive instance newtypeNodeBall :: Newtype NodeBall _
+type GraphBall = Graph BallData NameId
 
-instance showNodeBall :: Show NodeBall where
-  show (NodeBall r) = show r
-
-type GraphBall = List NodeBall
-
-getAllNamesId :: GraphBall -> List NameId
-getAllNamesId graph = getBalls graph Nil
-  where
-    getBalls :: List NodeBall -> List NameId -> List NameId
-    getBalls neigs prevs = case neigs of
-      Nil -> prevs
-      _ -> foldr 
-              (\(NodeBall nb) prevsAcc -> 
-                  if (nb.nameId `List.elem` prevsAcc) 
-                    then prevsAcc 
-                    else getBalls nb.neighbours (List.(:) nb.nameId prevsAcc))
-              prevs 
-              neigs 
-
-getListNamesId :: GraphBall -> List NameId
-getListNamesId = map (\(NodeBall nb) -> nb.nameId)
 
 addNodeBall :: Actor ActorData -> List (Actor ActorData) -> GraphBall -> GraphBall
 addNodeBall (Actor a) connectedBalls graph = case a.data of
-    ActorBall ball | a.nameId `List.notElem` (getAllNamesId graph) -> do
+    ActorBall ball | a.nameId `List.notElem` (getTopLayerNamesId graph) -> do -- getTopLayerNamesId is OK because all balls are present at top level of list (no need to recurcsive search)
         let connectedNamesIds = map (\(Actor b) -> b.nameId) connectedBalls
-        let neighbours = List.filter (\(NodeBall nb) -> nb.nameId `List.elem` connectedNamesIds) graph
-        let newNode = NodeBall 
-                { nameId : a.nameId
-                , color : ball.color
-                , attachedToCeiling : a.y < 1.0  
+        let neighbours = List.filter (\(Node{nodeData}) -> nodeData.nameId `List.elem` connectedNamesIds) graph
+        let newNode = Node 
+                { nodeId : a.nameId
+                , nodeData : 
+                    { nameId : a.nameId
+                    , color : ball.color
+                    , attachedToCeiling : a.y < 1.0
+                    }
                 , neighbours : neighbours
                 }
-        List.(:) newNode graph
+        -- attache new ball as a neighbor to old ones
+        let updatedGraph = flip map graph $ \node@(Node n) ->
+              if n.nodeId `List.elem` connectedNamesIds
+                then Node n{neighbours = newNode : n.neighbours}
+                else node
+        (newNode : updatedGraph)
     _ -> graph
 
 deleteNodeBall :: NameId -> GraphBall -> GraphBall
-deleteNodeBall nameId graph = deleteBall graph Nil
-  where
-    deleteBall :: GraphBall -> List NameId -> GraphBall
-    deleteBall graph prevNames =
-      let filtered = List.filter (\(NodeBall nb) -> nb.nameId /= nameId) graph
-      in flip map filtered $ \node@(NodeBall nb) ->
-          if nb.nameId `List.elem` prevNames
-            then node
-            else NodeBall nb{neighbours = deleteBall nb.neighbours (List.(:) nb.nameId prevNames)}
-  
+deleteNodeBall nameId graph = -- we need to delete ball from top level and from all list of neighbours at top level
+  let filteredTopLayer = List.filter (\(Node{nodeId}) -> nodeId /= nameId) graph
+  in flip map filteredTopLayer $ \(Node node) -> 
+      Node node{ neighbours = List.filter (\(Node{nodeId}) -> nodeId /= nameId ) node.neighbours}
 
-findAttachedToCeilingBalls :: List NodeBall -> List NameId -> List NameId
+findAttachedToCeilingBalls :: GraphBall -> List NameId -> List NameId
 findAttachedToCeilingBalls nodesToCheck attachedNodes = do
-    let part = flip List.partition nodesToCheck $ \(NodeBall n) -> 
-                    n.attachedToCeiling || 
-                    n.nameId `List.elem` attachedNodes ||
-                    List.any (\(NodeBall m) -> m.nameId `List.elem` attachedNodes) n.neighbours
+    let part = flip List.partition nodesToCheck $ \(Node n) -> 
+                    n.nodeData.attachedToCeiling || 
+                    n.nodeId `List.elem` attachedNodes ||
+                    List.any (\(Node m) -> m.nodeId `List.elem` attachedNodes) n.neighbours
     if null part.yes -- partition.yes for elems, where predicate is true; partition.no for elems where predicate is false
         then attachedNodes
-        else findAttachedToCeilingBalls part.no (attachedNodes <> getListNamesId part.yes)
+        else findAttachedToCeilingBalls part.no (attachedNodes <> getTopLayerNamesId part.yes)
 
 findNotAttachedToCeilingBalls :: GraphBall -> List NameId
-findNotAttachedToCeilingBalls graph = List.(\\) (getListNamesId graph) (findAttachedToCeilingBalls graph List.Nil)
+findNotAttachedToCeilingBalls graph = List.(\\) (getTopLayerNamesId graph) (findAttachedToCeilingBalls graph List.Nil)
+
+
+
+
+
+
+gr1 :: Graph String Int
+gr1 = 
+    Node {nodeId : 1, nodeData : "one", neighbours : 
+      ( Node {nodeId : 10, nodeData : "ten", neighbours : 
+        Node {nodeId : 15, nodeData : "fifteen", neighbours : Nil} : Nil } : 
+        Node {nodeId : 11, nodeData : "eleven", neighbours : Nil} : Nil
+      ) } :
+    Node {nodeId : 2, nodeData : "two", neighbours : 
+      (Node {nodeId : 10, nodeData : "ten", neighbours: Nil} :
+        Node {nodeId : 20, nodeData : "twenty", neighbours : 
+      (Node {nodeId : 10, nodeData : "ten", neighbours: Nil}: Nil) } : Nil)} :
+    Nil
+  
+
+runTestGraph :: Effect Unit
+runTestGraph = do
+  log (show gr1)
+  log ""
+  log (show $ mapGraphRecursive (\s -> "_" <> s  ) gr1)
+  log ""
+  log(show $ filterGraphRecursive (\id _ -> id < 15) gr1)
+
+  pure unit
